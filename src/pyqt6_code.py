@@ -1,4 +1,10 @@
-from pyqt_functions import *
+from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder
+import os
+from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit
+from PyQt6.QtCore import QPoint, QTimer, Qt, QSize
+from PyQt6.QtGui import QIcon, QTransform
+
+
 
 weight_window = 1200
 height_window = 800
@@ -14,7 +20,7 @@ class MyWindow(QWidget):
 
             block_background = QWidget(self)
             block_background.setFixedSize(weight_window, height_window)
-            block_background.setStyleSheet("background-image:url(background_images/DSC_5174_1.jpg);")
+            block_background.setStyleSheet("background-image:url(../images/background_images/DSC_5174_1.jpg);")
             block_background.move(0, 0)
 
             self.drag_position = QPoint()
@@ -120,8 +126,8 @@ class MyWindow(QWidget):
                 rotated_pixmap = pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
                 return QIcon(rotated_pixmap)
 
-            icon1 = rotate_icon("icons/pdf.png")
-            icon2 = rotate_icon("icons/settings.png")
+            icon1 = rotate_icon("../images/icons/pdf.png")
+            icon2 = rotate_icon("../images/icons/settings.png")
 
             tabWidgetObjects.setTabIcon(0, icon1)
             tabWidgetObjects.setTabIcon(1, icon2)
@@ -131,7 +137,7 @@ class MyWindow(QWidget):
             button_close.move(1150, 5)
             button_close.setCursor(Qt.CursorShape.DragMoveCursor)
             button_close.setStyleSheet("""
-            background-image:url(icons/close_icon.png);
+            background-image:url(../images/icons/close_icon.png);
             background-color: transparent;
             border: none;
             background-repeat: no-repeat;
@@ -267,7 +273,7 @@ class MyWindow(QWidget):
             button_do_operation.setFixedSize(50, 50)
             button_do_operation.setCursor(Qt.CursorShape.ClosedHandCursor)
             button_do_operation.setStyleSheet(
-                "background-image: url(icons/do_op_new.png); color: white; font-size: 14px; font:bold; border-radius: 10px;")
+                "background-image: url(../images/icons/do_op_new.png); color: white; font-size: 14px; font:bold; border-radius: 10px;")
             button_do_operation.move(980, 25)
             button_do_operation.clicked.connect(lambda: get_pdf(self))
 
@@ -287,7 +293,7 @@ class MyWindow(QWidget):
             window_for_choosing_styles.move(10, 100)
 
             button_from_choose_dark_theme = QPushButton(tabObjects_2)
-            button_from_choose_dark_theme.setStyleSheet("background-image: url(color_themes/dark_theme/dark_theme_icon.png); border-radius: 10px;")
+            button_from_choose_dark_theme.setStyleSheet("background-image: url(../images/color_themes/dark_theme/dark_theme_icon.png); border-radius: 10px;")
             button_from_choose_dark_theme.setFixedSize(250, 250)
             button_from_choose_dark_theme.move(20, 110)
 
@@ -295,7 +301,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(10, lambda: (
                     button_from_choose_dark_theme.setFixedSize(245, 245),
                     button_from_choose_dark_theme.setStyleSheet(
-                        "background-image: url(color_themes/dark_theme/dark_theme_icon_medium.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/dark_theme/dark_theme_icon_medium.png); border-radius: 10px;"
                     ),
                     button_from_choose_dark_theme.move(22, 112)
                 ))
@@ -303,7 +309,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(45, lambda: (
                     button_from_choose_dark_theme.setFixedSize(240, 240),
                     button_from_choose_dark_theme.setStyleSheet(
-                        "background-image: url(color_themes/dark_theme/dark_theme_icon_mini.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/dark_theme/dark_theme_icon_mini.png); border-radius: 10px;"
                     ),
                     button_from_choose_dark_theme.move(25, 115)
                 ))
@@ -311,7 +317,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(125, lambda: (
                     button_from_choose_dark_theme.setFixedSize(245, 245),
                     button_from_choose_dark_theme.setStyleSheet(
-                        "background-image: url(color_themes/dark_theme/dark_theme_icon_medium.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/dark_theme/dark_theme_icon_medium.png); border-radius: 10px;"
                     ),
                     button_from_choose_dark_theme.move(22, 112)
                 ))
@@ -319,7 +325,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(160, lambda: (
                     button_from_choose_dark_theme.setFixedSize(250, 250),
                     button_from_choose_dark_theme.setStyleSheet(
-                        "background-image: url(color_themes/dark_theme/dark_theme_icon.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/dark_theme/dark_theme_icon.png); border-radius: 10px;"
                     ),
                     button_from_choose_dark_theme.move(20, 110)
                 ))
@@ -327,7 +333,7 @@ class MyWindow(QWidget):
             button_from_choose_dark_theme.clicked.connect(change_theme_to_dark)
 
             button_from_choose_violet_theme = QPushButton(tabObjects_2)
-            button_from_choose_violet_theme.setStyleSheet("background-image: url(color_themes/violet_theme/violet_theme_icon.png); border-radius: 10px;")
+            button_from_choose_violet_theme.setStyleSheet("background-image: url(../images/color_themes/violet_theme/violet_theme_icon.png); border-radius: 10px;")
             button_from_choose_violet_theme.setFixedSize(250, 250)
             button_from_choose_violet_theme.move(280, 110)
 
@@ -335,7 +341,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(10, lambda: (
                     button_from_choose_violet_theme.setFixedSize(245, 245),
                     button_from_choose_violet_theme.setStyleSheet(
-                        "background-image: url(color_themes/violet_theme/violet_theme_icon_medium.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/violet_theme/violet_theme_icon_medium.png); border-radius: 10px;"
                     ),
                     button_from_choose_violet_theme.move(282, 112)
                 ))
@@ -343,21 +349,21 @@ class MyWindow(QWidget):
                 QTimer.singleShot(45, lambda: (
                     button_from_choose_violet_theme.setFixedSize(240, 240),
                     button_from_choose_violet_theme.setStyleSheet(
-                        "background-image: url(color_themes/violet_theme/violet_theme_icon_mini.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/violet_theme/violet_theme_icon_mini.png); border-radius: 10px;"
                     ),
                     button_from_choose_violet_theme.move(285, 115)
                 ))
                 QTimer.singleShot(125, lambda: (
                     button_from_choose_violet_theme.setFixedSize(245, 245),
                     button_from_choose_violet_theme.setStyleSheet(
-                        "background-image: url(color_themes/violet_theme/violet_theme_icon_medium.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/violet_theme/violet_theme_icon_medium.png); border-radius: 10px;"
                     ),
                     button_from_choose_violet_theme.move(282, 112)
                 ))
                 QTimer.singleShot(160, lambda: (
                     button_from_choose_violet_theme.setFixedSize(250, 250),
                     button_from_choose_violet_theme.setStyleSheet(
-                        "background-image: url(color_themes/violet_theme/violet_theme_icon.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/violet_theme/violet_theme_icon.png); border-radius: 10px;"
                     ),
                     button_from_choose_violet_theme.move(280, 110)
                 ))
@@ -366,7 +372,7 @@ class MyWindow(QWidget):
 
             button_from_choose_standart_theme = QPushButton(tabObjects_2)
             button_from_choose_standart_theme.setStyleSheet(
-                "background-image: url(color_themes/standard_theme/standard_theme_icon.png); border-radius: 10px;")
+                "background-image: url(../images/color_themes/standard_theme/standard_theme_icon.png); border-radius: 10px;")
             button_from_choose_standart_theme.setFixedSize(250, 250)
             button_from_choose_standart_theme.move(540, 110)
 
@@ -374,7 +380,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(10, lambda: (
                     button_from_choose_standart_theme.setFixedSize(245, 245),
                     button_from_choose_standart_theme.setStyleSheet(
-                        "background-image: url(color_themes/standard_theme/standard_theme_icon_medium.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/standard_theme/standard_theme_icon_medium.png); border-radius: 10px;"
                     ),
                     button_from_choose_standart_theme.move(542, 112)
                 ))
@@ -382,7 +388,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(45, lambda: (
                     button_from_choose_standart_theme.setFixedSize(240, 240),
                     button_from_choose_standart_theme.setStyleSheet(
-                        "background-image: url(color_themes/standard_theme/standard_theme_icon_mini.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/standard_theme/standard_theme_icon_mini.png); border-radius: 10px;"
                     ),
                     button_from_choose_standart_theme.move(545, 115)
                 ))
@@ -390,7 +396,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(125, lambda: (
                     button_from_choose_standart_theme.setFixedSize(245, 245),
                     button_from_choose_standart_theme.setStyleSheet(
-                        "background-image: url(color_themes/standard_theme/standard_theme_icon_medium.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/standard_theme/standard_theme_icon_medium.png); border-radius: 10px;"
                     ),
                     button_from_choose_standart_theme.move(542, 112)
                 ))
@@ -398,7 +404,7 @@ class MyWindow(QWidget):
                 QTimer.singleShot(160, lambda: (
                     button_from_choose_standart_theme.setFixedSize(250, 250),
                     button_from_choose_standart_theme.setStyleSheet(
-                        "background-image: url(color_themes/standard_theme/standard_theme_icon.png); border-radius: 10px;"
+                        "background-image: url(../images/color_themes/standard_theme/standard_theme_icon.png); border-radius: 10px;"
                     ),
                     button_from_choose_standart_theme.move(540, 110)
                 ))
@@ -425,3 +431,7 @@ class MyWindow(QWidget):
                 self.move(self.pos() + delta)
                 self.drag_position = event.globalPosition().toPoint()
                 event.accept()
+
+if __name__ == "__main__":
+    from pyqt_general_file import main
+    main()

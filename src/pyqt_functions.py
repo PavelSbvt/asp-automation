@@ -7,7 +7,23 @@ from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 import subprocess
 
-from console_output import *
+def print_out_string(text):
+    out_string_size = 150
+    if len(text) % 2 != 0:
+        text += " "
+
+    output_string = "|" + " " * int((out_string_size - len(text) - 2) / 2) + text + " " * int(
+        (out_string_size - len(text) - 2) / 2) + "|"
+    print(output_string)
+
+def print_separator():
+    print("|" + "_" * 148 + "|")
+
+def print_separator_points():
+    print("|" + "." * 148 + "|")
+
+def print_big_separator():
+    print("|" + "=" * 148 + "|")
 
 def open_pdf_folder(self):
     folder_path = self.save_folder_path
@@ -363,3 +379,7 @@ def get_pdf(self):
         f"Папка сохранения: {output_pdf_name}",
         QMessageBox.StandardButton.Ok
     )
+
+if __name__ == "__main__":
+    from pyqt_general_file import main
+    main()

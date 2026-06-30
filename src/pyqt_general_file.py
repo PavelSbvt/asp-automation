@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication
-from loading_window_pyqt import My_loading_window
-from pyqt6_code import MyWindow
+from src.loading_window_pyqt import My_loading_window
+from src.pyqt6_code import MyWindow
 
 def main():
     app = QApplication(sys.argv)
@@ -17,3 +17,6 @@ def main():
     loading_win.closed.connect(on_loading_closed)
 
     sys.exit(app.exec())
+
+if __name__ == "__main__":
+    main()

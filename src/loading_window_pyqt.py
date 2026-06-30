@@ -1,8 +1,7 @@
 from PyQt6.QtWidgets import QLabel
-from PyQt6.QtCore import QPoint, QTimer, pyqtSignal
+from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QWidget
-from PyQt6.QtCore import Qt
 from datetime import datetime
 
 width_loading = 600
@@ -50,7 +49,7 @@ class My_loading_window(QWidget):
             if current_hour >= 21:
                 self.label_welcome_to_program.setText("Доброй ночи!")
 
-            gif_loading = QMovie("gifs/loading_animation.gif")
+            gif_loading = QMovie("../images/gifs/loading_animation.gif")
             movie_widget = QLabel(self)
             movie_widget.setFixedSize(64,66)
             movie_widget.setMovie(gif_loading)
@@ -77,3 +76,7 @@ class My_loading_window(QWidget):
         def closeEvent(self, event):
             super().closeEvent(event)
             self.closed.emit()
+
+if __name__ == "__main__":
+    from pyqt_general_file import main
+    main()
