@@ -87,6 +87,9 @@ class MyWindow(QWidget):
 
         tabObjects_2 = QWidget()
 
+        tabObjects_3 = QWidget()
+
+
         self.open_folder_button = QPushButton("Открыть папку с PDF", tabObjects_1)
         self.open_folder_button.setFixedSize(300, 50)
         self.open_folder_button.move(370, 730)
@@ -118,6 +121,8 @@ class MyWindow(QWidget):
 
         tabWidgetObjects.addTab(tabObjects_1, "")
         tabWidgetObjects.addTab(tabObjects_2, "")
+        tabWidgetObjects.addTab(tabObjects_3, "")
+
 
         def rotate_icon(icon_path, size=65, angle=90):
             icon = QIcon(icon_path)
@@ -128,9 +133,11 @@ class MyWindow(QWidget):
 
         icon1 = rotate_icon("../images/icons/pdf.png")
         icon2 = rotate_icon("../images/icons/settings.png")
+        icon3 = rotate_icon("../images/icons/parsing_ill.png")
 
         tabWidgetObjects.setTabIcon(0, icon1)
         tabWidgetObjects.setTabIcon(1, icon2)
+        tabWidgetObjects.setTabIcon(2, icon3)
 
         button_close = QPushButton(self)
         button_close.setFixedSize(45, 45)
@@ -465,6 +472,4 @@ class MyWindow(QWidget):
 
 
 if __name__ == "__main__":
-    from pyqt_general_file import main
-
-    main()
+    print("Пожалуйста, запустите программу через pyqt_general_file.py")

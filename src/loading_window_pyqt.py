@@ -78,5 +78,4 @@ class My_loading_window(QWidget):
             self.closed.emit()
 
 if __name__ == "__main__":
-    from pyqt_general_file import main
-    main()
+    print("Пожалуйста, запустите программу через pyqt_general_file.py")

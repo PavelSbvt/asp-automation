@@ -392,5 +392,4 @@ def get_pdf(self):
     )
 
 if __name__ == "__main__":
-    from pyqt_general_file import main
-    main()
+    print("Пожалуйста, запустите программу через pyqt_general_file.py")
