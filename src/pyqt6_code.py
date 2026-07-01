@@ -582,6 +582,14 @@ class MyWindow(QWidget):
         """)
         button_choose_universal_excel.move(10,220)
         button_choose_universal_excel.clicked.connect(lambda: choose_universal_excel(self))
+        universal_excel_label_widget = QWidget(tabObjects_3)
+        universal_excel_label_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        universal_excel_label_widget.setFixedSize(300,50)
+        universal_excel_label_widget.move(10, 280)
+        self.universal_excel_label = QLabel(universal_excel_label_widget)
+        self.universal_excel_label.setStyleSheet("color: white; font: bold; font-size: 14px;")
+        self.universal_excel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.universal_excel_label.setGeometry(0,0,300,50)
 
     def update_progress(self, current, total):
         if total > 0:
