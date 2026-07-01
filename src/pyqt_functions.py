@@ -102,6 +102,10 @@ def get_pdf(self):
     self.output_text.append(count_peoples_in_work)
     QApplication.processEvents()
 
+    # прогресс бар
+    self.progress_bar.setValue(0)
+    self.progress_bar.setMaximum(100)
+
     print_big_separator()
     self.output_text.append("=" * 80)
 
@@ -109,11 +113,16 @@ def get_pdf(self):
 
     os.makedirs(f"{output_pdf_name}", exist_ok=True)
 
+    processed_count = 0
+
     for string_number in range(len(df)):
         surname_datelnyi_p = str(df.iloc[string_number, 0]).strip()
         surname_name_p = str(df.iloc[string_number, 9]).strip()
         direction = str(df.iloc[string_number, 10]).strip()
         discipline = str(df.iloc[string_number, 1]).strip()
+
+        processed_count += 1
+        self.update_progress(processed_count, len(df))
 
         if surname_datelnyi_p == "nan" or surname_name_p == "nan" or surname_name_p == "":
             continue
@@ -369,6 +378,8 @@ def get_pdf(self):
     print_big_separator()
     self.output_text.append("=" * 80)
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
+    self.progress_bar.setValue(100)
 
 
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
