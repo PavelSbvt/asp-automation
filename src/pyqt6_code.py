@@ -464,23 +464,23 @@ class MyWindow(QWidget):
         label_choose_the_term.setStyleSheet("font: bold; font-size: 18px; color: white;")
         label_choose_the_term.setGeometry(0, 0, 200, 50)
 
-        radio_button_1 = QRadioButton("Первый семестр", tabObjects_3) # активирует работу с файлом «Комиссии - История.doc»
-        radio_button_1.setStyleSheet("color: black; font-size: 18px; font: bold;")
-        radio_button_1.move(20, 90)
+        self.radio_button_1 = QRadioButton("Первый семестр", tabObjects_3) # активирует работу с файлом «Комиссии - История.doc»
+        self.radio_button_1.setStyleSheet("color: black; font-size: 18px; font: bold;")
+        self.radio_button_1.move(20, 90)
 
-        radio_button_2 = QRadioButton("Второй семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Иностранный.doc»
-        radio_button_2.setStyleSheet("color: black; font-size: 18px; font: bold;")
-        radio_button_2.move(20, 120)
+        self.radio_button_2 = QRadioButton("Второй семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Иностранный.doc»
+        self.radio_button_2.setStyleSheet("color: black; font-size: 18px; font: bold;")
+        self.radio_button_2.move(20, 120)
 
-        radio_button_3 = QRadioButton("Третий семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Специальность.doc»
-        radio_button_3.setStyleSheet("color: black; font-size: 18px; font: bold;")
-        radio_button_3.move(20, 150)
+        self.radio_button_3 = QRadioButton("Третий семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Специальность.doc»
+        self.radio_button_3.setStyleSheet("color: black; font-size: 18px; font: bold;")
+        self.radio_button_3.move(20, 150)
 
         # Группируем (чтобы работало как "только один выбор")
-        button_group = QButtonGroup(tabObjects_3)
-        button_group.addButton(radio_button_1)
-        button_group.addButton(radio_button_2)
-        button_group.addButton(radio_button_3)
+        self.button_group = QButtonGroup(tabObjects_3)
+        self.button_group.addButton(self.radio_button_1)
+        self.button_group.addButton(self.radio_button_2)
+        self.button_group.addButton(self.radio_button_3)
 
         # Добавить input с label: «Приказ о комиссиях»
         widget_for_label = QWidget(tabObjects_3)
@@ -522,6 +522,36 @@ class MyWindow(QWidget):
                 font-style: italic;
             }
         """)
+
+        parsing_button = QPushButton("Начать парсинг", tabObjects_3)
+        parsing_button.setStyleSheet("""
+        QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(60, 85, 45, 230),
+                    stop: 1 rgba(40, 65, 30, 230));
+                color: white;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(100, 140, 70, 250),
+                    stop: 1 rgba(70, 110, 45, 250));
+                border: 1px solid rgba(140, 190, 100, 230);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(40, 65, 30, 230),
+                    stop: 1 rgba(30, 50, 20, 230));
+                padding-top: 6px;
+                padding-bottom: 4px;
+            }
+        """)
+        # background-image: url(../images/icons/parsing_button_icon.png);
+        parsing_button.setFixedSize(140,40)
+        parsing_button.move(440,740)
 
     def update_progress(self, current, total):
         if total > 0:
