@@ -595,6 +595,89 @@ class MyWindow(QWidget):
         self.universal_excel_label.setText("Здесь будет имя выбранного файла...")
         self.universal_excel_label.setGeometry(0,0,300,50)
 
+        button_choose_history_commission = QPushButton("Выберите таблицу 'Комиссия - история.doc'",tabObjects_3)
+        button_choose_history_commission.setFixedSize(330,50)
+        button_choose_history_commission.setStyleSheet("""
+        QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(60, 85, 45, 230),
+                    stop: 1 rgba(40, 65, 30, 230));
+                color: white;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 10px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(100, 140, 70, 250),
+                    stop: 1 rgba(70, 110, 45, 250));
+                border: 1px solid rgba(140, 190, 100, 230);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(40, 65, 30, 230),
+                    stop: 1 rgba(30, 50, 20, 230));
+                padding-top: 6px;
+                padding-bottom: 4px;
+            }
+        """)
+        button_choose_history_commission.move(320, 100)
+        # button_choose_history_commission.clicked.connect(lambda: choose_history_excel(self))
+
+        history_excel_choosed_widget = QWidget(tabObjects_3)
+        history_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        history_excel_choosed_widget.setFixedSize(330, 50)
+        history_excel_choosed_widget.move(320, 160)
+        self.history_excel_choosed_widget_label = QLabel(history_excel_choosed_widget)
+        self.history_excel_choosed_widget_label.setStyleSheet("color: rgb(211, 211, 211); font: bold; font-size: 12px;")
+        self.history_excel_choosed_widget_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.history_excel_choosed_widget_label.setText("Здесь будет имя выбранного файла...")
+        self.history_excel_choosed_widget_label.setGeometry(0, 0, 330, 50)
+
+        button_choose_foreign_commission = QPushButton("Выберите таблицу 'Комиссия - иностранный.doc'", tabObjects_3)
+        button_choose_foreign_commission.setFixedSize(370, 50)
+        button_choose_foreign_commission.setStyleSheet("""
+                QPushButton {
+                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                            stop: 0 rgba(60, 85, 45, 230),
+                            stop: 1 rgba(40, 65, 30, 230));
+                        color: white;
+                        border: 2px solid rgba(100, 140, 65, 200);
+                        border-radius: 10px;
+                        font-size: 12px;
+                        font-weight: bold;
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                            stop: 0 rgba(100, 140, 70, 250),
+                            stop: 1 rgba(70, 110, 45, 250));
+                        border: 1px solid rgba(140, 190, 100, 230);
+                    }
+                    QPushButton:pressed {
+                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                            stop: 0 rgba(40, 65, 30, 230),
+                            stop: 1 rgba(30, 50, 20, 230));
+                        padding-top: 6px;
+                        padding-bottom: 4px;
+                    }
+                """)
+        button_choose_foreign_commission.move(680, 100)
+        # button_choose_foreign_commission.clicked.connect(lambda: choose_foreign_excel(self))
+
+        foreign_excel_choosed_widget = QWidget(tabObjects_3)
+        foreign_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        foreign_excel_choosed_widget.setFixedSize(370, 50)
+        foreign_excel_choosed_widget.move(680, 160)
+        self.foreign_excel_choosed_widget_label = QLabel(foreign_excel_choosed_widget)
+        self.foreign_excel_choosed_widget_label.setStyleSheet("color: rgb(211, 211, 211); font: bold; font-size: 12px;")
+        self.foreign_excel_choosed_widget_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.foreign_excel_choosed_widget_label.setText("Здесь будет имя выбранного файла...")
+        self.foreign_excel_choosed_widget_label.setGeometry(0, 0, 370, 50)
+
+
+
+
     def update_progress(self, current, total):
         if total > 0:
             progress = int((current / total) * 100)
