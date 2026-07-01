@@ -398,23 +398,28 @@ def choose_universal_excel(self):
         "",
         "Excel files (*.xlsx *.xls);;All files (*.*)"
     )
-    # ЕСЛИ пользователь выбрал файл
+    # если пользователь выбрал файл
     if file_path:
         # Сохраняем путь в атрибут класса
         self.universal_file_path = file_path
+        selected_file = file_path
 
         # Обновляем label (показываем имя файла)
         if len(f"{os.path.basename(file_path)}") > 30:
-            self.universal_excel_label.setStyleSheet("font-size: 12px;")
+            self.universal_excel_label.setStyleSheet("font-size: 12px; color: white")
             self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
         else:
             self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
+            self.universal_excel_label.setStyleSheet("font-size: 14px; color: white")
+
+        # return selected_file
 
         # Выводим в лог
         print(f"Выбран файл: {file_path}")
 
 def parsing_universal_excel(self):
     print("Парсинг универсальной таблицы.")
+
 
 
 if __name__ == "__main__":
