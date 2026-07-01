@@ -465,6 +465,81 @@ def parsing(self):
         semester_name = "Третий семестр"
         print("Выбран 3 семестр")
 
+    # парсинг
+    try:
+        # Читаем Excel файл
+        print(f"Читаю файл: {self.universal_file_path}")
+        df = pd.read_excel(self.universal_file_path, dtype=str)
+
+        print(f"Загружено {len(df)} строк")
+        QApplication.processEvents()
+
+        # Проверяем, что есть данные
+        if len(df) == 0:
+            print("Файл пуст!")
+            QApplication.processEvents()
+            return
+
+        students_data = []
+
+        for index, row in df.iterrows():
+            # Получаем данные по индексам колонок
+            fio = str(row.iloc[2]).strip() if len(row) > 0 else ""
+            profile = str(row.iloc[22]).strip() if len(row) > 1 else ""
+            citizenship = str(row.iloc[7]).strip() if len(row) > 2 else ""
+
+            # Пропускаем пустые строки
+            if fio == "nan" or not fio:
+                continue
+
+            # Очищаем данные от "nan"
+            if profile == "nan":
+                profile = ""
+            if citizenship == "nan":
+                citizenship = "РФ"
+
+            students_data.append({
+                'fio': fio,
+                'profile': profile,
+                'citizenship': citizenship
+            })
+
+        # Сохраняем данные в атрибут класса
+        self.students_data = students_data
+
+        for i, student in enumerate(students_data, 1):
+            print(f"{i}. ФИО: {student['fio']}")
+            print(f"   Профиль: {student['profile']}")
+            print(f"   Гражданство: {student['citizenship']}")
+            print("-" * 40)
+            QApplication.processEvents()
+
+        print(f"Всего записей: {len(students_data)}")
+        self.output_text.append("=" * 80)
+        QApplication.processEvents()
+
+        # Показываем сообщение об успехе
+        QMessageBox.information(
+            self,
+            "Готово!",
+            f"Данные успешно загружены!\n\n"
+            f"Найдено записей: {len(students_data)}\n"
+            f"Семестр: {semester_name}\n\n"
+        )
+
+        print(f"Загружено {len(students_data)} записей")
+
+    except Exception as e:
+        self.output_text.append(f"Ошибка при чтении файла: {e}")
+        QApplication.processEvents()
+        QMessageBox.critical(
+            self,
+            "Ошибка",
+            f"Не удалось прочитать файл:\n{str(e)}"
+        )
+        print(f"Ошибка: {e}")
+
+
 
 if __name__ == "__main__":
     print("Пожалуйста, запустите программу через pyqt_general_file.py")
