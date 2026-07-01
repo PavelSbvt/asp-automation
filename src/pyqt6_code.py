@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize
 from PyQt6.QtGui import QIcon, QTransform
 
-from src.pyqt_functions import parsing
+from src.pyqt_functions import parsing, choose_foreign_excel, choose_history_excel
 
 weight_window = 1200
 height_window = 800
@@ -623,7 +623,7 @@ class MyWindow(QWidget):
             }
         """)
         button_choose_history_commission.move(320, 100)
-        # button_choose_history_commission.clicked.connect(lambda: choose_history_excel(self))
+        button_choose_history_commission.clicked.connect(lambda: choose_history_excel(self))
 
         history_excel_choosed_widget = QWidget(tabObjects_3)
         history_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
@@ -663,7 +663,7 @@ class MyWindow(QWidget):
                     }
                 """)
         button_choose_foreign_commission.move(680, 100)
-        # button_choose_foreign_commission.clicked.connect(lambda: choose_foreign_excel(self))
+        button_choose_foreign_commission.clicked.connect(lambda: choose_foreign_excel(self))
 
         foreign_excel_choosed_widget = QWidget(tabObjects_3)
         foreign_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")

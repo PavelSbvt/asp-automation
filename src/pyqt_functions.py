@@ -6,6 +6,8 @@ import os
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 import subprocess
+from docx import Document
+import re
 
 def print_out_string(text):
     out_string_size = 150
@@ -513,55 +515,42 @@ def parsing_commissions(self):
         print("Выбран 3 семестр")
         # работаю с Комиссии - Специальность.doc
 
-# def choose_history_excel(self):
-#     file_path, _ = QFileDialog.getOpenFileName(
-#         self,
-#         "Выберите файл Doc с данными комиссии по истории",
-#         "",
-#         "Word files (*.doc *.docx);;All files (*.*)"
-#     )
-#     # если пользователь выбрал файл
-#     if file_path:
-#         # Сохраняем путь в атрибут класса
-#         self.universal_file_path = file_path
-#         selected_file = file_path
-#
-#         # Обновляем label (показываем имя файла)
-#         if len(f"{os.path.basename(file_path)}") > 30:
-#             self.history_excel_choosed_widget_label.setStyleSheet("font-size: 12px; color: white")
-#             self.history_excel_choosed_widget_label.setText(f"{os.path.basename(file_path)}")
-#         else:
-#             self.history_excel_choosed_widget_label.setText(f"{os.path.basename(file_path)}")
-#             self.history_excel_choosed_widget_label.setStyleSheet("font-size: 14px; color: white")
-#
-#         # return selected_file
-#
-#         print(f"Выбран файл: {file_path}")
-#
-# def choose_foreign_excel(self):
-#     file_path, _ = QFileDialog.getOpenFileName(
-#         self,
-#         "Выберите файл Doc с данными комиссии по иностранному",
-#         "",
-#         "Word files (*.doc *.docx);;All files (*.*)"
-#     )
-#     # если пользователь выбрал файл
-#     if file_path:
-#         # Сохраняем путь в атрибут класса
-#         self.universal_file_path = file_path
-#         selected_file = file_path
-#
-#         # Обновляем label (показываем имя файла)
-#         if len(f"{os.path.basename(file_path)}") > 30:
-#             self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 12px; color: white")
-#             self.foreign_excel_choosed_widget_label.setText(f"{os.path.basename(file_path)}")
-#         else:
-#             self.foreign_excel_choosed_widget_label.setText(f"{os.path.basename(file_path)}")
-#             self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 14px; color: white")
-#
-#         # return selected_file
-#
-#         print(f"Выбран файл: {file_path}")
+def choose_history_excel(self):
+    file_path, _ = QFileDialog.getOpenFileName(
+        self,
+        "Выберите файл комиссии по истории",
+        "",
+        "Word files (*.doc *.docx);;All files (*.*)"
+    )
+    if file_path:
+        self.history_commission_path = file_path
+        # Обновляем label
+        short_name = os.path.basename(file_path)
+        if len(short_name) > 30:
+            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white")
+            self.history_excel_choosed_widget_label.setText(short_name)
+        else:
+            self.history_excel_choosed_widget_label.setText(short_name)
+            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white")
+        print(f"Выбран файл истории: {file_path}")
+
+def choose_foreign_excel(self):
+    file_path, _ = QFileDialog.getOpenFileName(
+        self,
+        "Выберите файл комиссии по иностранному",
+        "",
+        "Word files (*.doc *.docx);;All files (*.*)"
+    )
+    if file_path:
+        self.foreign_commission_path = file_path
+        short_name = os.path.basename(file_path)
+        if len(short_name) > 30:
+            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white")
+            self.foreign_excel_choosed_widget_label.setText(short_name)
+        else:
+            self.foreign_excel_choosed_widget_label.setText(short_name)
+            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white")
+        print(f"Выбран файл иностранного: {file_path}")
 
 def parsing(self):
     print("Начало парсинга.")
