@@ -393,3 +393,4 @@ def get_pdf(self):
 
 if __name__ == "__main__":
     print("Пожалуйста, запустите программу через pyqt_general_file.py")
+    print(f"Сейчас запущен файл {os.path.basename(__file__)}")

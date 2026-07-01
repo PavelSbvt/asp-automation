@@ -79,3 +79,4 @@ class My_loading_window(QWidget):
 
 if __name__ == "__main__":
     print("Пожалуйста, запустите программу через pyqt_general_file.py")
+    print("Сейчас запущен файл loading_window_pyqt.py")

@@ -1,6 +1,6 @@
 from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder
 import os
-from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QMessageBox
+from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize
 from PyQt6.QtGui import QIcon, QTransform
 
@@ -445,6 +445,43 @@ class MyWindow(QWidget):
             }
         """)
 
+        # ============================================================
+        # Третья вкладка
+        # ============================================================
+
+        background_widget_for_choosing_term = QWidget(tabObjects_3)
+        background_widget_for_choosing_term.setFixedSize(300, 200)
+        background_widget_for_choosing_term.setStyleSheet("background-color: white; border-radius: 10px;")
+        background_widget_for_choosing_term.move(10,10)
+
+        choose_the_term = QWidget(tabObjects_3)
+        choose_the_term.setFixedSize(200, 50)
+        choose_the_term.setStyleSheet("background-color: green; border-radius: 10px; color: white;")
+        choose_the_term.move(20, 20)
+        label_choose_the_term = QLabel(choose_the_term)
+        label_choose_the_term.setText("Выберите семестр:")
+        label_choose_the_term.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label_choose_the_term.setStyleSheet("font: bold; font-size: 18px; color: white;")
+        label_choose_the_term.setGeometry(0, 0, 200, 50)
+
+        radio_button_1 = QRadioButton("Первый семестр", tabObjects_3) # активирует работу с файлом «Комиссии - История.doc»
+        radio_button_1.setStyleSheet("color: black; font-size: 18px; font: bold;")
+        radio_button_1.move(20, 90)
+
+        radio_button_2 = QRadioButton("Второй семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Иностранный.doc»
+        radio_button_2.setStyleSheet("color: black; font-size: 18px; font: bold;")
+        radio_button_2.move(20, 120)
+
+        radio_button_3 = QRadioButton("Третий семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Специальность.doc»
+        radio_button_3.setStyleSheet("color: black; font-size: 18px; font: bold;")
+        radio_button_3.move(20, 150)
+
+        # Группируем (чтобы работало как "только один выбор")
+        button_group = QButtonGroup(tabObjects_3)
+        button_group.addButton(radio_button_1)
+        button_group.addButton(radio_button_2)
+        button_group.addButton(radio_button_3)
+
     def update_progress(self, current, total):
         if total > 0:
             progress = int((current / total) * 100)
@@ -473,3 +510,4 @@ class MyWindow(QWidget):
 
 if __name__ == "__main__":
     print("Пожалуйста, запустите программу через pyqt_general_file.py")
+    print(f"Сейчас запущен файл {os.path.basename(__file__)}")
