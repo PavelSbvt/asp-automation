@@ -1,4 +1,4 @@
-from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder
+from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder, choose_universal_excel
 import os
 from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize
@@ -552,6 +552,36 @@ class MyWindow(QWidget):
         # background-image: url(../images/icons/parsing_button_icon.png);
         parsing_button.setFixedSize(140,40)
         parsing_button.move(440,740)
+
+        button_choose_universal_excel = QPushButton("Выберите таблицу для парсинга",tabObjects_3)
+        button_choose_universal_excel.setFixedSize(300,50)
+        button_choose_universal_excel.setStyleSheet("""
+        QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(60, 85, 45, 230),
+                    stop: 1 rgba(40, 65, 30, 230));
+                color: white;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(100, 140, 70, 250),
+                    stop: 1 rgba(70, 110, 45, 250));
+                border: 1px solid rgba(140, 190, 100, 230);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(40, 65, 30, 230),
+                    stop: 1 rgba(30, 50, 20, 230));
+                padding-top: 6px;
+                padding-bottom: 4px;
+            }
+        """)
+        button_choose_universal_excel.move(10,220)
+        button_choose_universal_excel.clicked.connect(lambda: choose_universal_excel(self))
 
     def update_progress(self, current, total):
         if total > 0:

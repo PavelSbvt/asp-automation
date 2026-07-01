@@ -391,6 +391,18 @@ def get_pdf(self):
         QMessageBox.StandardButton.Ok
     )
 
+def choose_universal_excel(self):
+    file_path, _ = QFileDialog.getOpenFileName(
+        self,
+        "Выберите файл Excel с данными",
+        "",
+        "Excel files (*.xlsx *.xls);;All files (*.*)"
+    )
+
+def parsing_universal_excel(self):
+    print("Парсинг универсальной таблицы.")
+
+
 if __name__ == "__main__":
     print("Пожалуйста, запустите программу через pyqt_general_file.py")
     print(f"Сейчас запущен файл {os.path.basename(__file__)}")
