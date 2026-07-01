@@ -417,9 +417,53 @@ def choose_universal_excel(self):
         # Выводим в лог
         print(f"Выбран файл: {file_path}")
 
-def parsing_universal_excel(self):
-    print("Парсинг универсальной таблицы.")
+def parsing(self):
+    print("Начало парсинга.")
+    # 1. Проверяем, что выбран файл
+    if not hasattr(self, 'universal_file_path') or not self.universal_file_path:
+        QMessageBox.warning(
+            self,
+            "Предупреждение",
+            "Сначала выберите универсальную таблицу!\n"
+            "Нажмите кнопку 'Выбрать универсальную таблицу'."
+        )
+        print("таблица не выбрана")
+        return
 
+    # 2. Проверяем, что выбран семестр
+    if not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked() and not self.radio_button_3.isChecked():
+        QMessageBox.warning(
+            self,
+            "Предупреждение",
+            "Пожалуйста, выберите семестр!"
+        )
+        print("не выбран семестр")
+        return
+
+    # 3. Проверяем, что введён текст приказа
+    commission_text = self.input_commission.text().strip()
+    if not commission_text:
+        QMessageBox.warning(
+            self,
+            "Предупреждение",
+            "Пожалуйста, введите текст приказа о комиссиях!"
+        )
+        print("Не введён текст приказа о комиссиях")
+        return
+
+    # 4. Определяем выбранный семестр
+    if self.radio_button_1.isChecked():
+        selected_semester = 1
+        semester_name = "Первый семестр"
+        print("Выбран 1 семестр")
+    elif self.radio_button_2.isChecked():
+        selected_semester = 2
+        semester_name = "Второй семестр"
+        print("Выбран 2 семестр")
+    else:
+        selected_semester = 3
+        semester_name = "Третий семестр"
+        print("Выбран 3 семестр")
 
 
 if __name__ == "__main__":

@@ -4,6 +4,8 @@ from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize
 from PyQt6.QtGui import QIcon, QTransform
 
+from src.pyqt_functions import parsing
+
 weight_window = 1200
 height_window = 800
 
@@ -552,6 +554,7 @@ class MyWindow(QWidget):
         # background-image: url(../images/icons/parsing_button_icon.png);
         parsing_button.setFixedSize(140,40)
         parsing_button.move(440,740)
+        parsing_button.clicked.connect(lambda: parsing(self))
 
         button_choose_universal_excel = QPushButton("Выберите таблицу для парсинга",tabObjects_3)
         button_choose_universal_excel.setFixedSize(300,50)
