@@ -1,6 +1,6 @@
 from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder
 import os
-from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup
+from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize
 from PyQt6.QtGui import QIcon, QTransform
 
@@ -456,7 +456,7 @@ class MyWindow(QWidget):
 
         choose_the_term = QWidget(tabObjects_3)
         choose_the_term.setFixedSize(200, 50)
-        choose_the_term.setStyleSheet("background-color: green; border-radius: 10px; color: white;")
+        choose_the_term.setStyleSheet("background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
         choose_the_term.move(20, 20)
         label_choose_the_term = QLabel(choose_the_term)
         label_choose_the_term.setText("Выберите семестр:")
@@ -481,6 +481,47 @@ class MyWindow(QWidget):
         button_group.addButton(radio_button_1)
         button_group.addButton(radio_button_2)
         button_group.addButton(radio_button_3)
+
+        # Добавить input с label: «Приказ о комиссиях»
+        widget_for_label = QWidget(tabObjects_3)
+        widget_for_label.setFixedSize(730,80)
+        widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        widget_for_label.move(320,10)
+
+        label_commission = QLabel(widget_for_label)
+        label_commission.setGeometry(10,5,700,30)
+        label_commission.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        label_commission.setText("Приказ о комиссиях")
+        label_commission.setStyleSheet("""
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        """)
+
+        # поле ввода
+        self.input_commission = QLineEdit(widget_for_label)
+        self.input_commission.setGeometry(10, 40, 700, 30)
+        self.input_commission.setPlaceholderText(
+            "Введите текст приказа"
+        )
+        self.input_commission.setStyleSheet("""
+            QLineEdit {
+                background: rgba(45, 70, 35, 180);
+                color: white;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 8px;
+                padding: 5px 10px;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border: 2px solid rgba(100, 200, 70, 220);
+                background: rgba(55, 80, 45, 200);
+            }
+            QLineEdit::placeholder {
+                color: rgba(200, 220, 180, 150);
+                font-style: italic;
+            }
+        """)
 
     def update_progress(self, current, total):
         if total > 0:
