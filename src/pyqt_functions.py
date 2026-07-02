@@ -408,11 +408,11 @@ def choose_universal_excel(self):
 
         # Обновляем label (показываем имя файла)
         if len(f"{os.path.basename(file_path)}") > 30:
-            self.universal_excel_label.setStyleSheet("font-size: 12px; color: white")
+            self.universal_excel_label.setStyleSheet("font-size: 12px; color: white; background-color: rgb(105,208,73);")
             self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
         else:
             self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
-            self.universal_excel_label.setStyleSheet("font-size: 14px; color: white")
+            self.universal_excel_label.setStyleSheet("font-size: 14px; color: white; background-color: rgb(105,208,73);")
 
         # return selected_file
 
@@ -527,12 +527,12 @@ def choose_history_excel(self):
         # Обновляем label
         short_name = os.path.basename(file_path)
         if len(short_name) > 30:
-            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white")
+            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
             self.history_excel_choosed_widget_label.setText(short_name)
         else:
             self.history_excel_choosed_widget_label.setText(short_name)
-            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white")
-        print(f"Выбран файл истории: {file_path}")
+            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+        print(f"Выбран файл комиссии по истории: {file_path}")
 
 def choose_foreign_excel(self):
     file_path, _ = QFileDialog.getOpenFileName(
@@ -545,12 +545,30 @@ def choose_foreign_excel(self):
         self.foreign_commission_path = file_path
         short_name = os.path.basename(file_path)
         if len(short_name) > 30:
-            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white")
+            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
             self.foreign_excel_choosed_widget_label.setText(short_name)
         else:
             self.foreign_excel_choosed_widget_label.setText(short_name)
-            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white")
-        print(f"Выбран файл иностранного: {file_path}")
+            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+        print(f"Выбран файл комиссии по иностранному: {file_path}")
+
+def choose_specialization_excel(self):
+    file_path, _ = QFileDialog.getOpenFileName(
+        self,
+        "Выберите файл комиссии по специальности",
+        "",
+        "Word files (*.doc *.docx);;All files (*.*)"
+    )
+    if file_path:
+        self.foreign_commission_path = file_path
+        short_name = os.path.basename(file_path)
+        if len(short_name) > 30:
+            self.specialization_excel_choosed_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
+            self.specialization_excel_choosed_label.setText(short_name)
+        else:
+            self.specialization_excel_choosed_label.setText(short_name)
+            self.specialization_excel_choosed_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+        print(f"Выбран файл комиссии по специальности: {file_path}")
 
 def parsing(self):
     print("Начало парсинга.")
