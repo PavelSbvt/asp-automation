@@ -6,7 +6,7 @@ import os
 from openpyxl import load_workbook
 from openpyxl.styles import Font, Alignment, Border, Side
 import subprocess
-from docx import Document
+import aspose.words as aw
 import re
 
 def print_out_string(text):
@@ -493,8 +493,6 @@ def parsing_universal_excel(self):
         )
         print(f"Ошибка: {e}")
 
-import aspose.words as aw
-
 def parse_doc_with_tables(path: str):
     doc = aw.Document(path)
     text = doc.get_text()
@@ -504,8 +502,13 @@ def parse_doc_with_tables(path: str):
     for idx, node in enumerate(doc.get_child_nodes(aw.NodeType.TABLE, True)):
         table = node.as_table()
         rows = []
-        for row in table.rows:
-            cells = [c.get_text().strip() for c in row.cells]
+        for row_node in table.rows:
+            # Получаем объект Row через as_row()
+            row = row_node.as_row()
+            cells = []
+            for cell_node in row.cells:
+                cell = cell_node.as_cell()
+                cells.append(cell.get_text().strip())
             rows.append(cells)
 
         if not rows:
@@ -524,24 +527,182 @@ def parse_doc_with_tables(path: str):
     tables_df = pd.concat(tables_data, ignore_index=True) if tables_data else pd.DataFrame()
     return tables_df, text
 
+
 def parsing_commissions(self):
-    # выбор файла по радиокнопкам
+    # Парсит файл комиссии и извлекает членов комиссии с ролями для каждой специальности
+    print("Парсинг комиссии...")
+
+    # Определяем файл в зависимости от семестра
     if self.radio_button_1.isChecked():
         path = getattr(self, "history_commission_path", None)
+        commission_name = "История"
+        semester_name = "Первый семестр"
     elif self.radio_button_2.isChecked():
         path = getattr(self, "foreign_commission_path", None)
+        commission_name = "Иностранный"
+        semester_name = "Второй семестр"
     else:
         path = getattr(self, "specialization_commission_path", None)
+        commission_name = "Специальность"
+        semester_name = "Третий семестр"
 
+    # Проверяем, что файл выбран
     if not path:
-        QMessageBox.warning(self, "Ошибка", "Сначала выберите файл комиссии!")
-        return
+        QMessageBox.warning(self, "Ошибка", f"Сначала выберите файл комиссии '{commission_name}'!")
+        return None
+
+    if not os.path.exists(path):
+        QMessageBox.warning(self, "Ошибка", f"Файл не существует: {path}")
+        return None
 
     try:
+        # Парсим документ через Aspose.Words
         tables_df, full_text = parse_doc_with_tables(path)
-        # Здесь можно сохранить tables_df в self.students_data и т.п.
+
+        members_by_specialty = []  # Список для хранения комиссий по специальностям
+
+        # Если есть таблицы
+        if tables_df is not None and not tables_df.empty:
+            print(
+                f"Найдено таблиц: {len(tables_df['table_index'].unique()) if 'table_index' in tables_df.columns else 1}")
+
+            # Получаем колонки
+            cols = list(tables_df.columns)
+            print(f"Колонки: {cols}")
+
+            # Находим колонку с ФИО и колонку с шифром
+            fio_col = None
+            code_col = None
+
+            for col in cols:
+                if col not in ['source_file', 'table_index']:
+                    col_lower = col.lower()
+                    if 'фамил' in col_lower or 'инициал' in col_lower:
+                        fio_col = col
+                    elif 'шифр' in col_lower or 'наименование' in col_lower or 'специальност' in col_lower:
+                        code_col = col
+
+            print(f"Колонка ФИО: {fio_col}")
+            print(f"Колонка шифра: {code_col}")
+
+            # Проходим по каждой строке таблицы
+            for idx, row in tables_df.iterrows():
+                if fio_col is None:
+                    # Если не нашли специальную колонку - берём все колонки
+                    for col in cols:
+                        if col not in ['source_file', 'table_index']:
+                            value = str(row[col]).strip() if pd.notna(row[col]) else ""
+                            if value and len(value) > 10:
+                                _extract_commission_members(value, members_by_specialty, row, code_col)
+                else:
+                    # Берём значение из колонки с ФИО
+                    value = str(row[fio_col]).strip() if pd.notna(row[fio_col]) else ""
+                    if value and len(value) > 10:
+                        _extract_commission_members(value, members_by_specialty, row, code_col)
+
+        # Если не нашли в таблицах - ищем в тексте документа
+        if not members_by_specialty and full_text:
+            print("Ищем комиссии в тексте документа...")
+            # Ищем блоки с комиссиями по паттерну
+            patterns = [
+                r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?.*?председатель.*?;)',
+                r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?.*?заместитель.*?;)',
+            ]
+            # ... можно добавить более сложную логику
+
+        # Сохраняем в атрибут класса
+        self.commission_members = members_by_specialty
+
+        # Выводим результат
+        if members_by_specialty:
+            print(f"Найдено {len(members_by_specialty)} комиссий:")
+            for i, item in enumerate(members_by_specialty, 1):
+                code = item.get('code', 'Без шифра')
+                members = item.get('members', [])
+                print(f"  {i}. Шифр: {code}")
+                for member in members:
+                    print(f"     - {member['fio']} ({member['role']})")
+
+            QMessageBox.information(
+                self,
+                "Готово!",
+                f"Комиссия успешно загружена!\n\n"
+                f"Найдено комиссий: {len(members_by_specialty)}\n"
+                f"Семестр: {semester_name}\n"
+                f"Файл: {os.path.basename(path)}"
+            )
+        else:
+            print("Члены комиссии не найдены!")
+            QMessageBox.warning(
+                self,
+                "Предупреждение",
+                f"Не удалось найти членов комиссии в файле:\n{os.path.basename(path)}"
+            )
+
+        return members_by_specialty
+
     except Exception as e:
-        QMessageBox.critical(self, "Ошибка парсинга", str(e))
+        print(f"Ошибка при парсинге комиссии: {e}")
+        import traceback
+        traceback.print_exc()
+        QMessageBox.critical(
+            self,
+            "Ошибка",
+            f"Не удалось прочитать файл комиссии:\n{str(e)}"
+        )
+        return None
+
+
+def _extract_commission_members(text, members_by_specialty, row=None, code_col=None):
+    #Извлекает членов комиссии из текста одной строки таблицы
+    import re
+
+    # Получаем шифр специальности
+    code = ""
+    if row is not None and code_col is not None and code_col in row:
+        code = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
+
+    # Разбиваем текст по точкам с запятой
+    parts = re.split(r'[;]', text)
+
+    members = []
+
+    for part in parts:
+        part = part.strip()
+        if not part or len(part) < 5:
+            continue
+
+        fio_match = re.search(
+            r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?|[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+)',
+            part
+        )
+
+        if not fio_match:
+            continue
+
+        fio = fio_match.group(1)
+
+        role = "член"
+        part_lower = part.lower()
+        if "председатель" in part_lower:
+            role = "председатель"
+        elif "заместитель" in part_lower:
+            role = "заместитель"
+        elif "член" in part_lower:
+            role = "член"
+
+        if not any(m['fio'] == fio for m in members):
+            members.append({
+                'fio': fio,
+                'role': role,
+                'full_text': part
+            })
+
+    if members:
+        members_by_specialty.append({
+            'code': code,
+            'members': members
+        })
 
 def choose_history_excel(self):
     file_path, _ = QFileDialog.getOpenFileName(
@@ -601,6 +762,17 @@ def choose_specialization_excel(self):
 def parsing(self):
     print("Начало парсинга.")
     # правлю функцию
+    parsing_universal_excel(self)
+    print("парсинг таблицы завершён")
+    print("начало парсинга doc-ов комиссии")
+    commission_members = parsing_commissions(self)  # <-- сохраняем результат
+    if commission_members:
+        self.commission_members = commission_members
+        print(f"Найдено {len(commission_members)} членов комиссии")
+    else:
+        print("Члены комиссии не найдены")
+    print("завершение парсинга doc-ов комиссии")
+
 
 
 if __name__ == "__main__":
