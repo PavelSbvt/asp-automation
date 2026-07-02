@@ -493,27 +493,78 @@ def parsing_universal_excel(self):
         )
         print(f"Ошибка: {e}")
 
+import aspose.words as aw
+
+def parse_doc_with_tables(path: str):
+    doc = aw.Document(path)
+    text = doc.get_text()
+
+    tables_data = []
+    # Получаем все таблицы в документе
+    for idx, node in enumerate(doc.get_child_nodes(aw.NodeType.TABLE, True)):
+        table = node.as_table()
+        rows = []
+        for row in table.rows:
+            cells = [c.get_text().strip() for c in row.cells]
+            rows.append(cells)
+
+        if not rows:
+            continue
+
+        # Если есть заголовок — делаем его колонками, иначе просто нумеруем
+        if len(rows) > 1 and all(len(r) == len(rows[0]) for r in rows):
+            df = pd.DataFrame(rows[1:], columns=rows[0])
+        else:
+            df = pd.DataFrame(rows)
+
+        df['source_file'] = path
+        df['table_index'] = idx
+        tables_data.append(df)
+
+    tables_df = pd.concat(tables_data, ignore_index=True) if tables_data else pd.DataFrame()
+    return tables_df, text
+
 def parsing_commissions(self):
-    print("Парсинг комиссии")
-    # Определяем выбранный семестр
+    # выбор файла по радиокнопкам
     if self.radio_button_1.isChecked():
-        selected_semester = 1
-        semester_name = "Первый семестр"
-        print("Выбран 1 семестр")
-        # работаю с Комиссии - История.doc
-
-
+        path = getattr(self, "history_commission_path", None)
     elif self.radio_button_2.isChecked():
-        selected_semester = 2
-        semester_name = "Второй семестр"
-        print("Выбран 2 семестр")
-        # работаю с Комиссии - Иностранный.doc
-
+        path = getattr(self, "foreign_commission_path", None)
     else:
-        selected_semester = 3
-        semester_name = "Третий семестр"
-        print("Выбран 3 семестр")
-        # работаю с Комиссии - Специальность.doc
+        path = getattr(self, "specialization_commission_path", None)
+
+    if not path:
+        QMessageBox.warning(self, "Ошибка", "Сначала выберите файл комиссии!")
+        return
+
+    try:
+        tables_df, full_text = parse_doc_with_tables(path)
+        # Здесь можно сохранить tables_df в self.students_data и т.п.
+    except Exception as e:
+        QMessageBox.critical(self, "Ошибка парсинга", str(e))
+
+# def parsing_commissions(self):
+#     print("Парсинг комиссии")
+#     # Определяем выбранный семестр
+#     if self.radio_button_1.isChecked():
+#         selected_semester = 1
+#         semester_name = "Первый семестр"
+#         print("Выбран 1 семестр")
+#         # работаю с Комиссии - История.doc
+#
+#
+#     elif self.radio_button_2.isChecked():
+#         selected_semester = 2
+#         semester_name = "Второй семестр"
+#         print("Выбран 2 семестр")
+#         # работаю с Комиссии - Иностранный.doc
+#
+#     else:
+#         selected_semester = 3
+#         semester_name = "Третий семестр"
+#         print("Выбран 3 семестр")
+#         # работаю с Комиссии - Специальность.doc
+
 
 def choose_history_excel(self):
     file_path, _ = QFileDialog.getOpenFileName(
@@ -560,7 +611,7 @@ def choose_specialization_excel(self):
         "Word files (*.doc *.docx);;All files (*.*)"
     )
     if file_path:
-        self.foreign_commission_path = file_path
+        self.specialization_commission_path = file_path
         short_name = os.path.basename(file_path)
         if len(short_name) > 30:
             self.specialization_excel_choosed_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
@@ -572,56 +623,7 @@ def choose_specialization_excel(self):
 
 def parsing(self):
     print("Начало парсинга.")
-    # # 1. Проверяем, что выбран файл
-    # if not hasattr(self, 'universal_file_path') or not self.universal_file_path:
-    #     QMessageBox.warning(
-    #         self,
-    #         "Предупреждение",
-    #         "Сначала выберите универсальную таблицу!\n"
-    #         "Нажмите кнопку 'Выбрать универсальную таблицу'."
-    #     )
-    #     print("таблица не выбрана")
-    #     return
-    #
-    # # 2. Проверяем, что выбран семестр
-    # if not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked() and not self.radio_button_3.isChecked():
-    #     QMessageBox.warning(
-    #         self,
-    #         "Предупреждение",
-    #         "Пожалуйста, выберите семестр!"
-    #     )
-    #     print("не выбран семестр")
-    #     return
-    #
-    # # 3. Проверяем, что введён текст приказа
-    # commission_text = self.input_commission.text().strip()
-    # if not commission_text:
-    #     QMessageBox.warning(
-    #         self,
-    #         "Предупреждение",
-    #         "Пожалуйста, введите текст приказа о комиссиях!"
-    #     )
-    #     print("Не введён текст приказа о комиссиях")
-    #     return
-    #
-    # # 4. Определяем выбранный семестр
-    # if self.radio_button_1.isChecked():
-    #     selected_semester = 1
-    #     semester_name = "Первый семестр"
-    #     print("Выбран 1 семестр")
-    # elif self.radio_button_2.isChecked():
-    #     selected_semester = 2
-    #     semester_name = "Второй семестр"
-    #     print("Выбран 2 семестр")
-    # else:
-    #     selected_semester = 3
-    #     semester_name = "Третий семестр"
-    #     print("Выбран 3 семестр")
-    #
-    # self.parsing_universal_excel()
-
-
-
+    # правлю функцию
 
 
 if __name__ == "__main__":
