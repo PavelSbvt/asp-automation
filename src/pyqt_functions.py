@@ -543,29 +543,6 @@ def parsing_commissions(self):
     except Exception as e:
         QMessageBox.critical(self, "Ошибка парсинга", str(e))
 
-# def parsing_commissions(self):
-#     print("Парсинг комиссии")
-#     # Определяем выбранный семестр
-#     if self.radio_button_1.isChecked():
-#         selected_semester = 1
-#         semester_name = "Первый семестр"
-#         print("Выбран 1 семестр")
-#         # работаю с Комиссии - История.doc
-#
-#
-#     elif self.radio_button_2.isChecked():
-#         selected_semester = 2
-#         semester_name = "Второй семестр"
-#         print("Выбран 2 семестр")
-#         # работаю с Комиссии - Иностранный.doc
-#
-#     else:
-#         selected_semester = 3
-#         semester_name = "Третий семестр"
-#         print("Выбран 3 семестр")
-#         # работаю с Комиссии - Специальность.doc
-
-
 def choose_history_excel(self):
     file_path, _ = QFileDialog.getOpenFileName(
         self,
