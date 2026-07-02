@@ -15,6 +15,14 @@ class MyWindow(QWidget):
         super().__init__()
 
         self.excel_file_path = None
+        self.universal_file_path = None
+        self.students_data = None
+        self.commission_members = None
+
+        # Пути к файлам комиссий
+        self.history_commission_path = None
+        self.foreign_commission_path = None
+        self.specialization_commission_path = None
 
         desktop_path = os.path.join(os.environ["USERPROFILE"], "Desktop")
 
