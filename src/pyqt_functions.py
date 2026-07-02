@@ -9,6 +9,10 @@ import subprocess
 import aspose.words as aw
 import re
 
+import requests
+from bs4 import BeautifulSoup
+from typing import List, Tuple
+
 def print_out_string(text):
     out_string_size = 150
     if len(text) % 2 != 0:
@@ -773,7 +777,77 @@ def parsing(self):
         print("Члены комиссии не найдены")
     print("завершение парсинга doc-ов комиссии")
 
+def site_parce_dn() -> List[Tuple[str, str]]:
+    url = 'http://dn.tstu.ru/index.php/specialties'
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
 
+    soup = BeautifulSoup(response.text, 'html.parser')
+    target_table = None
+    for table in soup.find_all('table'):
+        headers = [th.get_text(strip=True) for th in table.find_all('th')]
+        if 'Шифр и наименование научной специальности' in headers:
+            target_table = table
+            break
+    if target_table is None:
+        return []
+
+    specialties = []
+    for row in target_table.find_all('tr'):
+        cols = row.find_all('td')
+        if not cols:
+            continue
+
+        if len(cols) == 3:
+            code = cols[1].get_text(strip=True)
+            name = cols[2].get_text(strip=True)
+            if code and code.endswith('.') and ' ' not in code:
+                specialties.append((code, name))
+        elif len(cols) == 2:
+            code = cols[0].get_text(strip=True)
+            name = cols[1].get_text(strip=True)
+            if code and code.endswith('.') and ' ' not in code:
+                specialties.append((code, name))
+    return specialties
+
+def site_parce_main() -> List[Tuple[str, str]]:
+    url = 'https://www.tstu.ru/r.php?r=postup.abitur.na_sp'
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
+    }
+    response = requests.get(url, headers=headers, timeout=10)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    target_table = None
+    for header in soup.find_all(['h4', 'font'], class_='head4'):
+        if header.get_text(strip=True) == 'Аспирантура':
+            target_table = header.find_next('table')
+            break
+
+    if target_table is None:
+        anchor = soup.find('a', attrs={'name': '4'})
+        if anchor:
+            next_tag = anchor.find_next()
+            while next_tag and next_tag.name != 'table':
+                next_tag = next_tag.find_next()
+            target_table = next_tag
+
+    specialties = []
+    for row in target_table.find_all('tr'):
+        cols = row.find_all('td')
+        if not cols:
+            continue
+        if len(cols) >= 2:
+            code = cols[-2].get_text(strip=True)
+            name = cols[-1].get_text(strip=True)
+            if code and '.' in code and ' ' not in code:
+                specialties.append((code, name))
+
+    return specialties
 
 if __name__ == "__main__":
     print("Пожалуйста, запустите программу через pyqt_general_file.py")
