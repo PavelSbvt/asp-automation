@@ -423,79 +423,150 @@ def choose_universal_excel(self):
         # Выводим в лог
         print(f"Выбран файл: {file_path}")
 
-def parsing_universal_excel(self):
-    # парсинг
-    try:
-        # Читаем Excel файл
-        print(f"Читаю файл: {self.universal_file_path}")
-        df = pd.read_excel(self.universal_file_path, dtype=str)
 
-        print(f"Загружено {len(df)} строк")
+def parsing_universal_excel(self):
+    # Парсит универсальную таблицу Excel
+    try:
+        print("=== НАЧАЛО parsing_universal_excel")
+
+        # Принудительно обновляем интерфейс
         QApplication.processEvents()
 
-        # Проверяем, что есть данные
-        if len(df) == 0:
-            print("Файл пуст!")
-            QApplication.processEvents()
+        print(f"Путь к файлу: {self.universal_file_path}")
+        QApplication.processEvents()
+
+        # Проверяем существование файла
+        if not os.path.exists(self.universal_file_path):
+            print(f"Файл не существует: {self.universal_file_path}")
+            QMessageBox.critical(self, "Ошибка", f"Файл не существует:\n{self.universal_file_path}")
+
             return
 
-        students_data = []
-
-        for index, row in df.iterrows():
-            # Получаем данные по индексам колонок
-            fio = str(row.iloc[2]).strip() if len(row) > 0 else ""
-            profile = str(row.iloc[22]).strip() if len(row) > 1 else ""
-            citizenship = str(row.iloc[7]).strip() if len(row) > 2 else ""
-
-            # Пропускаем пустые строки
-            if fio == "nan" or not fio:
-                continue
-
-            # Очищаем данные от "nan"
-            if profile == "nan":
-                profile = ""
-            if citizenship == "nan":
-                citizenship = "РФ"
-
-            students_data.append({
-                'fio': fio,
-                'profile': profile,
-                'citizenship': citizenship
-            })
-
-        # Сохраняем данные в атрибут класса
-        self.students_data = students_data
-
-        for i, student in enumerate(students_data, 1):
-            print(f"{i}. ФИО: {student['fio']}")
-            print(f"   Профиль: {student['profile']}")
-            print(f"   Гражданство: {student['citizenship']}")
-            print("-" * 40)
-            QApplication.processEvents()
-
-        print(f"Всего записей: {len(students_data)}")
-        self.output_text.append("=" * 80)
+        print("Файл существует")
         QApplication.processEvents()
 
-        # Показываем сообщение об успехе
+        # Проверяем размер файла
+        file_size = os.path.getsize(self.universal_file_path)
+        print(f"Размер файла: {file_size} байт")
+        # QApplication.processEvents()
+
+        if file_size == 0:
+            print("Файл пустой!")
+            QMessageBox.critical(self, "Ошибка", "Файл пустой!")
+            return
+
+        print("Начинаю чтение файла...")
+
+        try:
+            print("Через openpyxl...")
+            from openpyxl import load_workbook
+            wb = load_workbook(self.universal_file_path, read_only=True, data_only=True)
+            ws = wb.active
+            print(f"Активный лист: {ws.title}")
+            QApplication.processEvents()
+
+            data = []
+            for row in ws.iter_rows(values_only=True):
+                row_data = []
+                for cell in row:
+                    row_data.append(str(cell) if cell is not None else "")
+                data.append(row_data)
+                if len(data) > 100:  # ограничиваем для теста
+                    break
+
+            wb.close()
+            print(f"Прочитано {len(data)} строк")
+            # QApplication.processEvents()
+
+            if len(data) > 1:
+                df = pd.DataFrame(data[1:], columns=data[0])
+            else:
+                df = pd.DataFrame()
+
+        except Exception as e:
+            print(f"openpyxl не сработал: {e}")
+            # QApplication.processEvents()
+
+            # Пробуем через pandas
+            try:
+                print("Через pandas...")
+                df = pd.read_excel(
+                    self.universal_file_path,
+                    dtype=str,
+                    engine='openpyxl'
+                )
+                print(f"pandas прочитал {len(df)} строк")
+                # QApplication.processEvents()
+            except Exception as e2:
+                print(f"pandas не сработал: {e2}")
+                # QApplication.processEvents()
+                raise
+
+        if df is None or len(df) == 0:
+            print("Нет данных в файле!")
+            QMessageBox.warning(self, "Ошибка", "Файл пуст или не содержит данных!")
+            print("Ошибка", "Файл пуст или не содержит данных!")
+            return
+
+        print(f"Загружено {len(df)} строк, колонок: {len(df.columns)}")
+
+        students_data = []
+        for index, row in df.iterrows():
+            try:
+                if len(row) > 2:
+                    fio = str(row.iloc[2]).strip()
+                else:
+                    fio = ""
+
+                if len(row) > 22:
+                    profile = str(row.iloc[22]).strip()
+                else:
+                    profile = ""
+
+                if len(row) > 7:
+                    citizenship = str(row.iloc[7]).strip()
+                else:
+                    citizenship = ""
+
+                if fio and fio != "nan" and fio != "":
+                    if profile == "nan":
+                        profile = ""
+                    if citizenship == "nan" or citizenship == "":
+                        citizenship = "РФ"
+
+                    students_data.append({
+                        'fio': fio,
+                        'profile': profile,
+                        'citizenship': citizenship
+                    })
+            except Exception as e:
+                print(f"Ошибка строки {index}: {e}")
+                continue
+
+        self.students_data = students_data
+        print(f"Всего студентов: {len(students_data)}")
+        QApplication.processEvents()
+
+        for i, student in enumerate(students_data[:5], 1):
+            print(f"   {i}. {student['fio']}")
+
         QMessageBox.information(
             self,
             "Готово!",
             f"Данные успешно загружены!\n\n"
-            f"Найдено записей: {len(students_data)}\n"
+            f"Найдено записей: {len(students_data)}"
         )
 
-        print(f"Загружено {len(students_data)} записей")
-
     except Exception as e:
-        self.output_text.append(f"Ошибка при чтении файла: {e}")
+        print(f"КРИТИЧЕСКАЯ ОШИБКА: {e}")
+        import traceback
+        traceback.print_exc()
         QApplication.processEvents()
         QMessageBox.critical(
             self,
             "Ошибка",
             f"Не удалось прочитать файл:\n{str(e)}"
         )
-        print(f"Ошибка: {e}")
 
 def parse_doc_with_tables(path: str):
     doc = aw.Document(path)
@@ -612,7 +683,6 @@ def parsing_commissions(self):
                 r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?.*?председатель.*?;)',
                 r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?.*?заместитель.*?;)',
             ]
-            # ... можно добавить более сложную логику
 
         # Сохраняем в атрибут класса
         self.commission_members = members_by_specialty
@@ -658,7 +728,7 @@ def parsing_commissions(self):
 
 
 def _extract_commission_members(text, members_by_specialty, row=None, code_col=None):
-    #Извлекает членов комиссии из текста одной строки таблицы
+    # Извлекает членов комиссии из текста одной строки таблицы
     import re
 
     # Получаем шифр специальности
@@ -763,19 +833,19 @@ def choose_specialization_excel(self):
             self.specialization_excel_choosed_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"Выбран файл комиссии по специальности: {file_path}")
 
-def parsing(self):
-    print("Начало парсинга.")
-    # правлю функцию
-    parsing_universal_excel(self)
-    print("парсинг таблицы завершён")
-    print("начало парсинга doc-ов комиссии")
-    commission_members = parsing_commissions(self)  # <-- сохраняем результат
-    if commission_members:
-        self.commission_members = commission_members
-        print(f"Найдено {len(commission_members)} членов комиссии")
-    else:
-        print("Члены комиссии не найдены")
-    print("завершение парсинга doc-ов комиссии")
+# def parsing(self):
+#     print("Начало парсинга.")
+#     # правлю функцию
+#     parsing_universal_excel(self)
+#     print("парсинг таблицы завершён")
+#     print("начало парсинга doc-ов комиссии")
+#     commission_members = parsing_commissions(self)  # <-- сохраняем результат
+#     if commission_members:
+#         self.commission_members = commission_members
+#         print(f"Найдено {len(commission_members)} членов комиссии")
+#     else:
+#         print("Члены комиссии не найдены")
+#     print("завершение парсинга doc-ов комиссии")
 
 def site_parce_dn() -> List[Tuple[str, str]]:
     url = 'http://dn.tstu.ru/index.php/specialties'
@@ -848,6 +918,349 @@ def site_parce_main() -> List[Tuple[str, str]]:
                 specialties.append((code, name))
 
     return specialties
+
+
+def get_specialty_code(profile: str) -> str:
+    # Находит код специальности по названию профиля
+    # Сначала пробуем основной сайт
+    specialties = site_parce_main()
+    if not specialties:
+        # Если не работает — пробуем запасной
+        specialties = site_parce_dn()
+
+    for code, name in specialties:
+        if profile.lower() in name.lower():
+            return code
+    return ""
+
+
+def fill_database_sheet(self):
+    # Заполняет лист БД в файле 'Шаблон протокола для ПР.xlsx'
+    try:
+        # Путь к шаблону
+        template_path = "Шаблон протокола для ПР.xlsx"
+        if not os.path.exists(template_path):
+            template_path = os.path.join(os.path.dirname(__file__), template_path)
+
+        if not os.path.exists(template_path):
+            print(f" Шаблон не найден: {template_path}")
+            return None
+
+        # Загружаем шаблон
+        wb = load_workbook(template_path)
+        ws = wb["БД"]
+
+        # Находим первую пустую строку
+        row = 2  # 1-я строка - заголовки
+        while True:
+            cell_value = ws.cell(row=row, column=1).value
+            if cell_value is None or str(cell_value).strip() == "":
+                break
+            row += 1
+
+        start_row = row
+        print(f"Начинаем заполнение с строки {start_row}")
+
+        # Получаем членов комиссии по ролям
+        chairman = None
+        deputy = None
+        members = []
+
+        for commission in self.commission_members:
+            for member in commission.get('members', []):
+                if member['role'] == 'председатель':
+                    chairman = member
+                elif member['role'] == 'заместитель':
+                    deputy = member
+                elif member['role'] == 'член':
+                    members.append(member)
+
+        # Заполняем каждого студента
+        for i, student in enumerate(self.students_data):
+            row_num = start_row + i
+
+            fio = student['fio']
+            profile = student['profile']
+            citizenship = student['citizenship']
+
+            # Находим код специальности
+            specialty_code = get_specialty_code(profile)
+
+            # Определяем дисциплину в зависимости от семестра
+            if self.selected_semester == 1:
+                discipline = "История и философия науки"
+            elif self.selected_semester == 2:
+                discipline = "Иностранный язык (английский)"
+            else:
+                discipline = profile
+
+            # Формируем ФИО в разных форматах
+            fio_genitive = _get_fio_genitive(fio, citizenship)  # для "СЛУШАЛИ"
+            fio_initials = _get_fio_initials(fio)  # для "ПОСТАНОВИЛИ"
+
+            # Заполняем колонки
+            ws.cell(row=row_num, column=1, value=fio_genitive)  # СЛУШАЛИ
+            ws.cell(row=row_num, column=2, value=discipline)  # Дисциплина
+            ws.cell(row=row_num, column=3, value=self.commission_text)  # Направление
+
+            if chairman:
+                ws.cell(row=row_num, column=4, value=chairman['fio'])  # Председатель
+                ws.cell(row=row_num, column=5, value=_get_fio_initials(chairman['fio']))  # ФИО председателя
+
+            if deputy:
+                ws.cell(row=row_num, column=6, value=deputy['fio'])  # Член №1 (заместитель)
+                ws.cell(row=row_num, column=7, value=_get_fio_initials(deputy['fio']))  # ФИО заместителя
+
+            if members and len(members) > 0:
+                ws.cell(row=row_num, column=8, value=members[0]['fio'])  # Член №2
+                ws.cell(row=row_num, column=9, value=_get_fio_initials(members[0]['fio']))  # ФИО члена №2
+
+            ws.cell(row=row_num, column=10, value=fio)  # ПОСТАНОВИЛИ
+            ws.cell(row=row_num, column=11,
+                    value=f"{specialty_code} {profile}" if specialty_code else profile)  # НАПРАВЛЕНИЕ
+            ws.cell(row=row_num, column=12, value=citizenship)  # Гражданство
+
+            print(f"  Строка {row_num}: {fio}")
+
+        # Сохраняем файл
+        output_path = os.path.join(self.save_folder_path, "Заполненный_протокол.xlsx")
+        wb.save(output_path)
+        wb.close()
+
+        print(f"Файл сохранён: {output_path}")
+
+        return output_path
+
+    except Exception as e:
+        print(f"Ошибка при заполнении: {e}")
+        return None
+
+
+def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
+    # Преобразует ФИО в родительный падеж
+    # Для граждан РФ - склоняем, для иностранцев - нет
+    if citizenship != "РФ":
+        return fio
+
+    parts = fio.split()
+    if len(parts) < 3:
+        return fio
+
+    surname = parts[0]
+    name = parts[1]
+    patronymic = parts[2]
+
+    # Склоняем фамилию
+    if surname.endswith('ов'):
+        surname_gen = surname[:-2] + 'ова'
+    elif surname.endswith('ев'):
+        surname_gen = surname[:-2] + 'ева'
+    elif surname.endswith('ин'):
+        surname_gen = surname[:-2] + 'ина'
+    elif surname.endswith('ий'):
+        surname_gen = surname[:-2] + 'ого'
+    else:
+        surname_gen = surname + 'а'
+
+    # Склоняем имя
+    if name.endswith('й'):
+        name_gen = name[:-1] + 'я'
+    elif name.endswith('а'):
+        name_gen = name[:-1] + 'ы'
+    else:
+        name_gen = name + 'ы'
+
+    # Склоняем отчество
+    if patronymic.endswith('ич'):
+        patronymic_gen = patronymic[:-2] + 'ича'
+    elif patronymic.endswith('на'):
+        patronymic_gen = patronymic[:-1] + 'ы'
+    else:
+        patronymic_gen = patronymic + 'а'
+
+    return f"{surname_gen} {name_gen} {patronymic_gen}"
+
+
+def _get_fio_initials(fio: str) -> str:
+    # Преобразует ФИО в формат / И.О. Фамилия /
+    parts = fio.split()
+    if len(parts) >= 3:
+        surname = parts[0]
+        initials = f"{parts[1][0]}.{parts[2][0]}."
+        return f"/ {initials} {surname} /"
+    elif len(parts) == 2:
+        surname = parts[0]
+        initials = f"{parts[1][0]}."
+        return f"/ {initials} {surname} /"
+    return fio
+
+
+def test_excel():
+    file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx"
+
+    print(f"Тест: читаю файл {file_path}")
+    print(f"Файл существует: {os.path.exists(file_path)}")
+    print(f"Размер: {os.path.getsize(file_path)} байт")
+
+    try:
+        df = pd.read_excel(file_path, dtype=str, engine='openpyxl')
+        print(f"Успешно! Загружено {len(df)} строк")
+        print(f"Колонки: {list(df.columns)}")
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+
+
+def parsing(self):
+    print("=== НАЧАЛО ПАРСИНГА")
+
+    # Проверки
+    print("Проверяю наличие файлов...")
+    if not hasattr(self, 'universal_file_path') or not self.universal_file_path:
+        QMessageBox.warning(self, "Ошибка", "Сначала выберите универсальную таблицу!")
+        return
+    print("Универсальный файл есть")
+
+    if not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked() and not self.radio_button_3.isChecked():
+        QMessageBox.warning(self, "Ошибка", "Выберите семестр!")
+        return
+    print("Семестр выбран")
+
+    # Сохраняем текст приказа
+    print("Сохраняю текст приказа...")
+    self.commission_text = self.input_commission.text().strip()
+    print(f"Текст приказа: {self.commission_text[:30]}...")
+
+    # Определяем семестр
+    print("Определяю семестр...")
+    if self.radio_button_1.isChecked():
+        self.selected_semester = 1
+        self.semester_name = "Первый семестр"
+    elif self.radio_button_2.isChecked():
+        self.selected_semester = 2
+        self.semester_name = "Второй семестр"
+    else:
+        self.selected_semester = 3
+        self.semester_name = "Третий семестр"
+    print(f"Семестр: {self.semester_name}")
+
+    # Читаем Excel файл
+    print("Читаю универсальную таблицу...")
+    try:
+        df = pd.read_excel(
+            self.universal_file_path,
+            dtype=str,
+            engine='openpyxl'
+        )
+        print(f"Загружено {len(df)} строк")
+
+        # Ищем нужные колонки по названиям
+        columns = list(df.columns)
+        print(f"Колонки: {columns[:5]}...")
+
+        # Находим индексы нужных колонок
+        fio_idx = None
+        profile_idx = None
+        citizenship_idx = None
+
+        for i, col in enumerate(columns):
+            col_lower = col.lower()
+            if 'фио' in col_lower:
+                fio_idx = i
+            if 'профиль' in col_lower:
+                profile_idx = i
+            if 'гражданство' in col_lower:
+                citizenship_idx = i
+
+        # Если не нашли по названиям - используем индексы из теста
+        if fio_idx is None:
+            fio_idx = 2  # ФИО
+        if profile_idx is None:
+            profile_idx = 22  # ПРОФИЛЬ
+        if citizenship_idx is None:
+            citizenship_idx = 40  # ГРАЖДАНСТВО
+
+        print(f"Индексы: ФИО={fio_idx}, Профиль={profile_idx}, Гражданство={citizenship_idx}")
+
+        # Извлекаем данные
+        students_data = []
+        for index, row in df.iterrows():
+            try:
+                fio = str(row.iloc[fio_idx]).strip() if len(row) > fio_idx else ""
+                profile = str(row.iloc[profile_idx]).strip() if len(row) > profile_idx else ""
+                citizenship = str(row.iloc[citizenship_idx]).strip() if len(row) > citizenship_idx else ""
+
+                if fio and fio != "nan" and fio != "":
+                    if profile == "nan":
+                        profile = ""
+                    if citizenship == "nan" or citizenship == "":
+                        citizenship = "РФ"
+
+                    students_data.append({
+                        'fio': fio,
+                        'profile': profile,
+                        'citizenship': citizenship
+                    })
+            except Exception as e:
+                print(f"Ошибка строки {index}: {e}")
+                continue
+
+        self.students_data = students_data
+        print(f"Всего студентов: {len(students_data)}")
+
+        # Показываем первых 5 студентов
+        for i, student in enumerate(students_data[:5], 1):
+            print(f"      {i}. {student['fio']}")
+
+    except Exception as e:
+        print(f"Ошибка: {e}")
+        import traceback
+        traceback.print_exc()
+        QMessageBox.critical(self, "Ошибка", f"Не удалось прочитать файл:\n{str(e)}")
+        return
+
+    print("Парсинг таблицы завершён")
+
+    # Проверяем данные
+    print("Проверяю данные студентов...")
+    if not hasattr(self, 'students_data') or not self.students_data:
+        QMessageBox.warning(self, "Ошибка", "Не удалось загрузить данные из универсальной таблицы!")
+        return
+    print(f"Загружено {len(self.students_data)} студентов")
+
+    # Создаём тестовую комиссию
+    print("Создаю тестовую комиссию...")
+    self.commission_members = [{
+        'code': '1.1.1',
+        'members': [
+            {'fio': 'Иванов И.И.', 'role': 'председатель'},
+            {'fio': 'Петров П.П.', 'role': 'заместитель'},
+            {'fio': 'Сидоров С.С.', 'role': 'член'}
+        ]
+    }]
+    print("Тестовая комиссия создана")
+
+    # Заполняем БД
+    # print("Заполняю БД...")
+    # db_file = self.fill_database_sheet()
+    # print(f"Результат: {db_file}")
+    #
+    # if db_file:
+    #     QMessageBox.information(
+    #         self,
+    #         "Готово!",
+    #         f"Данные успешно загружены!\n\n"
+    #         f"Студентов: {len(self.students_data)}\n"
+    #         f"Семестр: {self.semester_name}\n"
+    #         f"Файл сохранён: {os.path.basename(db_file)}"
+    #     )
+    # else:
+    #     QMessageBox.critical(self, "Ошибка", "Не удалось сохранить данные в файл!")
+
+    print("пропускаю часть кода - ложится с ошибкой")
+
+    print("=== КОНЕЦ ПАРСИНГА")
 
 if __name__ == "__main__":
     print("Пожалуйста, запустите программу через pyqt_general_file.py")
