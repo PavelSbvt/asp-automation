@@ -956,7 +956,7 @@ def fill_database_sheet(self):
     df = pd.DataFrame(data)
 
     # Сохраняем
-    output_path = os.path.join(self.save_folder_path, "Заполненный_протокол.xlsx")
+    output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Заполненный_протокол.xlsx")) # поднимает до кореневой - на один уровень из src
     try:
         df.to_excel(output_path, index=False, sheet_name='БД')
         print(f" Файл сохранён: {output_path}")
