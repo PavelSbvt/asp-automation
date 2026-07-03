@@ -935,104 +935,34 @@ def get_specialty_code(profile: str) -> str:
 
 
 def fill_database_sheet(self):
-    # Заполняет лист БД в файле 'Шаблон протокола для ПР.xlsx'
+    print("=== fill_database_sheet через pandas ===")
+
+    if not hasattr(self, 'students_data') or not self.students_data:
+        print(" Нет студентов!")
+        return None
+
+    # Создаём DataFrame
+    data = []
+    for student in self.students_data:
+        data.append({
+            'СЛУШАЛИ': student['fio'],
+            'Дисциплина': student['profile'],
+            'Направление': self.commission_text,
+            'ПОСТАНОВИЛИ': student['fio'],
+            'НАПРАВЛЕНИЕ': student['profile'],
+            'Гражданство': student['citizenship']
+        })
+
+    df = pd.DataFrame(data)
+
+    # Сохраняем
+    output_path = os.path.join(self.save_folder_path, "Заполненный_протокол.xlsx")
     try:
-        # Путь к шаблону
-        template_path = "Шаблон протокола для ПР.xlsx"
-        if not os.path.exists(template_path):
-            template_path = os.path.join(os.path.dirname(__file__), template_path)
-
-        if not os.path.exists(template_path):
-            print(f" Шаблон не найден: {template_path}")
-            return None
-
-        # Загружаем шаблон
-        wb = load_workbook(template_path)
-        ws = wb["БД"]
-
-        # Находим первую пустую строку
-        row = 2  # 1-я строка - заголовки
-        while True:
-            cell_value = ws.cell(row=row, column=1).value
-            if cell_value is None or str(cell_value).strip() == "":
-                break
-            row += 1
-
-        start_row = row
-        print(f"Начинаем заполнение с строки {start_row}")
-
-        # Получаем членов комиссии по ролям
-        chairman = None
-        deputy = None
-        members = []
-
-        for commission in self.commission_members:
-            for member in commission.get('members', []):
-                if member['role'] == 'председатель':
-                    chairman = member
-                elif member['role'] == 'заместитель':
-                    deputy = member
-                elif member['role'] == 'член':
-                    members.append(member)
-
-        # Заполняем каждого студента
-        for i, student in enumerate(self.students_data):
-            row_num = start_row + i
-
-            fio = student['fio']
-            profile = student['profile']
-            citizenship = student['citizenship']
-
-            # Находим код специальности
-            specialty_code = get_specialty_code(profile)
-
-            # Определяем дисциплину в зависимости от семестра
-            if self.selected_semester == 1:
-                discipline = "История и философия науки"
-            elif self.selected_semester == 2:
-                discipline = "Иностранный язык (английский)"
-            else:
-                discipline = profile
-
-            # Формируем ФИО в разных форматах
-            fio_genitive = _get_fio_genitive(fio, citizenship)  # для "СЛУШАЛИ"
-            fio_initials = _get_fio_initials(fio)  # для "ПОСТАНОВИЛИ"
-
-            # Заполняем колонки
-            ws.cell(row=row_num, column=1, value=fio_genitive)  # СЛУШАЛИ
-            ws.cell(row=row_num, column=2, value=discipline)  # Дисциплина
-            ws.cell(row=row_num, column=3, value=self.commission_text)  # Направление
-
-            if chairman:
-                ws.cell(row=row_num, column=4, value=chairman['fio'])  # Председатель
-                ws.cell(row=row_num, column=5, value=_get_fio_initials(chairman['fio']))  # ФИО председателя
-
-            if deputy:
-                ws.cell(row=row_num, column=6, value=deputy['fio'])  # Член №1 (заместитель)
-                ws.cell(row=row_num, column=7, value=_get_fio_initials(deputy['fio']))  # ФИО заместителя
-
-            if members and len(members) > 0:
-                ws.cell(row=row_num, column=8, value=members[0]['fio'])  # Член №2
-                ws.cell(row=row_num, column=9, value=_get_fio_initials(members[0]['fio']))  # ФИО члена №2
-
-            ws.cell(row=row_num, column=10, value=fio)  # ПОСТАНОВИЛИ
-            ws.cell(row=row_num, column=11,
-                    value=f"{specialty_code} {profile}" if specialty_code else profile)  # НАПРАВЛЕНИЕ
-            ws.cell(row=row_num, column=12, value=citizenship)  # Гражданство
-
-            print(f"  Строка {row_num}: {fio}")
-
-        # Сохраняем файл
-        output_path = os.path.join(self.save_folder_path, "Заполненный_протокол.xlsx")
-        wb.save(output_path)
-        wb.close()
-
-        print(f"Файл сохранён: {output_path}")
-
+        df.to_excel(output_path, index=False, sheet_name='БД')
+        print(f" Файл сохранён: {output_path}")
         return output_path
-
     except Exception as e:
-        print(f"Ошибка при заполнении: {e}")
+        print(f"Ошибка: {e}")
         return None
 
 
@@ -1095,7 +1025,7 @@ def _get_fio_initials(fio: str) -> str:
     return fio
 
 
-def test_excel():
+def test_excel(): # тестовая функция - поиск ошибки
     file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx"
 
     print(f"Тест: читаю файл {file_path}")
@@ -1229,36 +1159,40 @@ def parsing(self):
         return
     print(f"Загружено {len(self.students_data)} студентов")
 
-    # Создаём тестовую комиссию
-    print("Создаю тестовую комиссию...")
-    self.commission_members = [{
-        'code': '1.1.1',
-        'members': [
-            {'fio': 'Иванов И.И.', 'role': 'председатель'},
-            {'fio': 'Петров П.П.', 'role': 'заместитель'},
-            {'fio': 'Сидоров С.С.', 'role': 'член'}
-        ]
-    }]
-    print("Тестовая комиссия создана")
+    # # Создаём тестовую комиссию
+    # print("Создаю тестовую комиссию...")
+    # self.commission_members = [{
+    #     'code': '1.1.1',
+    #     'members': [
+    #         {'fio': 'Иванов И.И.', 'role': 'председатель'},
+    #         {'fio': 'Петров П.П.', 'role': 'заместитель'},
+    #         {'fio': 'Сидоров С.С.', 'role': 'член'}
+    #     ]
+    # }]
+    # print("Тестовая комиссия создана")
 
     # Заполняем БД
-    # print("Заполняю БД...")
-    # db_file = self.fill_database_sheet()
-    # print(f"Результат: {db_file}")
-    #
-    # if db_file:
-    #     QMessageBox.information(
-    #         self,
-    #         "Готово!",
-    #         f"Данные успешно загружены!\n\n"
-    #         f"Студентов: {len(self.students_data)}\n"
-    #         f"Семестр: {self.semester_name}\n"
-    #         f"Файл сохранён: {os.path.basename(db_file)}"
-    #     )
-    # else:
-    #     QMessageBox.critical(self, "Ошибка", "Не удалось сохранить данные в файл!")
+    print("Заполняю БД...")
+    try:
+        db_file = fill_database_sheet(self)
+        print(f"Результат: {db_file}")
+    except Exception as e:
+        print(f"Ошибка при вызове fill_database_sheet: {e}")
+        import traceback
+        traceback.print_exc()
+        db_file = None
 
-    print("пропускаю часть кода - ложится с ошибкой")
+    if db_file:
+        QMessageBox.information(
+            self,
+            "Готово!",
+            f"Данные успешно загружены!\n\n"
+            f"Студентов: {len(self.students_data)}\n"
+            f"Семестр: {self.semester_name}\n"
+            f"Файл сохранён: {os.path.basename(db_file)}"
+        )
+    else:
+        QMessageBox.critical(self, "Ошибка", "Не удалось сохранить данные в файл!")
 
     print("=== КОНЕЦ ПАРСИНГА")
 

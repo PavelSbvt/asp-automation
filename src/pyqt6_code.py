@@ -806,6 +806,73 @@ class MyWindow(QWidget):
         self.specialization_excel_choosed_label.setText("Здесь будет имя выбранного файла...")
         self.specialization_excel_choosed_label.setGeometry(0, 0, 330, 50)
 
+        widget_for_choose_save_way_for_parsed_pdf = QWidget(tabObjects_3)
+        widget_for_choose_save_way_for_parsed_pdf.setFixedSize(300, 190)
+        widget_for_choose_save_way_for_parsed_pdf.setStyleSheet("background-color: white; border-radius: 10px;")
+        widget_for_choose_save_way_for_parsed_pdf.move(10, 220)
+
+        widget_for_label_choosing_way = QWidget(tabObjects_3)
+        widget_for_label_choosing_way.setFixedSize(280,50)
+        widget_for_label_choosing_way.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        widget_for_label_choosing_way.move(20, 230)
+        self.label_for_choosing_way_save_for_parsing_pdf = QLabel(widget_for_label_choosing_way)
+        self.label_for_choosing_way_save_for_parsing_pdf.setStyleSheet("color: white; font: bold; font-size: 14px;")
+        self.label_for_choosing_way_save_for_parsing_pdf.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_for_choosing_way_save_for_parsing_pdf.setText("Выберите путь сохранения для PDF")
+        self.label_for_choosing_way_save_for_parsing_pdf.setGeometry(0,0,280,50)
+
+        # # Кнопка выбора пути сохранения
+
+        button_choose_save_path = QPushButton("Выбрать папку", tabObjects_3)
+        button_choose_save_path.setFixedSize(250, 40)
+        button_choose_save_path.move(35, 290)
+        button_choose_save_path.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(60, 85, 45, 230),
+                    stop: 1 rgba(40, 65, 30, 230));
+                color: white;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(100, 140, 70, 250),
+                    stop: 1 rgba(70, 110, 45, 250));
+                border: 1px solid rgba(140, 190, 100, 230);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(40, 65, 30, 230),
+                    stop: 1 rgba(30, 50, 20, 230));
+                padding-top: 6px;
+                padding-bottom: 4px;
+            }
+        """)
+
+        # button_choose_save_path.clicked.connect(self.choose_parsing_save_folder)
+
+        # self.save_path_label = QLabel("Папка не выбрана", tabObjects_3)
+        # self.save_path_label.setGeometry(35, 335, 250, 40)
+        # self.save_path_label.setStyleSheet("""
+        #     color: white;
+        #     font-size: 11px;
+        #     background: rgba(45, 70, 35, 150);
+        #     border: 1px solid rgba(100, 140, 65, 150);
+        #     border-radius: 8px;
+        #     padding: 5px;
+        # """)
+        # self.save_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+
+
+        # # пусть пока путь сохранения для парсинга такой же, как основной
+        # self.parsing_save_folder_path = self.save_folder_path
+        # self.save_path_label.setText(f"{self.parsing_save_folder_path}")
+
     def update_progress(self, current, total):
         if total > 0:
             progress = int((current / total) * 100)
