@@ -130,9 +130,8 @@ class MyWindow(QWidget):
         self.open_folder_button.clicked.connect(lambda: open_pdf_folder(self))
 
         tabWidgetObjects.addTab(tabObjects_1, "")
-        tabWidgetObjects.addTab(tabObjects_2, "")
         tabWidgetObjects.addTab(tabObjects_3, "")
-
+        tabWidgetObjects.addTab(tabObjects_2, "")
 
         def rotate_icon(icon_path, size=65, angle=90):
             icon = QIcon(icon_path)
@@ -146,8 +145,8 @@ class MyWindow(QWidget):
         icon3 = rotate_icon("../images/icons/parsing_ill.png")
 
         tabWidgetObjects.setTabIcon(0, icon1)
-        tabWidgetObjects.setTabIcon(1, icon2)
-        tabWidgetObjects.setTabIcon(2, icon3)
+        tabWidgetObjects.setTabIcon(1, icon3)
+        tabWidgetObjects.setTabIcon(2, icon2)
 
         button_close = QPushButton(self)
         button_close.setFixedSize(45, 45)
