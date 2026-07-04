@@ -1,19 +1,19 @@
-from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder, choose_universal_excel
-import os
-from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit
-from PyQt6.QtCore import QPoint, QTimer, Qt, QSize
-from PyQt6.QtGui import QIcon, QTransform
+from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder, choose_universal_excel # импорт функций из файла pyqt_functions.py - функции для работы интерфейса основного окна, вынесенные в отдельный файл
+import os # Для работы с файловой системой (пути, папки)
+from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit # Основные виджеты PyQt6
+from PyQt6.QtCore import QPoint, QTimer, Qt, QSize # QPoint — для перетаскивания окон, QTimer — для задержек, Qt — константы, QSize — размеры
+from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
 
-from src.pyqt_functions import parsing, choose_foreign_excel, choose_history_excel, choose_specialization_excel
+from src.pyqt_functions import parsing, choose_foreign_excel, choose_history_excel, choose_specialization_excel # разделил файл на два - в один написал код pyqt, в другой написал код функций, чтобы было удобнее ориентироваться по коду
 
-weight_window = 1200
+weight_window = 1200 # для удобной правки размеры окна сделал глобальными
 height_window = 800
 
+class MyWindow(QWidget): # Класс главного окна программы (наследуется от QWidget)
+    def __init__(self): # конструктор
+        super().__init__() # Вызов конструктора родительского класса QWidget
 
-class MyWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-
+        # устанавливаю дефолтные пути к файлам пустыми
         self.excel_file_path = None
         self.universal_file_path = None
         self.students_data = None
@@ -24,29 +24,31 @@ class MyWindow(QWidget):
         self.foreign_commission_path = None
         self.specialization_commission_path = None
 
-        desktop_path = os.path.join(os.environ["USERPROFILE"], "Desktop")
+        desktop_path = os.path.join(os.environ["USERPROFILE"], "Desktop") # Путь к рабочему столу пользователя
 
-        self.save_folder_path = os.path.join(desktop_path, "results_folder")
+        self.save_folder_path = os.path.join(desktop_path, "results_folder") # Папка для сохранения результатов
 
-        block_background = QWidget(self)
+        block_background = QWidget(self)  # первый виджет. первым появится, имеет размер всего окна загрузки, используется для фона загрузочного окна
         block_background.setFixedSize(weight_window, height_window)
         block_background.setStyleSheet("background-image:url(../images/background_images/DSC_5174_1.jpg);")
         block_background.move(0, 0)
 
-        self.drag_position = QPoint()
+        self.drag_position = QPoint() # Это создан атрибут для хранения позиции мыши, это будет объект класса qpoint. для начала точка будет иметь координаты 0.0
 
-        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint) #  удаление стандартной рамки окна (заголовок, кнопки свернуть, развернуть, закрыть)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground) # включение прозрачного фона для окна, скрывается рамка окна
 
-        tabWidgetObjects = QTabWidget(self)
+        tabWidgetObjects = QTabWidget(self) # виджет вкладок
 
-        tabWidgetObjects.setFixedSize(1200, 800)
+        tabWidgetObjects.setFixedSize(1200, 800)  # Размер виджета вкладок
 
-        tabWidgetObjects.setTabPosition(QTabWidget.TabPosition.West)
-        tabWidgetObjects.setIconSize(QSize(65, 65))
+        tabWidgetObjects.setTabPosition(QTabWidget.TabPosition.West) # позиция вкладок слева
 
-        tabWidgetObjects.setTabBarAutoHide(False)
+        tabWidgetObjects.setIconSize(QSize(65, 65)) # Размер иконок на вкладках
 
+        tabWidgetObjects.setTabBarAutoHide(False) # Вкладки всегда видны
+
+        # стиль вкладок через qss
         tabWidgetObjects.setStyleSheet(""" 
                 QTabWidget::pane {
                     border: none;
@@ -93,13 +95,14 @@ class MyWindow(QWidget):
                 }
             """)
 
-        tabObjects_1 = QWidget()
+        # создание виджетов для вкладок
+        tabObjects_1 = QWidget() # вкладка 1
 
-        tabObjects_2 = QWidget()
+        tabObjects_2 = QWidget() # вкладка 2
 
-        tabObjects_3 = QWidget()
+        tabObjects_3 = QWidget() # вкладка 3
 
-
+        # кнопка открытия папки с пдф (первая вкладка)
         self.open_folder_button = QPushButton("Открыть папку с PDF", tabObjects_1)
         self.open_folder_button.setFixedSize(300, 50)
         self.open_folder_button.move(370, 730)
@@ -127,31 +130,35 @@ class MyWindow(QWidget):
                         stop: 1 rgba(30, 50, 20, 230));
                 }
             """)
-        self.open_folder_button.clicked.connect(lambda: open_pdf_folder(self))
+        self.open_folder_button.clicked.connect(lambda: open_pdf_folder(self)) # При клике открывает папку с пдф, но чтобы передать аргумент self к функции, которую я вывел в отдельный файл, пришлось использовать лямбда функцию
 
-        tabWidgetObjects.addTab(tabObjects_1, "")
-        tabWidgetObjects.addTab(tabObjects_3, "")
-        tabWidgetObjects.addTab(tabObjects_2, "")
+        # добавление вкладок
+        tabWidgetObjects.addTab(tabObjects_1, "") # кладка 1
+        tabWidgetObjects.addTab(tabObjects_3, "") # кладка 2
+        tabWidgetObjects.addTab(tabObjects_2, "") # кладка 3
+        # порядок добавления определяет их положение среди вкладок
 
-        def rotate_icon(icon_path, size=65, angle=90):
+        def rotate_icon(icon_path, size=65, angle=90): # Функция для поворота иконок на 90 градусов по пути файла и размер у всех 65
             icon = QIcon(icon_path)
             pixmap = icon.pixmap(size, size)
             transform = QTransform().rotate(angle)
             rotated_pixmap = pixmap.transformed(transform, Qt.TransformationMode.SmoothTransformation)
             return QIcon(rotated_pixmap)
 
+        # вызов функций поворота иконок, потому что изначально иконки находятся в неправильном положении
         icon1 = rotate_icon("../images/icons/pdf.png")
         icon2 = rotate_icon("../images/icons/settings.png")
         icon3 = rotate_icon("../images/icons/parsing_ill.png")
 
+        # устанавливаю иконки на вкладки
         tabWidgetObjects.setTabIcon(0, icon1)
         tabWidgetObjects.setTabIcon(1, icon3)
         tabWidgetObjects.setTabIcon(2, icon2)
 
-        button_close = QPushButton(self)
+        button_close = QPushButton(self) # создание кастомной кнопки закрытия окна, так как стандартную я удалил
         button_close.setFixedSize(45, 45)
         button_close.move(1150, 5)
-        button_close.setCursor(Qt.CursorShape.DragMoveCursor)
+        button_close.setCursor(Qt.CursorShape.DragMoveCursor) # при наведении на кнопку курсор сменится на выбранный в методе
         button_close.setStyleSheet("""
             background-image:url(../images/icons/close_icon.png);
             background-color: transparent;
@@ -159,20 +166,22 @@ class MyWindow(QWidget):
             background-repeat: no-repeat;
             background-position: center;
             """)
-        button_close.clicked.connect(self.close)
+        button_close.clicked.connect(self.close) # При клике закрывает окно
 
-        block_for_print_process = QWidget(tabObjects_1)
+        # блок для логгирования процесса работы программы, дублирования логгирования вывода из консоли
+        block_for_print_process = QWidget(tabObjects_1) # Виджет-контейнер для текстового поля
         block_for_print_process.setFixedSize(1020, 620)
         block_for_print_process.setStyleSheet(
             "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba(60, 85, 45, 230),stop: 1 rgba(40, 65, 30, 230)); border-radius: 10px;")
         block_for_print_process.move(10, 100)
 
-        self.output_text = QTextEdit(block_for_print_process)
+        self.output_text = QTextEdit(block_for_print_process) # Поле для вывода лога (self — чтобы использовать в других методах)
         self.output_text.setGeometry(5, 35, 1010, 580)
         self.output_text.setStyleSheet(
             "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 rgba(60, 95, 45, 0.2),stop: 1 rgba(45, 75, 35, 0.25));border-radius: 10px;; color: white; font-family; font: bold; font-size: 12px;")
-        self.output_text.setReadOnly(True)
+        self.output_text.setReadOnly(True) # Только для чтения (пользователь не может редактировать)
 
+        # кнопка выбора файла эксель
         button_to_find_file_tabel = QPushButton(tabObjects_1)
         button_to_find_file_tabel.setFixedSize(180, 50)
         button_to_find_file_tabel.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -204,8 +213,9 @@ class MyWindow(QWidget):
             """)
         button_to_find_file_tabel.move(10, 25)
         button_to_find_file_tabel.setText("Выберите файл")
-        button_to_find_file_tabel.clicked.connect(lambda: choose_file(self))
+        button_to_find_file_tabel.clicked.connect(lambda: choose_file(self)) # При клике открывает диалог выбора файла, но чтобы передать аргумент self к функции, которую я вывел в отдельный файл, пришлось использовать лямбда функцию
 
+        # кнопка изменения пути сохранения
         button_to_find_where_save = QPushButton(tabObjects_1)
         button_to_find_where_save.setFixedSize(250, 50)
         button_to_find_where_save.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -237,7 +247,9 @@ class MyWindow(QWidget):
             """)
         button_to_find_where_save.move(200, 25)
         button_to_find_where_save.setText("Изменить путь для сохранения")
+        button_to_find_where_save.clicked.connect(lambda: choose_save_folder(self)) # вызов функции выбора пути сохранения
 
+        # блок сообщения пути отображения пути сохранения пдф файлов
         block_where_save_pdfs_now = QWidget(tabObjects_1)
         block_where_save_pdfs_now.setFixedSize(160, 50)
         block_where_save_pdfs_now.setStyleSheet("""              
@@ -254,13 +266,13 @@ class MyWindow(QWidget):
                     """)
         block_where_save_pdfs_now.move(460, 25)
 
-        button_to_find_where_save.clicked.connect(lambda: choose_save_folder(self))
         block_where_save_pdfs_now_label = QLabel(block_where_save_pdfs_now)
         block_where_save_pdfs_now_label.setText("Путь сохранения:")
         block_where_save_pdfs_now_label.setGeometry(0, 0, 160, 50)
         block_where_save_pdfs_now_label.setStyleSheet("color:white; font: bold; font-size: 14px;")
         block_where_save_pdfs_now_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # отображение текущего пути сохранения файлов
         block_way_save = QWidget(tabObjects_1)
         block_way_save.setFixedSize(340, 50)
         block_way_save.setStyleSheet("""
@@ -272,7 +284,7 @@ class MyWindow(QWidget):
             """)
         block_way_save.move(630, 25)
 
-        self.path_value_label = QLabel(block_way_save)
+        self.path_value_label = QLabel(block_way_save) # self — чтобы обновлять путь при изменении
         short_path = self.save_folder_path
         if len(short_path) > 150:
             short_path = "..." + short_path[-150:]
@@ -284,6 +296,7 @@ class MyWindow(QWidget):
         self.path_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.path_value_label.setWordWrap(True)
         block_way_save.setToolTip(self.save_folder_path)
+
 
         button_do_operation = QPushButton(tabObjects_1)
         button_do_operation.setFixedSize(50, 50)
