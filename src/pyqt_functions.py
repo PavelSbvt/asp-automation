@@ -1026,64 +1026,70 @@ def _get_fio_initials(fio: str) -> str:
 
 
 def test_excel(): # тестовая функция - поиск ошибки
-    file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx"
+    file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx" # жестко прописанный путь к универсальной таблице
 
-    print(f"Тест: читаю файл {file_path}")
-    print(f"Файл существует: {os.path.exists(file_path)}")
-    print(f"Размер: {os.path.getsize(file_path)} байт")
+    print(f"[I] Тест: читаю файл {file_path}") # так как филе пас это путь я просто прописываю, какой файл тестируется на чтение
+    print(f"[I] Файл существует: {os.path.exists(file_path)}") # вернёт булево
+    print(f"[I] Размер: {os.path.getsize(file_path)} байт") # если сколько-нибудь весит, то файл точно есть
 
     try:
-        df = pd.read_excel(file_path, dtype=str, engine='openpyxl')
-        print(f"Успешно! Загружено {len(df)} строк")
-        print(f"Колонки: {list(df.columns)}")
+        df = pd.read_excel(file_path, dtype=str, engine='openpyxl') # read_excel - функция, которая читает Excel файл и превращает его в DataFrame, все данные читает как текст, для чтения используется движок openpyxl - можно сделать чисто через pandas
+        print(f"[S] Успешно! Загружено {len(df)} строк") # SUCCESS - успешное завершение оперции
+        print(f"[I] Колонки: {list(df.columns)}")
     except Exception as e:
-        print(f"Ошибка: {e}")
+        print(f"[E] Ошибка: {e}")
         import traceback
-        traceback.print_exc()
+        traceback.print_exc() # Нужно было использовать библиотеку, чтобы вывод ошибки был полным. Вывод ошибки в консоль
 
 
 def parsing(self):
-    print("=== НАЧАЛО ПАРСИНГА")
+    print("[I] НАЧАЛО ПАРСИНГА")
 
     # Проверки
-    print("Проверяю наличие файлов...")
-    if not hasattr(self, 'universal_file_path') or not self.universal_file_path:
-        QMessageBox.warning(self, "Ошибка", "Сначала выберите универсальную таблицу!")
+    print("[I] Проверяю наличие файлов...")
+    if not hasattr(self, 'universal_file_path') or not self.universal_file_path: # Если у объекта self нет атрибута с именем 'universal_file_path' или атрибут существует, но он пустой
+        QMessageBox.warning(self, "Ошибка", "Сначала выберите универсальную таблицу!") # Выскочит короткий QMessageBox с предупреждением
+        print("[E] Не выбрана универсальная таблица")
         return
-    print("Универсальный файл есть")
 
-    if not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked() and not self.radio_button_3.isChecked():
-        QMessageBox.warning(self, "Ошибка", "Выберите семестр!")
+    print("[I] Универсальный файл есть")
+
+    if not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked() and not self.radio_button_3.isChecked(): # Если ни одна кнопка QRadioButton не выбрана
+        QMessageBox.warning(self, "Ошибка", "Выберите семестр!") # Тоже появится предупреждение, о том что не выбран семестр
+        print("[E] Не выбран семестр")
         return
-    print("Семестр выбран")
+
+    print("[I] Семестр выбран")
 
     # Сохраняем текст приказа
-    print("Сохраняю текст приказа...")
-    self.commission_text = self.input_commission.text().strip()
-    print(f"Текст приказа: {self.commission_text[:30]}...")
+    print("[I] Сохраняю текст приказа") # лог для отладки
+    self.commission_text = self.input_commission.text().strip() # атрибуту класса присваивается значение того, что было
+    # введено в поле ввода QLineEdit, берет только текст и удаляет пробелы в начале и конце строки
+    print(f"[I] Текст приказа: {self.commission_text[:30]}...") # для отладки - вывод кусочка вписанного в поле приказа
 
     # Определяем семестр
-    print("Определяю семестр...")
-    if self.radio_button_1.isChecked():
+    print("[I] Определение семестра.")
+    if self.radio_button_1.isChecked(): # если радиокнопка нажата, то вернёт True
         self.selected_semester = 1
         self.semester_name = "Первый семестр"
-    elif self.radio_button_2.isChecked():
+    elif self.radio_button_2.isChecked(): ## ели вторая нажата, то вернёт True
         self.selected_semester = 2
         self.semester_name = "Второй семестр"
-    else:
+    else: # иначе приравняет вспомогательные переменные к 3 семестру. Проверка на выбор была где-то выше, поэтому не было необходимости на дополнительную
         self.selected_semester = 3
         self.semester_name = "Третий семестр"
-    print(f"Семестр: {self.semester_name}")
+
+    print(f"Семестр: {self.semester_name}") # соответственно после предыдущего блока кода переменная имя семестра будет вмещать имя текущего выбранного семестра и выведет в лог
 
     # Читаем Excel файл
-    print("Читаю универсальную таблицу...")
+    print("[I] Чтение универсальной таблицы.")
     try:
-        df = pd.read_excel(
-            self.universal_file_path,
-            dtype=str,
-            engine='openpyxl'
+        df = pd.read_excel( # df - сокращение от dataframe - таблицы в пандас, обращаемся к библиотеке пандас, методу чтения таблиц, присваивая таблицу, которую возвращает метод чтения переменной
+            self.universal_file_path, # путь к таблице. он принадлежит классу и прописан ранее в коде
+            dtype=str, # читать данные как текст
+            engine='openpyxl' # использовать библиотеку openpyxl для чтения файла. движок
         )
-        print(f"Загружено {len(df)} строк")
+        print(f"[I] Загружено {len(df)} строк")
 
         # Ищем нужные колонки по названиям
         columns = list(df.columns)
