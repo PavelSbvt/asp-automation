@@ -13,6 +13,8 @@ import requests
 from bs4 import BeautifulSoup
 from typing import List, Tuple
 
+import shutil
+
 def print_out_string(text):
     out_string_size = 150
     if len(text) % 2 != 0:
@@ -397,6 +399,324 @@ def get_pdf(self):
         QMessageBox.StandardButton.Ok
     )
 
+
+def generate_pdf_from_db(self, excel_file_path: str):
+    """
+    Генерация PDF-протоколов на основе сгенерированного Excel-файла,
+    содержащего листы «БД» и «Протокол».
+    Для конвертации используется Microsoft Excel (через VBScript ExportAsFixedFormat).
+    """
+    QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+    if not excel_file_path:
+        print_big_separator()
+        msg = "ОШИБКА: Не указан путь к файлу с данными!"
+        print_out_string(msg)
+        self.output_text.append(msg)
+        QApplication.processEvents()
+        print_big_separator()
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
+
+    try:
+        # Читаем лист «БД», все поля как строки
+        df = pd.read_excel(excel_file_path, sheet_name="БД", dtype=str)
+    except Exception as e:
+        print_big_separator()
+        msg = f"ОШИБКА при чтении файла: {e}"
+        print_out_string(msg)
+        self.output_text.append(msg)
+        QApplication.processEvents()
+        print_big_separator()
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
+
+    EXCEL_FILE = excel_file_path   # файл содержит и «БД», и «Протокол»
+
+    print_big_separator()
+    self.output_text.append("=" * 80)
+
+    count_msg = f"Найдено {len(df)} человек"
+    print_out_string(count_msg)
+    self.output_text.append(count_msg)
+    QApplication.processEvents()
+
+    self.progress_bar.setValue(0)
+    self.progress_bar.setMaximum(100)
+
+    print_big_separator()
+    self.output_text.append("=" * 80)
+
+    output_pdf_name = self.save_folder_path
+    os.makedirs(output_pdf_name, exist_ok=True)
+
+    processed_count = 0
+
+    for string_number in range(len(df)):
+        # ------------------------------------------------------------
+        # Данные из новой структуры «БД» (колонки 0..10)
+        # 0  = СЛУШАЛИ (фамилия в родительном падеже)
+        # 1  = Прием кандидатского экзамена по дисциплине
+        # 2  = Направление (текст приказа)
+        # 3  = Председатель комиссии (full_text)
+        # 4  = ФИО (инициалы председателя)
+        # 5  = Члены комиссии №1: (full_text зама)
+        # 6  = ФИО (инициалы зама)
+        # 7  = Члены комиссии №2: (full_text члена)
+        # 8  = ФИО (инициалы члена)
+        # 9  = ПОСТАНОВИЛИ (ФИО в именительном падеже)
+        # 10 = НАПРАВЛЕНИЕ (шифр + профиль)
+        # ------------------------------------------------------------
+        surname_genitive = str(df.iloc[string_number, 0]).strip()   # родительный
+        discipline       = str(df.iloc[string_number, 1]).strip()
+        commission_text  = str(df.iloc[string_number, 2]).strip()   # текст приказа
+        chair_full       = str(df.iloc[string_number, 3]).strip()
+        chair_initials   = str(df.iloc[string_number, 4]).strip()
+        deputy_full      = str(df.iloc[string_number, 5]).strip()
+        deputy_initials  = str(df.iloc[string_number, 6]).strip()
+        member_full      = str(df.iloc[string_number, 7]).strip()
+        member_initials  = str(df.iloc[string_number, 8]).strip()
+        surname_nominative = str(df.iloc[string_number, 9]).strip() # именительный
+        direction_raw    = str(df.iloc[string_number, 10]).strip()
+
+        processed_count += 1
+        self.update_progress(processed_count, len(df))
+
+        # Пропускаем пустые строки
+        if surname_genitive == "nan" or surname_nominative == "nan" or surname_nominative == "":
+            continue
+
+        # Из направления берём первую часть (шифр) для имени файла
+        code = direction_raw.split()[0] if direction_raw and direction_raw != "nan" else "unknown"
+
+        msg = f"* Делаю PDF для: {surname_nominative}"
+        print_out_string(msg)
+        self.output_text.append(msg)
+        QApplication.processEvents()
+
+        print_separator_points()
+        self.output_text.append("." * 80)
+
+        # Загружаем шаблон (лист «Протокол») из того же файла
+        wb = load_workbook(EXCEL_FILE)
+        ws = wb["Протокол"]
+
+        # === Статические надписи (одинаковы для всех протоколов) ===
+        cell = ws['A1']
+        cell.value = (
+            "МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ\n"
+            "Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
+            "«Тамбовский государственный технический университет»"
+        )
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[1].height = 42
+
+        ws['A8'].value = "ПРОТОКОЛ №___________"
+        ws['A8'].alignment = Alignment(horizontal='center', vertical='center')
+        ws['A8'].font = Font(name='Times New Roman', size=14, bold=True)
+        ws.row_dimensions[8].height = 20
+
+        ws['A10'].value = "от  «___»__________________20___г."
+        ws['A10'].alignment = Alignment(horizontal='center', vertical='center')
+        ws['A10'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[10].height = 15
+
+        ws['I5'].value = "___________Д.Ю. Муромцев"
+        ws['I5'].alignment = Alignment(horizontal='left', vertical='center')
+        ws['I5'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[5].height = 15
+
+        ws['I6'].value = "«___»______________20___г."
+        ws['I6'].alignment = Alignment(horizontal='left', vertical='center')
+        ws['I6'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[6].height = 15
+
+        # === Запись текста приказа в A12 ===
+        ws['A12'] = commission_text
+        ws['A12'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        ws['A12'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[12].height = 45
+
+        # === Настройка высоты строк и границ ===
+        thin_border = Border(bottom=Side(border_style='thin', color='000000'))
+
+        strings_with_data = [29, 39, 23, 14, 42, 17, 45, 19, 47]
+        for row_num in range(1, 60):
+            if row_num in strings_with_data:
+                ws.row_dimensions[row_num].height = 15
+            else:
+                ws.row_dimensions[row_num].height = 15
+        ws.row_dimensions[14].height = 35
+        ws.row_dimensions[17].height = 35
+        ws.row_dimensions[19].height = 35
+        ws.row_dimensions[21].height = 5
+        ws.row_dimensions[25].height = 5
+        ws.row_dimensions[28].height = 5
+        ws.row_dimensions[44].height = 10
+        ws.row_dimensions[33].height = 18
+        ws.row_dimensions[34].height = 18
+        ws.row_dimensions[35].height = 18
+        ws.row_dimensions[36].height = 18
+        ws.row_dimensions[37].height = 18
+        ws.row_dimensions[2].height = 20
+        ws.row_dimensions[7].height = 5
+
+        # === Заполнение переменных данных ===
+        # Фамилия в родительном падеже (СЛУШАЛИ)
+        cell = ws.cell(row=29, column=3, value=surname_genitive)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # ФИО в именительном падеже (ПОСТАНОВИЛИ)
+        cell = ws.cell(row=39, column=4, value=surname_nominative)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Дисциплина
+        cell = ws.cell(row=26, column=4, value=discipline)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+        ws.row_dimensions[26].height = 30
+
+        # Направление (шифр + профиль)
+        cell = ws.cell(row=23, column=1, value=direction_raw)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+        ws.row_dimensions[23].height = 30
+
+        # Председатель (full_text)
+        cell = ws.cell(row=14, column=1, value=chair_full)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Инициалы председателя
+        cell = ws.cell(row=42, column=9, value=chair_initials)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12)
+
+        # Заместитель (full_text)
+        cell = ws.cell(row=17, column=1, value=deputy_full)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Инициалы зама
+        cell = ws.cell(row=45, column=9, value=deputy_initials)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12)
+
+        # Член комиссии (full_text)
+        cell = ws.cell(row=19, column=1, value=member_full)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Инициалы члена
+        cell = ws.cell(row=47, column=9, value=member_initials)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12)
+
+        # Очистка пустых строк таблицы комиссии
+        for row_num in [32, 33, 34, 35, 36, 37]:
+            cell = ws.cell(row=row_num, column=1)
+            cell.value = ""
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='left', vertical='center')
+            cell.font = Font(name='Times New Roman', size=12)
+        for col in ['E42', 'E45', 'E47']:
+            ws[col].value = ""
+            ws[col].border = thin_border
+            ws[col].alignment = Alignment(horizontal='left', vertical='center')
+            ws[col].font = Font(name='Times New Roman', size=12)
+
+        # Если фамилия слишком длинная, уменьшаем шрифт
+        if len(surname_nominative) > 35:
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=8, italic=True)
+        else:
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Сохраняем временный xlsx
+        file_name = f"{code} {surname_nominative}.xlsx"
+        file_name = file_name.replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_")
+        wb.save(file_name)
+        excel_path = os.path.abspath(file_name)
+
+        # === Конвертация в PDF через Excel (ExportAsFixedFormat) ===
+        pdf_path = os.path.abspath(f"{output_pdf_name}/{code} {surname_nominative}.pdf")
+
+        vba_script = f'''
+Dim xlApp
+Dim xlBook
+Set xlApp = CreateObject("Excel.Application")
+xlApp.Visible = False
+Set xlBook = xlApp.Workbooks.Open("{excel_path}")
+xlBook.Sheets(1).ExportAsFixedFormat 0, "{pdf_path}"
+xlBook.Close False
+xlApp.Quit
+'''
+
+        with open("temp_convert.vbs", "w", encoding="windows-1251") as f:
+            f.write(vba_script)
+
+        try:
+            subprocess.run(["cscript", "//Nologo", "temp_convert.vbs"], shell=True, check=True, timeout=30)
+        except subprocess.CalledProcessError as e:
+            msg_err = f"! Ошибка конвертации Excel: {e}"
+            print_out_string(msg_err)
+            self.output_text.append(msg_err)
+            QApplication.processEvents()
+            os.remove("temp_convert.vbs")
+            os.remove(file_name)
+            continue
+        except FileNotFoundError:
+            msg_err = "! Не удалось запустить cscript (Windows Script Host). Проверьте установку."
+            print_out_string(msg_err)
+            self.output_text.append(msg_err)
+            QApplication.processEvents()
+            os.remove("temp_convert.vbs")
+            os.remove(file_name)
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            QMessageBox.critical(self, "Ошибка", msg_err)
+            return
+
+        os.remove("temp_convert.vbs")
+        os.remove(file_name)
+
+        msg = f"+ Готов: {code} {surname_nominative}.pdf"
+        print_out_string(msg)
+        self.output_text.append(msg)
+        QApplication.processEvents()
+
+        print_separator()
+        self.output_text.append("-" * 80)
+
+    final_msg = f"Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'"
+    print_big_separator()
+    print_out_string(final_msg)
+    self.output_text.append(final_msg)
+    print_big_separator()
+    self.output_text.append("=" * 80)
+    QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
+    self.progress_bar.setValue(100)
+
+    QMessageBox.information(
+        self,
+        "Готово!",
+        f"Создано PDF документов: {len(df)}\n\n"
+        f"Папка сохранения: {output_pdf_name}",
+        QMessageBox.StandardButton.Ok
+    )
+
 def choose_universal_excel(self):
     file_path, _ = QFileDialog.getOpenFileName(
         self,
@@ -726,6 +1046,13 @@ def parsing_commissions(self):
         )
         return None
 
+def extract_code_number(text: str) -> str:
+    """Извлекает код специальности вида 1.2.3 из строки."""
+    if not isinstance(text, str):
+        return ""
+    import re
+    match = re.search(r'\d{1,2}\.\d{1,2}\.\d{1,2}', text)
+    return match.group(0) if match else text.strip()
 
 def _extract_commission_members(text, members_by_specialty, row=None, code_col=None):
     # Извлекает членов комиссии из текста одной строки таблицы
@@ -734,7 +1061,8 @@ def _extract_commission_members(text, members_by_specialty, row=None, code_col=N
     # Получаем шифр специальности
     code = ""
     if row is not None and code_col is not None and code_col in row:
-        code = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
+        raw_code = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
+        code = extract_code_number(raw_code)
 
     # Разбиваем текст по точкам с запятой
     parts = re.split(r'[;]', text)
@@ -921,18 +1249,26 @@ def site_parce_main() -> List[Tuple[str, str]]:
 
 
 def get_specialty_code(profile: str) -> str:
-    # Находит код специальности по названию профиля
-    # Сначала пробуем основной сайт
-    specialties = site_parce_main()
-    if not specialties:
-        # Если не работает — пробуем запасной
-        specialties = site_parce_dn()
+    try:
+        # пробуем основной сайт
+        specialties = site_parce_main()
+        if not specialties:
+            specialties = site_parce_dn()
+        for code, name in specialties:
+            if profile.lower() in name.lower():
+                return code
+        return ""   # не найдено соответствие
+    except Exception:
+        # Любая ошибка (сеть, таймаут) → возвращаем пустую строку
+        return ""
 
-    for code, name in specialties:
-        if profile.lower() in name.lower():
-            return code
-    return ""
 
+def clean_excel_string(s: str) -> str:
+    if not isinstance(s, str):
+        return s
+    # Удаляем все управляющие символы, кроме \t, \n, \r
+    cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', s)
+    return cleaned
 
 def fill_database_sheet(self):
     print("=== fill_database_sheet через pandas ===")
@@ -941,35 +1277,144 @@ def fill_database_sheet(self):
         print(" Нет студентов!")
         return None
 
-    # Создаём DataFrame
-    data = []
-    for student in self.students_data:
-        data.append({
-            'СЛУШАЛИ': student['fio'],
-            'Дисциплина': student['profile'],
-            'Направление': self.commission_text,
-            'ПОСТАНОВИЛИ': student['fio'],
-            'НАПРАВЛЕНИЕ': student['profile'],
-            'Гражданство': student['citizenship']
-        })
+    # Столбцы итоговой таблицы
+    columns = [
+        'СЛУШАЛИ',                                    # 0
+        'Прием кандидатского экзамена по дисциплине', # 1
+        'Направление',                                # 2
+        'Председатель комиссии',                      # full_text
+        'ФИО',                                        # инициалы председателя
+        'Члены комиссии №1:',                         # full_text зама
+        'ФИО',                                        # инициалы зама
+        'Члены комиссии №2:',                         # full_text члена
+        'ФИО',                                        # инициалы члена
+        'ПОСТАНОВИЛИ',                                # 9
+        'НАПРАВЛЕНИЕ'                                 # 10
+    ]
 
-    df = pd.DataFrame(data)
+    # ===== Строим словарь комиссий по коду специальности =====
+    commission_dict = {}
+    for comm in getattr(self, 'commission_members', []):
+        raw_code = comm.get('code', '')
+        code = extract_code_number(raw_code)
+        if code:
+            commission_dict[code] = comm
 
-    # Сохраняем
-    output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Тестовый протокол - БД.xlsx")) # поднимает до кореневой - на один уровень из src
-    try:
-        df.to_excel(output_path, index=False, sheet_name='БД')
-        print(f" Файл сохранён: {output_path}")
-        return output_path
-    except Exception as e:
-        print(f"Ошибка: {e}")
+    print("Ключи словаря комиссий:", list(commission_dict.keys()))
+
+    def get_member_by_role(comm, role: str):
+        if not comm:
+            return None
+        for m in comm.get('members', []):
+            if m.get('role', '').lower() == role:
+                return m
         return None
+
+    data_rows = []
+    for student in self.students_data:
+        direction_code = get_specialty_code(student['profile'])
+        if not direction_code:
+            direction_code = student['profile']
+
+        clean_code = extract_code_number(direction_code)
+        if not clean_code:
+            clean_code = direction_code.strip()
+
+        student_comm = commission_dict.get(clean_code)
+        if not student_comm:
+            for key, comm in commission_dict.items():
+                if key.startswith('.'.join(clean_code.split('.')[:2])):
+                    student_comm = comm
+                    break
+
+        if not student_comm and self.commission_members:
+            student_comm = self.commission_members[0]
+
+        pred = get_member_by_role(student_comm, 'председатель')
+        zam  = get_member_by_role(student_comm, 'заместитель')
+        chlen = get_member_by_role(student_comm, 'член')
+
+        pred_text = clean_excel_string(pred['full_text']) if pred else ''
+        pred_fio  = clean_excel_string(pred['fio']) if pred else ''
+        zam_text  = clean_excel_string(zam['full_text']) if zam else ''
+        zam_fio   = clean_excel_string(zam['fio']) if zam else ''
+        chlen_text = clean_excel_string(chlen['full_text']) if chlen else ''
+        chlen_fio = clean_excel_string(chlen['fio']) if chlen else ''
+
+        fio_clean = clean_excel_string(student['fio'])
+        profile_clean = clean_excel_string(student['profile'])
+        direction_clean = clean_excel_string(clean_code)
+
+        if hasattr(self, 'selected_semester'):
+            if self.selected_semester == 1:
+                discipline_text = "История и философия науки"
+            elif self.selected_semester == 2:
+                discipline_text = "Иностранный язык (английский)"
+            else:
+                discipline_text = profile_clean
+        else:
+            discipline_text = profile_clean
+
+        row = [
+            _get_fio_genitive(student['fio'], student.get('citizenship', 'РФ')).upper(),
+            discipline_text,
+            self.commission_text,
+            pred_text,
+            _get_fio_initials(pred_fio) if pred else '',
+            zam_text,
+            _get_fio_initials(zam_fio) if zam else '',
+            chlen_text,
+            _get_fio_initials(chlen_fio) if chlen else '',
+            fio_clean,
+            direction_clean + " " + profile_clean
+        ]
+        data_rows.append(row)
+
+    df = pd.DataFrame(data_rows, columns=columns)
+
+    # Путь к выходному файлу
+    output_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "Тестовый протокол - БД.xlsx")
+    )
+
+    # 1. Определяем путь к файлу-шаблону (корень проекта)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    template_file = os.path.join(project_root, "Протокол_шаблон.xlsx")  # имя вашего шаблона
+
+    if not os.path.exists(template_file):
+        print(f"Файл шаблона не найден: {template_file}")
+        return None
+
+    # 2. Копируем шаблон в целевой файл (теперь в нём есть лист «Протокол»)
+    try:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        shutil.copy(template_file, output_path)
+        print(f"Шаблон скопирован в {output_path}")
+    except Exception as e:
+        print(f"Ошибка при копировании шаблона: {e}")
+        return None
+
+    # 3. Добавляем лист «БД» в скопированный файл, заменяя старый, если был
+    try:
+        with pd.ExcelWriter(
+            output_path,
+            engine='openpyxl',
+            mode='a',                       # открыть существующий файл
+            if_sheet_exists='replace'       # заменить лист, если уже есть
+        ) as writer:
+            df.to_excel(writer, sheet_name='БД', index=False)
+        print(f"Лист 'БД' успешно добавлен в {output_path}")
+    except Exception as e:
+        print(f"Ошибка при записи листа БД: {e}")
+        return None
+
+    return output_path
 
 
 def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
     # Преобразует ФИО в родительный падеж
     # Для граждан РФ - склоняем, для иностранцев - нет
-    if citizenship != "РФ":
+    if citizenship != "Россия":
         return fio
 
     parts = fio.split()
@@ -989,6 +1434,10 @@ def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
         surname_gen = surname[:-2] + 'ина'
     elif surname.endswith('ий'):
         surname_gen = surname[:-2] + 'ого'
+    elif surname.endswith('ова'):
+        surname_gen = surname[:-1] + 'у'
+    elif surname.endswith('ева'):
+        surname_gen = surname[:-1] + 'у'
     else:
         surname_gen = surname + 'а'
 
@@ -996,33 +1445,32 @@ def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
     if name.endswith('й'):
         name_gen = name[:-1] + 'я'
     elif name.endswith('а'):
-        name_gen = name[:-1] + 'ы'
+        name_gen = name[:-1] + 'у'
     else:
-        name_gen = name + 'ы'
+        name_gen = name + 'а'
 
     # Склоняем отчество
     if patronymic.endswith('ич'):
         patronymic_gen = patronymic[:-2] + 'ича'
     elif patronymic.endswith('на'):
-        patronymic_gen = patronymic[:-1] + 'ы'
+        patronymic_gen = patronymic[:-1] + 'у'
     else:
         patronymic_gen = patronymic + 'а'
-
     return f"{surname_gen} {name_gen} {patronymic_gen}"
 
 
 def _get_fio_initials(fio: str) -> str:
     # Преобразует ФИО в формат / И.О. Фамилия /
     parts = fio.split()
-    if len(parts) >= 3:
-        surname = parts[0]
-        initials = f"{parts[1][0]}.{parts[2][0]}."
-        return f"/ {initials} {surname} /"
-    elif len(parts) == 2:
-        surname = parts[0]
-        initials = f"{parts[1][0]}."
-        return f"/ {initials} {surname} /"
-    return fio
+    if len(parts) < 2:
+        return fio
+    surname = parts[0]
+    # Все части после фамилии объединяем в одну строку, оставляем только буквы
+    letters = [c for c in ''.join(parts[1:]) if c.isalpha()]
+    if not letters:
+        return fio
+    initials = '.'.join(letters) + '.'
+    return f"/ {initials} {surname} /"
 
 
 def test_excel(): # тестовая функция - поиск ошибки
@@ -1145,6 +1593,16 @@ def parsing(self):
         self.students_data = students_data
         print(f"Всего студентов: {len(students_data)}")
 
+        print("Начало парсинга doc-ов комиссии")
+        commission_members = parsing_commissions(self)
+        if commission_members:
+            self.commission_members = commission_members
+            print(f"Найдено комиссий: {len(commission_members)}")
+        else:
+            print("Члены комиссии не найдены!")
+            self.commission_members = []  # чтобы не упало в fill_database_sheet
+        print("Завершение парсинга doc-ов комиссии")
+
         # Показываем первых 5 студентов
         for i, student in enumerate(students_data[:5], 1):
             print(f"      {i}. {student['fio']}")
@@ -1181,24 +1639,19 @@ def parsing(self):
     print("Заполняю БД...")
     try:
         db_file = fill_database_sheet(self)
-        print(f"Результат: {db_file}")
+        if db_file:
+            self.generated_db_path = db_file
+            print(f"БД сохранена: {db_file}")
+            # Теперь генерация PDF
+            generate_pdf_from_db(self, self.generated_db_path)
+        else:
+            QMessageBox.critical(self, "Ошибка", "Не удалось сохранить файл БД!")
+            return
     except Exception as e:
-        print(f"Ошибка при вызове fill_database_sheet: {e}")
         import traceback
         traceback.print_exc()
-        db_file = None
-
-    if db_file:
-        QMessageBox.information(
-            self,
-            "Готово!",
-            f"Данные успешно загружены!\n\n"
-            f"Студентов: {len(self.students_data)}\n"
-            f"Семестр: {self.semester_name}\n"
-            f"Файл сохранён: {os.path.basename(db_file)}"
-        )
-    else:
-        QMessageBox.critical(self, "Ошибка", "Не удалось сохранить данные в файл!")
+        QMessageBox.critical(self, "Ошибка", f"Ошибка при создании БД или PDF:\n{str(e)}")
+        return
 
     print("=== КОНЕЦ ПАРСИНГА")
 
