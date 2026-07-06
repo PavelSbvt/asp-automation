@@ -1,13 +1,10 @@
 from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder, choose_universal_excel # импорт функций из файла pyqt_functions.py - функции для работы интерфейса основного окна, вынесенные в отдельный файл
 import os # Для работы с файловой системой (пути, папки)
-from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit # Основные виджеты PyQt6
+from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QFileDialog # Основные виджеты PyQt6
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize # QPoint — для перетаскивания окон, QTimer — для задержек, Qt — константы, QSize — размеры
 from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
 
-from src.pyqt_functions import parsing, choose_foreign_excel, choose_history_excel, choose_specialization_excel # разделил файл на два - в один написал код pyqt, в другой написал код функций, чтобы было удобнее ориентироваться по коду
-
-weight_window = 1200 # для удобной правки размеры окна сделал глобальными
-height_window = 800
+from pyqt_functions import parsing, choose_foreign_excel, choose_history_excel, choose_specialization_excel, open_parsing_pdf_folder # разделил файл на два - в один написал код pyqt, в другой написал код функций, чтобы было удобнее ориентироваться по коду
 
 class MyWindow(QWidget): # Класс главного окна программы (наследуется от QWidget)
     def __init__(self): # конструктор
@@ -29,7 +26,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.save_folder_path = os.path.join(desktop_path, "results_folder") # Папка для сохранения результатов
 
         block_background = QWidget(self)  # первый виджет. первым появится, имеет размер всего окна загрузки, используется для фона загрузочного окна
-        block_background.setFixedSize(weight_window, height_window)
+        block_background.setFixedSize(1200, 800)
         block_background.setStyleSheet("background-image:url(../images/background_images/DSC_5174_1.jpg);")
         block_background.move(0, 0)
 
@@ -611,7 +608,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
 
-        parsing_button = QPushButton("Начать парсинг", tabObjects_3)
+        parsing_button = QPushButton("Начать парсинг и генерацию PDF", tabObjects_3)
         parsing_button.setStyleSheet("""
         QPushButton {
                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -638,8 +635,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
         # background-image: url(../images/icons/parsing_button_icon.png);
-        parsing_button.setFixedSize(140,40)
-        parsing_button.move(440,740)
+        parsing_button.setFixedSize(280,40)
+        parsing_button.move(370,740)
         parsing_button.clicked.connect(lambda: parsing(self))
 
         # background блок для выбора файлов
@@ -865,26 +862,103 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
 
-        # button_choose_save_path.clicked.connect(self.choose_parsing_save_folder)
+        # Путь для сохранения PDF после парсинга (по умолчанию как основной)
+        self.parsing_save_folder_path = self.save_folder_path
 
-        # self.save_path_label = QLabel("Папка не выбрана", tabObjects_3)
-        # self.save_path_label.setGeometry(35, 335, 250, 40)
-        # self.save_path_label.setStyleSheet("""
-        #     color: white;
-        #     font-size: 11px;
-        #     background: rgba(45, 70, 35, 150);
-        #     border: 1px solid rgba(100, 140, 65, 150);
-        #     border-radius: 8px;
-        #     padding: 5px;
-        # """)
-        # self.save_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.save_path_label = QLabel("Папка не выбрана", tabObjects_3)
+        self.save_path_label.setGeometry(35, 335, 250, 40)
+        self.save_path_label.setStyleSheet("""
+            color: white;
+            font-size: 11px;
+            background: rgba(45, 70, 35, 150);
+            border: 1px solid rgba(100, 140, 65, 150);
+            border-radius: 8px;
+            padding: 5px;
+        """)
+        self.save_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.save_path_label.setText(f"{self.parsing_save_folder_path}")
+
+        button_choose_save_path.clicked.connect(self.choose_parsing_save_folder)
 
 
+        # блок для пояснения к прогресс бару
+
+        widget_for_progress_bar = QWidget(tabObjects_3)
+        widget_for_progress_bar.setFixedSize(1040,75)
+        widget_for_progress_bar.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        widget_for_progress_bar.move(10,420)
+        self.label_for_progress = QLabel(widget_for_progress_bar)
+        self.label_for_progress.setText("Прогресс сборки PDF")
+        self.label_for_progress.setStyleSheet("color: white; font-size: 18px; font: bold;")
+        self.label_for_progress.setGeometry(0,0,1040,50)
+        self.label_for_progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # прогресс бар для второй вкладки (с парсингом)
+        self.progress_bar_parsing = QProgressBar(tabObjects_3)
+        self.progress_bar_parsing.setFixedSize(1020, 25)
+        self.progress_bar_parsing.move(20, 465)
+        self.progress_bar_parsing.setRange(0, 100)
+        self.progress_bar_parsing.setValue(0)
+        self.progress_bar_parsing.setStyleSheet("""
+            QProgressBar {
+                color: white;
+                font-weight: bold;
+                font-size: 13px;
+                text-align: center;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 10px;
+                background: rgba(45, 70, 35, 150);
+            }
+            QProgressBar::chunk {
+                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                    stop: 0 rgba(60, 150, 40, 200),
+                    stop: 0.5 rgba(100, 200, 70, 220),
+                    stop: 1 rgba(60, 150, 40, 200));
+                border-radius: 8px;
+            }
+        """)
+
+        # кнопка, которая открывает выбранную папку с готовыми пдф
+        button_to_open_folder_with_done_pdf = QPushButton("Открыть папку с PDF", tabObjects_3)
+        button_to_open_folder_with_done_pdf.setFixedSize(280,50)
+        button_to_open_folder_with_done_pdf.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(60, 85, 45, 230),
+                    stop: 1 rgba(40, 65, 30, 230));
+                color: white;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(100, 140, 70, 250),
+                    stop: 1 rgba(70, 110, 45, 250));
+                border: 1px solid rgba(140, 190, 100, 230);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(40, 65, 30, 230),
+                    stop: 1 rgba(30, 50, 20, 230));
+                padding-top: 6px;
+                padding-bottom: 4px;
+            }
+        """)
+        button_to_open_folder_with_done_pdf.move(370,680)
+        button_to_open_folder_with_done_pdf.clicked.connect(lambda: open_parsing_pdf_folder(self))
 
 
-        # # пусть пока путь сохранения для парсинга такой же, как основной
-        # self.parsing_save_folder_path = self.save_folder_path
-        # self.save_path_label.setText(f"{self.parsing_save_folder_path}")
+    def choose_parsing_save_folder(self):
+        folder_path = QFileDialog.getExistingDirectory(
+            self,
+            "Выберите папку для сохранения PDF (парсинг)",
+            self.parsing_save_folder_path
+        )
+        if folder_path:
+            self.parsing_save_folder_path = folder_path
+            self.save_path_label.setText(folder_path)
 
     def update_progress(self, current, total):
         if total > 0:
@@ -910,8 +984,3 @@ class MyWindow(QWidget): # Класс главного окна программ
             self.move(self.pos() + delta)
             self.drag_position = event.globalPosition().toPoint()
             event.accept()
-
-
-if __name__ == "__main__":
-    print("Пожалуйста, запустите программу через pyqt_general_file.py")
-    print(f"Сейчас запущен файл {os.path.basename(__file__)}")

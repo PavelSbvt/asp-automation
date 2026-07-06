@@ -8,10 +8,13 @@ from openpyxl.styles import Font, Alignment, Border, Side
 import subprocess
 import aspose.words as aw
 import re
+import traceback
 
 import requests
 from bs4 import BeautifulSoup
 from typing import List, Tuple
+
+import shutil # встроенная библиотека Python для работы с файлами и папками на высоком уровне (от английского shell utilities — утилиты командной оболочки)
 
 def print_out_string(text):
     out_string_size = 150
@@ -80,7 +83,7 @@ def get_pdf(self):
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
     if not self.excel_file_path:
         print_big_separator()
-        string_1 = "ОШИБКА: Сначала выберите файл с данными!"
+        string_1 = "[E] ОШИБКА: Сначала выберите файл с данными!"
         print_out_string(string_1)
         self.output_text.append(string_1)
         QApplication.processEvents()
@@ -92,8 +95,8 @@ def get_pdf(self):
         df = pd.read_excel(self.excel_file_path, sheet_name="БД", dtype=str)
     except Exception as e:
         print_big_separator()
-        print_out_string(f"ОШИБКА при чтении файла: {e}")
-        self.output_text.append(f"ОШИБКА при чтении файла: {e}")
+        print_out_string(f"[E] ОШИБКА при чтении файла: {e}")
+        self.output_text.append(f"[E] ОШИБКА при чтении файла: {e}")
         QApplication.processEvents()
         print_big_separator()
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
@@ -103,7 +106,7 @@ def get_pdf(self):
     print_big_separator()
     self.output_text.append("=" * 80)
 
-    count_peoples_in_work = f"Найдено {len(df)} человек"
+    count_peoples_in_work = f"[I] Найдено {len(df)} человек"
     print_out_string(count_peoples_in_work)
     self.output_text.append(count_peoples_in_work)
     QApplication.processEvents()
@@ -135,7 +138,7 @@ def get_pdf(self):
 
         code = direction.split()[0] if direction and direction != "nan" else "unknown"
 
-        msg = f"* Делаю PDF для: {surname_name_p}"
+        msg = f"[I] Делаю PDF для: {surname_name_p}"
         print_out_string(msg)
         self.output_text.append(msg)
         QApplication.processEvents()
@@ -368,7 +371,7 @@ def get_pdf(self):
         os.remove("temp_convert.vbs")
         os.remove(file_name)
 
-        msg = f"+ Готов: {code} {surname_name_p}.pdf"
+        msg = f"[S] Готов: {code} {surname_name_p}.pdf"
 
         print_out_string(msg)
         self.output_text.append(msg)
@@ -377,7 +380,7 @@ def get_pdf(self):
         print_separator()
         self.output_text.append("-" * 80)
 
-    msg = f"Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'"
+    msg = f"[I] Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'"
     print_big_separator()
     print_out_string(msg)
     self.output_text.append(msg)
@@ -396,8 +399,10 @@ def get_pdf(self):
         f"Папка сохранения: {output_pdf_name}",
         QMessageBox.StandardButton.Ok
     )
+    print(f"[S] Готово! Создано PDF документов: {len(df)}. Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
 
 def choose_universal_excel(self):
+    """выбор универсальной таблицы"""
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл Excel с данными",
@@ -421,48 +426,341 @@ def choose_universal_excel(self):
         # return selected_file
 
         # Выводим в лог
-        print(f"Выбран файл: {file_path}")
+        print(f"[I] Выбран файл: {file_path}")
+
+def generate_pdf_from_db(self, excel_file_path: str):
+    """
+    Генерация PDF-протоколов на основе сгенерированного Excel-файла,
+    содержащего листы «БД» и «Протокол».
+    Для конвертации используется Microsoft Excel (через VBScript ExportAsFixedFormat).
+    """
+    QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
+    if not excel_file_path:
+        print_big_separator()
+        print("[E] ОШИБКА: Не указан путь к файлу с данными!")
+        print_big_separator()
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
+
+    try:
+        # Читаем лист «БД», все поля как строки
+        df = pd.read_excel(excel_file_path, sheet_name="БД", dtype=str)
+    except Exception as e:
+        print_big_separator()
+        print(f"[E] ОШИБКА при чтении файла: {e}")
+        print_big_separator()
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
+
+    print_big_separator()
+
+    print(f"[I] Найдено {len(df)} человек")
+
+    print_big_separator()
+
+    output_pdf_name = self.parsing_save_folder_path
+    os.makedirs(output_pdf_name, exist_ok=True)
+
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    template_file = os.path.join(project_root, "Протокол_шаблон.xlsx")
+
+    if not os.path.exists(template_file):
+        print(f"[E] Файл шаблона не найден: {template_file}")
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
+
+    processed_count = 0
+
+    for string_number in range(len(df)):
+        # ------------------------------------------------------------
+        # Данные из новой структуры «БД» (колонки 0..10)
+        # 0  = СЛУШАЛИ (фамилия в родительном падеже)
+        # 1  = Прием кандидатского экзамена по дисциплине
+        # 2  = Направление (текст приказа)
+        # 3  = Председатель комиссии (full_text)
+        # 4  = ФИО (инициалы председателя)
+        # 5  = Члены комиссии №1: (full_text зама)
+        # 6  = ФИО (инициалы зама)
+        # 7  = Члены комиссии №2: (full_text члена)
+        # 8  = ФИО (инициалы члена)
+        # 9  = ПОСТАНОВИЛИ (ФИО в именительном падеже)
+        # 10 = НАПРАВЛЕНИЕ (шифр + профиль)
+        # ------------------------------------------------------------
+        surname_genitive = str(df.iloc[string_number, 0]).strip()   # родительный
+        discipline       = str(df.iloc[string_number, 1]).strip()
+        commission_text  = str(df.iloc[string_number, 2]).strip()   # текст приказа
+        chair_full       = str(df.iloc[string_number, 3]).strip()
+        chair_initials   = str(df.iloc[string_number, 4]).strip()
+        deputy_full      = str(df.iloc[string_number, 5]).strip()
+        deputy_initials  = str(df.iloc[string_number, 6]).strip()
+        member_full      = str(df.iloc[string_number, 7]).strip()
+        member_initials  = str(df.iloc[string_number, 8]).strip()
+        surname_nominative = str(df.iloc[string_number, 9]).strip() # именительный
+        direction_raw    = str(df.iloc[string_number, 10]).strip()
+
+        processed_count += 1
+
+        progress = int((processed_count / len(df)) * 100)
+        self.progress_bar_parsing.setValue(progress)
+        QApplication.processEvents()
+
+        # Пропускаем пустые строки
+        if surname_genitive == "nan" or surname_nominative == "nan" or surname_nominative == "":
+            continue
+
+        # Из направления берём первую часть (шифр) для имени файла
+        code = direction_raw.split()[0] if direction_raw and direction_raw != "nan" else "unknown"
+
+        print(f"[I] Делаю PDF для: {surname_nominative}")
+
+        print_separator_points()
+
+        # Загружаем шаблон (лист «Протокол») из того же файла
+        wb = load_workbook(template_file)
+        ws = wb["Протокол"]
+
+        # === Статические надписи (одинаковы для всех протоколов) ===
+
+        cell = ws['A1']
+        text = (
+            "МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ\n"
+            "Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
+            "«Тамбовский государственный технический университет»"
+        )
+        cell.value = text
+        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.font = Font(name='Times New Roman', size=12)
+
+        ws.row_dimensions[1].height = 42
+
+        ws['A8'].value = "ПРОТОКОЛ №___________"
+        ws['A8'].alignment = Alignment(horizontal='center', vertical='center')
+        ws['A8'].font = Font(name='Times New Roman', size=14, bold=True)
+        ws.row_dimensions[8].height = 20
+
+        ws['A10'].value = "от  «___»__________________20___г."
+        ws['A10'].alignment = Alignment(horizontal='center', vertical='center')
+        ws['A10'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[10].height = 15
+
+        ws['I5'].value = "___________Д.Ю. Муромцев"
+        ws['I5'].alignment = Alignment(horizontal='left', vertical='center')
+        ws['I5'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[5].height = 15
+
+        ws['I6'].value = "«___»______________20___г."
+        ws['I6'].alignment = Alignment(horizontal='left', vertical='center')
+        ws['I6'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[6].height = 15
+
+        # === Запись текста приказа в A12 ===
+        ws['A12'] = commission_text
+        ws['A12'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        ws['A12'].font = Font(name='Times New Roman', size=12)
+        ws.row_dimensions[12].height = 45
+
+        # === Настройка высоты строк и границ ===
+        thin_border = Border(bottom=Side(border_style='thin', color='000000'))
+
+        strings_with_data = [29, 39, 23, 14, 42, 17, 45, 19, 47]
+        for row_num in range(2, 60):
+            if row_num in strings_with_data:
+                ws.row_dimensions[row_num].height = 15
+            else:
+                ws.row_dimensions[row_num].height = 15
+        ws.row_dimensions[14].height = 35
+        ws.row_dimensions[17].height = 35
+        ws.row_dimensions[19].height = 35
+        ws.row_dimensions[21].height = 5
+        ws.row_dimensions[25].height = 5
+        ws.row_dimensions[28].height = 5
+        ws.row_dimensions[44].height = 10
+        ws.row_dimensions[33].height = 18
+        ws.row_dimensions[34].height = 18
+        ws.row_dimensions[35].height = 18
+        ws.row_dimensions[36].height = 18
+        ws.row_dimensions[37].height = 18
+        ws.row_dimensions[2].height = 20
+        ws.row_dimensions[7].height = 5
+
+        # === Заполнение переменных данных ===
+        # Фамилия в родительном падеже (СЛУШАЛИ)
+        cell = ws.cell(row=29, column=3, value=surname_genitive)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # ФИО в именительном падеже (ПОСТАНОВИЛИ)
+        cell = ws.cell(row=39, column=4, value=surname_nominative)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Дисциплина
+        cell = ws.cell(row=26, column=4, value=discipline)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+        ws.row_dimensions[26].height = 30
+
+        # Направление (шифр + профиль)
+        cell = ws.cell(row=23, column=1, value=direction_raw)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+        ws.row_dimensions[23].height = 30
+
+        # Председатель (full_text)
+        cell = ws.cell(row=14, column=1, value=chair_full)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Инициалы председателя
+        cell = ws.cell(row=42, column=9, value=chair_initials)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12)
+
+        # Заместитель (full_text)
+        cell = ws.cell(row=17, column=1, value=deputy_full)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Инициалы зама
+        cell = ws.cell(row=45, column=9, value=deputy_initials)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12)
+
+        # Член комиссии (full_text)
+        cell = ws.cell(row=19, column=1, value=member_full)
+        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Инициалы члена
+        cell = ws.cell(row=47, column=9, value=member_initials)
+        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.border = thin_border
+        cell.font = Font(name='Times New Roman', size=12)
+
+        # Очистка пустых строк таблицы комиссии
+        for row_num in [32, 33, 34, 35, 36, 37]:
+            cell = ws.cell(row=row_num, column=1)
+            cell.value = ""
+            cell.border = thin_border
+            cell.alignment = Alignment(horizontal='left', vertical='center')
+            cell.font = Font(name='Times New Roman', size=12)
+        for col in ['E42', 'E45', 'E47']:
+            ws[col].value = ""
+            ws[col].border = thin_border
+            ws[col].alignment = Alignment(horizontal='left', vertical='center')
+            ws[col].font = Font(name='Times New Roman', size=12)
+
+        # Если фамилия слишком длинная, уменьшаем шрифт
+        if len(surname_nominative) > 35:
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=8, italic=True)
+        else:
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=12, italic=True)
+
+        # Сохраняем временный xlsx
+        file_name = f"{code} {surname_nominative}.xlsx"
+        file_name = file_name.replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_")
+        wb.save(file_name)
+        excel_path = os.path.abspath(file_name)
+
+        # === Конвертация в PDF через Excel (ExportAsFixedFormat) ===
+        pdf_path = os.path.abspath(f"{output_pdf_name}/{code} {surname_nominative}.pdf")
+
+        vba_script = f'''
+                    Dim xlApp
+                    Dim xlBook
+                    Set xlApp = CreateObject("Excel.Application")
+                    xlApp.Visible = False
+                    Set xlBook = xlApp.Workbooks.Open("{excel_path}")
+                    xlBook.Sheets(1).ExportAsFixedFormat 0, "{pdf_path}"
+                    xlBook.Close False
+                    xlApp.Quit
+                    '''
+
+        with open("temp_convert.vbs", "w", encoding="windows-1251") as f:
+            f.write(vba_script)
+
+        try:
+            subprocess.run(["cscript", "//Nologo", "temp_convert.vbs"], shell=True, check=True, timeout=30)
+        except subprocess.CalledProcessError as e:
+            print(f"[E] Ошибка конвертации Excel: {e}")
+            os.remove("temp_convert.vbs")
+            os.remove(file_name)
+            continue
+        except FileNotFoundError:
+            print("[E] Не удалось запустить cscript (Windows Script Host). Проверьте установку.")
+            os.remove("temp_convert.vbs")
+            os.remove(file_name)
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            QMessageBox.critical(self, "Ошибка", f"Ошибка конвертации Excel: {e}")
+            return
+
+        os.remove("temp_convert.vbs")
+        os.remove(file_name)
+
+        print(f"[S] Готов: {code} {surname_nominative}.pdf")
+
+        print_separator()
+
+    self.progress_bar_parsing.setValue(100)
+
+    print(f"[S] Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'")
+
+    print_big_separator()
+    QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
+    QMessageBox.information(
+        self,
+        "Готово!",
+        f"Создано PDF документов: {len(df)}\n\n"
+        f"Папка сохранения: {output_pdf_name}",
+        QMessageBox.StandardButton.Ok
+    )
+    print(f"[S] Готово! Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
 
 
 def parsing_universal_excel(self):
-    # Парсит универсальную таблицу Excel
+    """Парсит универсальную таблицу Excel"""
     try:
-        print("=== НАЧАЛО parsing_universal_excel")
+        print("[I] НАЧАЛО parsing_universal_excel")
 
-        # Принудительно обновляем интерфейс
-        QApplication.processEvents()
-
-        print(f"Путь к файлу: {self.universal_file_path}")
-        QApplication.processEvents()
+        print(f"[I] Путь к файлу: {self.universal_file_path}")
 
         # Проверяем существование файла
         if not os.path.exists(self.universal_file_path):
-            print(f"Файл не существует: {self.universal_file_path}")
+            print(f"[E] Файл не существует: {self.universal_file_path}")
             QMessageBox.critical(self, "Ошибка", f"Файл не существует:\n{self.universal_file_path}")
 
             return
 
-        print("Файл существует")
-        QApplication.processEvents()
+        print("[I] Файл существует")
 
         # Проверяем размер файла
         file_size = os.path.getsize(self.universal_file_path)
-        print(f"Размер файла: {file_size} байт")
-        # QApplication.processEvents()
+        print(f"[I] Размер файла: {file_size} байт")
 
         if file_size == 0:
-            print("Файл пустой!")
+            print("[E] Файл пустой!")
             QMessageBox.critical(self, "Ошибка", "Файл пустой!")
             return
 
-        print("Начинаю чтение файла...")
+        print("[I] Начало чтения файла")
 
         try:
-            print("Через openpyxl...")
+            print("[I] Через openpyxl...")
             from openpyxl import load_workbook
             wb = load_workbook(self.universal_file_path, read_only=True, data_only=True)
             ws = wb.active
-            print(f"Активный лист: {ws.title}")
+            print(f"[I] Активный лист: {ws.title}")
             QApplication.processEvents()
 
             data = []
@@ -475,8 +773,7 @@ def parsing_universal_excel(self):
                     break
 
             wb.close()
-            print(f"Прочитано {len(data)} строк")
-            # QApplication.processEvents()
+            print(f"[I] Прочитано {len(data)} строк")
 
             if len(data) > 1:
                 df = pd.DataFrame(data[1:], columns=data[0])
@@ -484,31 +781,28 @@ def parsing_universal_excel(self):
                 df = pd.DataFrame()
 
         except Exception as e:
-            print(f"openpyxl не сработал: {e}")
-            # QApplication.processEvents()
+            print(f"[E] openpyxl не сработал: {e}")
 
             # Пробуем через pandas
             try:
-                print("Через pandas...")
+                print("[I] Через pandas...")
                 df = pd.read_excel(
                     self.universal_file_path,
                     dtype=str,
                     engine='openpyxl'
                 )
-                print(f"pandas прочитал {len(df)} строк")
-                # QApplication.processEvents()
+                print(f"[I] pandas прочитал {len(df)} строк")
             except Exception as e2:
-                print(f"pandas не сработал: {e2}")
-                # QApplication.processEvents()
+                print(f"[E] pandas не сработал: {e2}")
                 raise
 
         if df is None or len(df) == 0:
-            print("Нет данных в файле!")
+            print("[E] Нет данных в файле!")
             QMessageBox.warning(self, "Ошибка", "Файл пуст или не содержит данных!")
-            print("Ошибка", "Файл пуст или не содержит данных!")
+            print("[E] Ошибка. Файл пуст или не содержит данных!")
             return
 
-        print(f"Загружено {len(df)} строк, колонок: {len(df.columns)}")
+        print(f"[I] Загружено {len(df)} строк, колонок: {len(df.columns)}")
 
         students_data = []
         for index, row in df.iterrows():
@@ -540,15 +834,15 @@ def parsing_universal_excel(self):
                         'citizenship': citizenship
                     })
             except Exception as e:
-                print(f"Ошибка строки {index}: {e}")
+                print(f"[E] Ошибка строки {index}: {e}")
                 continue
 
         self.students_data = students_data
-        print(f"Всего студентов: {len(students_data)}")
+        print(f"[I] Всего студентов: {len(students_data)}")
         QApplication.processEvents()
 
         for i, student in enumerate(students_data[:5], 1):
-            print(f"   {i}. {student['fio']}")
+            print(f"[I]   {i}. {student['fio']}")
 
         QMessageBox.information(
             self,
@@ -556,10 +850,10 @@ def parsing_universal_excel(self):
             f"Данные успешно загружены!\n\n"
             f"Найдено записей: {len(students_data)}"
         )
+        print(f"[S] Данные успешно загружены! Найдено записей: {len(students_data)}")
 
     except Exception as e:
-        print(f"КРИТИЧЕСКАЯ ОШИБКА: {e}")
-        import traceback
+        print(f"[E] КРИТИЧЕСКАЯ ОШИБКА: {e}")
         traceback.print_exc()
         QApplication.processEvents()
         QMessageBox.critical(
@@ -604,8 +898,8 @@ def parse_doc_with_tables(path: str):
 
 
 def parsing_commissions(self):
-    # Парсит файл комиссии и извлекает членов комиссии с ролями для каждой специальности
-    print("Парсинг комиссии...")
+    """ Парсит файл комиссии и извлекает членов комиссии с ролями для каждой специальности """
+    print("[I] Парсинг комиссии...")
 
     # Определяем файл в зависимости от семестра
     if self.radio_button_1.isChecked():
@@ -624,10 +918,12 @@ def parsing_commissions(self):
     # Проверяем, что файл выбран
     if not path:
         QMessageBox.warning(self, "Ошибка", f"Сначала выберите файл комиссии '{commission_name}'!")
+        print("[E] Ошибка. сначала выберите файл комиссии")
         return None
 
     if not os.path.exists(path):
         QMessageBox.warning(self, "Ошибка", f"Файл не существует: {path}")
+        print("[E] ошибка. файл не существует")
         return None
 
     try:
@@ -639,11 +935,11 @@ def parsing_commissions(self):
         # Если есть таблицы
         if tables_df is not None and not tables_df.empty:
             print(
-                f"Найдено таблиц: {len(tables_df['table_index'].unique()) if 'table_index' in tables_df.columns else 1}")
+                f"[I] Найдено таблиц: {len(tables_df['table_index'].unique()) if 'table_index' in tables_df.columns else 1}")
 
             # Получаем колонки
             cols = list(tables_df.columns)
-            print(f"Колонки: {cols}")
+            print(f"[I] Колонки: {cols}")
 
             # Находим колонку с ФИО и колонку с шифром
             fio_col = None
@@ -657,8 +953,8 @@ def parsing_commissions(self):
                     elif 'шифр' in col_lower or 'наименование' in col_lower or 'специальност' in col_lower:
                         code_col = col
 
-            print(f"Колонка ФИО: {fio_col}")
-            print(f"Колонка шифра: {code_col}")
+            print(f"[I] Колонка ФИО: {fio_col}")
+            print(f"[I] Колонка шифра: {code_col}")
 
             # Проходим по каждой строке таблицы
             for idx, row in tables_df.iterrows():
@@ -677,7 +973,7 @@ def parsing_commissions(self):
 
         # Если не нашли в таблицах - ищем в тексте документа
         if not members_by_specialty and full_text:
-            print("Ищем комиссии в тексте документа...")
+            print("[I] поиск комиссии в тексте документа...")
             # Ищем блоки с комиссиями по паттерну
             patterns = [
                 r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?.*?председатель.*?;)',
@@ -689,13 +985,13 @@ def parsing_commissions(self):
 
         # Выводим результат
         if members_by_specialty:
-            print(f"Найдено {len(members_by_specialty)} комиссий:")
+            print(f"[I] Найдено {len(members_by_specialty)} комиссий:")
             for i, item in enumerate(members_by_specialty, 1):
                 code = item.get('code', 'Без шифра')
                 members = item.get('members', [])
-                print(f"  {i}. Шифр: {code}")
+                print(f"[I]  {i}. Шифр: {code}")
                 for member in members:
-                    print(f"     - {member['fio']} ({member['role']})")
+                    print(f"[I]     - {member['fio']} ({member['role']})")
 
             QMessageBox.information(
                 self,
@@ -706,7 +1002,7 @@ def parsing_commissions(self):
                 f"Файл: {os.path.basename(path)}"
             )
         else:
-            print("Члены комиссии не найдены!")
+            print("[E] Члены комиссии не найдены!")
             QMessageBox.warning(
                 self,
                 "Предупреждение",
@@ -716,8 +1012,7 @@ def parsing_commissions(self):
         return members_by_specialty
 
     except Exception as e:
-        print(f"Ошибка при парсинге комиссии: {e}")
-        import traceback
+        print(f"[E] Ошибка при парсинге комиссии: {e}")
         traceback.print_exc()
         QMessageBox.critical(
             self,
@@ -727,14 +1022,21 @@ def parsing_commissions(self):
         return None
 
 
+def extract_code_number(text: str) -> str:
+    """Извлекает код специальности вида 1.2.3 из строки."""
+    if not isinstance(text, str):
+        return ""
+    match = re.search(r'\d{1,2}\.\d{1,2}\.\d{1,2}', text)
+    return match.group(0) if match else text.strip()
+
 def _extract_commission_members(text, members_by_specialty, row=None, code_col=None):
     # Извлекает членов комиссии из текста одной строки таблицы
-    import re
 
     # Получаем шифр специальности
     code = ""
     if row is not None and code_col is not None and code_col in row:
-        code = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
+        raw_code = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
+        code = extract_code_number(raw_code)
 
     # Разбиваем текст по точкам с запятой
     parts = re.split(r'[;]', text)
@@ -778,7 +1080,9 @@ def _extract_commission_members(text, members_by_specialty, row=None, code_col=N
             'members': members
         })
 
+
 def choose_history_excel(self):
+    """выбор doc файла с таблицей, содержащей информацию и комиссии по истории"""
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл комиссии по истории",
@@ -795,9 +1099,10 @@ def choose_history_excel(self):
         else:
             self.history_excel_choosed_widget_label.setText(short_name)
             self.history_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
-        print(f"Выбран файл комиссии по истории: {file_path}")
+        print(f"[I] Выбран файл комиссии по истории: {file_path}")
 
 def choose_foreign_excel(self):
+    """выбор doc файла с таблицей, содержащей информацию и комиссии по иностранному"""
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл комиссии по иностранному",
@@ -813,9 +1118,10 @@ def choose_foreign_excel(self):
         else:
             self.foreign_excel_choosed_widget_label.setText(short_name)
             self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
-        print(f"Выбран файл комиссии по иностранному: {file_path}")
+        print(f"[I] Выбран файл комиссии по иностранному: {file_path}")
 
 def choose_specialization_excel(self):
+    """выбор doc файла с таблицей, содержащей информацию и комиссии по специальности"""
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл комиссии по специальности",
@@ -831,23 +1137,29 @@ def choose_specialization_excel(self):
         else:
             self.specialization_excel_choosed_label.setText(short_name)
             self.specialization_excel_choosed_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
-        print(f"Выбран файл комиссии по специальности: {file_path}")
+        print(f"[I] Выбран файл комиссии по специальности: {file_path}")
 
-# def parsing(self):
-#     print("Начало парсинга.")
-#     # правлю функцию
-#     parsing_universal_excel(self)
-#     print("парсинг таблицы завершён")
-#     print("начало парсинга doc-ов комиссии")
-#     commission_members = parsing_commissions(self)  # <-- сохраняем результат
-#     if commission_members:
-#         self.commission_members = commission_members
-#         print(f"Найдено {len(commission_members)} членов комиссии")
-#     else:
-#         print("Члены комиссии не найдены")
-#     print("завершение парсинга doc-ов комиссии")
+def choose_save_folder_path(self):
+    """выбор папки сохранения готовых пдф"""
+    file_path, _ = QFileDialog.getOpenFileName(
+        self,
+        "Выберите папку сохранения для PDF",
+        "",
+        "Word files (*.doc *.docx);;All files (*.*)"
+    )
+    if file_path:
+        self.specialization_commission_path = file_path
+        short_name = os.path.basename(file_path)
+        if len(short_name) > 30:
+            self.specialization_excel_choosed_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
+            self.specialization_excel_choosed_label.setText(short_name)
+        else:
+            self.specialization_excel_choosed_label.setText(short_name)
+            self.specialization_excel_choosed_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+        print(f"[I] Выбран файл комиссии по специальности: {file_path}")
 
 def site_parce_dn() -> List[Tuple[str, str]]:
+    """парсинг данных профилей и их кодов аспирантов с сайта магистратуры"""
     url = 'http://dn.tstu.ru/index.php/specialties'
     response = requests.get(url, timeout=10)
     response.raise_for_status()
@@ -881,6 +1193,7 @@ def site_parce_dn() -> List[Tuple[str, str]]:
     return specialties
 
 def site_parce_main() -> List[Tuple[str, str]]:
+    """парсинг данных (аспирантов) профилей и их кодов с сайта ТГТУ"""
     url = 'https://www.tstu.ru/r.php?r=postup.abitur.na_sp'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
@@ -921,55 +1234,177 @@ def site_parce_main() -> List[Tuple[str, str]]:
 
 
 def get_specialty_code(profile: str) -> str:
-    # Находит код специальности по названию профиля
-    # Сначала пробуем основной сайт
-    specialties = site_parce_main()
-    if not specialties:
-        # Если не работает — пробуем запасной
-        specialties = site_parce_dn()
+    try:
+        # пробуем основной сайт
+        specialties = site_parce_main()
+        if not specialties:
+            specialties = site_parce_dn()
+        for code, name in specialties:
+            if profile.lower() in name.lower():
+                return code
+        return ""   # не найдено соответствие
+    except Exception:
+        # Любая ошибка (сеть, таймаут) - возвращаем пустую строку
+        return ""
 
-    for code, name in specialties:
-        if profile.lower() in name.lower():
-            return code
-    return ""
+
+def clean_excel_string(s: str) -> str:
+    if not isinstance(s, str):
+        return s
+    # Удаляем все управляющие символы, кроме \t, \n, \r
+    cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', s)
+    return cleaned
+
 
 
 def fill_database_sheet(self):
-    print("=== fill_database_sheet через pandas ===")
+    print("[I] fill_database_sheet через pandas")
+    """функция заполнения листа БД таблицы-шаблона"""
 
     if not hasattr(self, 'students_data') or not self.students_data:
-        print(" Нет студентов!")
+        print("[E] Нет студентов!")
         return None
 
-    # Создаём DataFrame
-    data = []
+    # Столбцы итоговой таблицы
+    columns = [
+        'СЛУШАЛИ',                                    # 0
+        'Прием кандидатского экзамена по дисциплине', # 1
+        'Направление',                                # 2
+        'Председатель комиссии',                      # full_text
+        'ФИО',                                        # инициалы председателя
+        'Члены комиссии №1:',                         # full_text зама
+        'ФИО',                                        # инициалы зама
+        'Члены комиссии №2:',                         # full_text члена
+        'ФИО',                                        # инициалы члена
+        'ПОСТАНОВИЛИ',                                # 9
+        'НАПРАВЛЕНИЕ'                                 # 10
+    ]
+
+    # ===== Строим словарь комиссий по коду специальности =====
+    commission_dict = {}
+    for comm in getattr(self, 'commission_members', []):
+        raw_code = comm.get('code', '')
+        code = extract_code_number(raw_code)
+        if code:
+            commission_dict[code] = comm
+
+    print("[I] Ключи словаря комиссий:", list(commission_dict.keys()))
+
+    def get_member_by_role(comm, role: str):
+        if not comm:
+            return None
+        for m in comm.get('members', []):
+            if m.get('role', '').lower() == role:
+                return m
+        return None
+
+    data_rows = []
     for student in self.students_data:
-        data.append({
-            'СЛУШАЛИ': student['fio'],
-            'Дисциплина': student['profile'],
-            'Направление': self.commission_text,
-            'ПОСТАНОВИЛИ': student['fio'],
-            'НАПРАВЛЕНИЕ': student['profile'],
-            'Гражданство': student['citizenship']
-        })
+        direction_code = get_specialty_code(student['profile'])
+        if not direction_code:
+            direction_code = student['profile']
 
-    df = pd.DataFrame(data)
+        clean_code = extract_code_number(direction_code)
+        if not clean_code:
+            clean_code = direction_code.strip()
 
-    # Сохраняем
-    output_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "Тестовый протокол - БД.xlsx")) # поднимает до кореневой - на один уровень из src
-    try:
-        df.to_excel(output_path, index=False, sheet_name='БД')
-        print(f" Файл сохранён: {output_path}")
-        return output_path
-    except Exception as e:
-        print(f"Ошибка: {e}")
+        student_comm = commission_dict.get(clean_code)
+        if not student_comm:
+            for key, comm in commission_dict.items():
+                if key.startswith('.'.join(clean_code.split('.')[:2])):
+                    student_comm = comm
+                    break
+
+        if not student_comm and self.commission_members:
+            student_comm = self.commission_members[0]
+
+        pred = get_member_by_role(student_comm, 'председатель')
+        zam  = get_member_by_role(student_comm, 'заместитель')
+        chlen = get_member_by_role(student_comm, 'член')
+
+        pred_text = clean_excel_string(pred['full_text']) if pred else ''
+        pred_fio  = clean_excel_string(pred['fio']) if pred else ''
+        zam_text  = clean_excel_string(zam['full_text']) if zam else ''
+        zam_fio   = clean_excel_string(zam['fio']) if zam else ''
+        chlen_text = clean_excel_string(chlen['full_text']) if chlen else ''
+        chlen_fio = clean_excel_string(chlen['fio']) if chlen else ''
+
+        fio_clean = clean_excel_string(student['fio'])
+        profile_clean = clean_excel_string(student['profile'])
+        direction_clean = clean_excel_string(clean_code)
+
+        if hasattr(self, 'selected_semester'):
+            if self.selected_semester == 1:
+                discipline_text = "История и философия науки"
+            elif self.selected_semester == 2:
+                discipline_text = "Иностранный язык (английский)"
+            else:
+                discipline_text = profile_clean
+        else:
+            discipline_text = profile_clean
+
+        row = [
+            _get_fio_genitive(student['fio'], student.get('citizenship', 'РФ')).upper(),
+            discipline_text,
+            self.commission_text,
+            pred_text,
+            _get_fio_initials(pred_fio) if pred else '',
+            zam_text,
+            _get_fio_initials(zam_fio) if zam else '',
+            chlen_text,
+            _get_fio_initials(chlen_fio) if chlen else '',
+            fio_clean,
+            direction_clean + " " + profile_clean
+        ]
+        data_rows.append(row)
+
+    df = pd.DataFrame(data_rows, columns=columns)
+
+    # Путь к выходному файлу
+    output_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "Тестовый протокол - БД.xlsx")
+    )
+
+    # 1. Определяем путь к файлу-шаблону (корень проекта)
+    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    template_file = os.path.join(project_root, "Протокол_шаблон.xlsx")  # имя шаблона
+
+    if not os.path.exists(template_file):
+        print(f"[E] Файл шаблона не найден: {template_file}")
         return None
+
+    # 2. Копируем шаблон в целевой файл (теперь в нём есть лист «Протокол»)
+    try:
+        os.makedirs(os.path.dirname(output_path), exist_ok=True)
+        shutil.copy(template_file, output_path)
+        print(f"[I] Шаблон скопирован в {output_path}")
+    except Exception as e:
+        print(f"[E] Ошибка при копировании шаблона: {e}")
+        return None
+
+    # 3. Добавляем лист «БД» в скопированный файл, заменяя старый, если был
+    try:
+        with pd.ExcelWriter(
+            output_path,
+            engine='openpyxl',
+            mode='a',                       # открыть существующий файл
+            if_sheet_exists='replace'       # заменить лист, если уже есть
+        ) as writer:
+            df.to_excel(writer, sheet_name='БД', index=False)
+        print(f"[S] Лист 'БД' успешно добавлен в {output_path}")
+    except Exception as e:
+        print(f"[E] Ошибка при записи листа БД: {e}")
+        return None
+
+    return output_path
+
 
 
 def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
+    """функция для склонения ФИО из И.п. в Р.п. - слушали."""
     # Преобразует ФИО в родительный падеж
     # Для граждан РФ - склоняем, для иностранцев - нет
-    if citizenship != "РФ":
+    if citizenship != "Россия":
         return fio
 
     parts = fio.split()
@@ -989,6 +1424,10 @@ def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
         surname_gen = surname[:-2] + 'ина'
     elif surname.endswith('ий'):
         surname_gen = surname[:-2] + 'ого'
+    elif surname.endswith('ова'):
+        surname_gen = surname[:-1] + 'у'
+    elif surname.endswith('ева'):
+        surname_gen = surname[:-1] + 'у'
     else:
         surname_gen = surname + 'а'
 
@@ -996,37 +1435,39 @@ def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
     if name.endswith('й'):
         name_gen = name[:-1] + 'я'
     elif name.endswith('а'):
-        name_gen = name[:-1] + 'ы'
+        name_gen = name[:-1] + 'у'
     else:
-        name_gen = name + 'ы'
+        name_gen = name + 'а'
 
     # Склоняем отчество
     if patronymic.endswith('ич'):
         patronymic_gen = patronymic[:-2] + 'ича'
     elif patronymic.endswith('на'):
-        patronymic_gen = patronymic[:-1] + 'ы'
+        patronymic_gen = patronymic[:-1] + 'у'
     else:
         patronymic_gen = patronymic + 'а'
-
     return f"{surname_gen} {name_gen} {patronymic_gen}"
 
-
 def _get_fio_initials(fio: str) -> str:
-    # Преобразует ФИО в формат / И.О. Фамилия /
+    """ Преобразует ФИО в формат / И.О. Фамилия / """
     parts = fio.split()
-    if len(parts) >= 3:
-        surname = parts[0]
-        initials = f"{parts[1][0]}.{parts[2][0]}."
-        return f"/ {initials} {surname} /"
-    elif len(parts) == 2:
-        surname = parts[0]
-        initials = f"{parts[1][0]}."
-        return f"/ {initials} {surname} /"
-    return fio
+    if len(parts) < 2:
+        return fio
+    surname = parts[0]
+    # Все части после фамилии объединяем в одну строку, оставляем только буквы
+    letters = [c for c in ''.join(parts[1:]) if c.isalpha()]
+    if not letters:
+        return fio
+    initials = '.'.join(letters) + '.'
+    return f"/ {initials} {surname} /"
+
 
 
 def test_excel(): # тестовая функция - поиск ошибки
-    file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx" # жестко прописанный путь к универсальной таблице
+
+    """тестовая функция, созданная для поиска ошибки в коде. не используется в программе. только для отладки"""
+
+    file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx" # только для отладки на моём пк. не будет использоваться в программе
 
     print(f"[I] Тест: читаю файл {file_path}") # так как филе пас это путь я просто прописываю, какой файл тестируется на чтение
     print(f"[I] Файл существует: {os.path.exists(file_path)}") # вернёт булево
@@ -1079,7 +1520,7 @@ def parsing(self):
         self.selected_semester = 3
         self.semester_name = "Третий семестр"
 
-    print(f"Семестр: {self.semester_name}") # соответственно после предыдущего блока кода переменная имя семестра будет вмещать имя текущего выбранного семестра и выведет в лог
+    print(f"[I] Семестр: {self.semester_name}") # соответственно после предыдущего блока кода переменная имя семестра будет вмещать имя текущего выбранного семестра и выведет в лог
 
     # Читаем Excel файл
     print("[I] Чтение универсальной таблицы.")
@@ -1093,7 +1534,7 @@ def parsing(self):
 
         # Ищем нужные колонки по названиям
         columns = list(df.columns)
-        print(f"Колонки: {columns[:5]}...")
+        print(f"[I] Колонки: {columns[:5]}...")
 
         # Находим индексы нужных колонок
         fio_idx = None
@@ -1117,7 +1558,7 @@ def parsing(self):
         if citizenship_idx is None:
             citizenship_idx = 40  # ГРАЖДАНСТВО
 
-        print(f"Индексы: ФИО={fio_idx}, Профиль={profile_idx}, Гражданство={citizenship_idx}")
+        print(f"[I] Индексы: ФИО={fio_idx}, Профиль={profile_idx}, Гражданство={citizenship_idx}")
 
         # Извлекаем данные
         students_data = []
@@ -1139,69 +1580,73 @@ def parsing(self):
                         'citizenship': citizenship
                     })
             except Exception as e:
-                print(f"Ошибка строки {index}: {e}")
+                print(f"[E] Ошибка строки {index}: {e}")
                 continue
 
         self.students_data = students_data
-        print(f"Всего студентов: {len(students_data)}")
+        print(f"[I] Всего студентов: {len(students_data)}")
 
-        # Показываем первых 5 студентов
-        for i, student in enumerate(students_data[:5], 1):
-            print(f"      {i}. {student['fio']}")
+        print("[I]Начало парсинга doc-ов комиссии")
+        commission_members = parsing_commissions(self)
+        if commission_members:
+            self.commission_members = commission_members
+            print(f"[I] Найдено комиссий: {len(commission_members)}")
+        else:
+            print("[E] Члены комиссии не найдены!")
+            self.commission_members = []  # чтобы не упало в fill_database_sheet
+        print("[I] Завершение парсинга doc-ов комиссии")
+
+        for i, student in enumerate(students_data, 1):
+            print(f"[I]      {i}. {student['fio']}")
 
     except Exception as e:
-        print(f"Ошибка: {e}")
+        print(f"[E] Ошибка: {e}")
         import traceback
         traceback.print_exc()
         QMessageBox.critical(self, "Ошибка", f"Не удалось прочитать файл:\n{str(e)}")
         return
 
-    print("Парсинг таблицы завершён")
+    print("[S] Парсинг таблицы завершён")
 
     # Проверяем данные
-    print("Проверяю данные студентов...")
+    print("[I] Проверяю данные студентов...")
     if not hasattr(self, 'students_data') or not self.students_data:
         QMessageBox.warning(self, "Ошибка", "Не удалось загрузить данные из универсальной таблицы!")
         return
-    print(f"Загружено {len(self.students_data)} студентов")
-
-    # # Создаём тестовую комиссию
-    # print("Создаю тестовую комиссию...")
-    # self.commission_members = [{
-    #     'code': '1.1.1',
-    #     'members': [
-    #         {'fio': 'Иванов И.И.', 'role': 'председатель'},
-    #         {'fio': 'Петров П.П.', 'role': 'заместитель'},
-    #         {'fio': 'Сидоров С.С.', 'role': 'член'}
-    #     ]
-    # }]
-    # print("Тестовая комиссия создана")
+    print(f"[I] Загружено {len(self.students_data)} студентов")
 
     # Заполняем БД
-    print("Заполняю БД...")
+    print("[I] Заполняю БД...")
     try:
         db_file = fill_database_sheet(self)
-        print(f"Результат: {db_file}")
+        if db_file:
+            self.generated_db_path = db_file
+            print(f"[I] БД сохранена: {db_file}")
+            # Теперь генерация PDF
+            generate_pdf_from_db(self, self.generated_db_path)
+        else:
+            QMessageBox.critical(self, "Ошибка", "Не удалось сохранить файл БД!")
+            print("[E] Ошибка. Не удалось сохранить файл БД!")
+            return
     except Exception as e:
-        print(f"Ошибка при вызове fill_database_sheet: {e}")
         import traceback
         traceback.print_exc()
-        db_file = None
+        QMessageBox.critical(self, "Ошибка", f"Ошибка при создании БД или PDF:\n{str(e)}")
+        print(f"[E] Ошибка. Ошибка при создании БД или PDF:{str(e)}")
+        return
 
-    if db_file:
-        QMessageBox.information(
+def open_parsing_pdf_folder(self):
+    """Открывает папку с созданными по напарсенным данным PDF"""
+    folder_path = self.parsing_save_folder_path
+    if not os.path.exists(folder_path):
+        QMessageBox.warning(
             self,
-            "Готово!",
-            f"Данные успешно загружены!\n\n"
-            f"Студентов: {len(self.students_data)}\n"
-            f"Семестр: {self.semester_name}\n"
-            f"Файл сохранён: {os.path.basename(db_file)}"
+                "Папка не найдена",
+                f"Папка '{folder_path}' не существует.\n\n"
+                f"Сначала создайте PDF файлы, нажав кнопку 'Начать парсинг и генерацию PDF' на третьей вкладке."
         )
-    else:
-        QMessageBox.critical(self, "Ошибка", "Не удалось сохранить данные в файл!")
+        print("[E] ошибка с открытием папки с пдф")
+        return
+    os.startfile(folder_path)
 
-    print("=== КОНЕЦ ПАРСИНГА")
-
-if __name__ == "__main__":
-    print("Пожалуйста, запустите программу через pyqt_general_file.py")
-    print(f"Сейчас запущен файл {os.path.basename(__file__)}")
+    print("[I] КОНЕЦ ПАРСИНГА")

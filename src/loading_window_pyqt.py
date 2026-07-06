@@ -6,8 +6,6 @@ from PyQt6.QtGui import QMovie # класс из pyqt6 для показа ги�
 from PyQt6.QtWidgets import QWidget # базовый класс для виджетов
 from datetime import datetime # питоновский модуль для работы со временем и датой
 
-width_loading = 600 # для удобной правки размеры окна сделал глобальными
-height_loading = 400
 class My_loading_window(QWidget): # класс загрузочного окна
         closed = pyqtSignal() # как раз кастомный сигнал для закрытия окна (здесь инициализируется)
         def __init__(self): # конструктор
@@ -21,7 +19,7 @@ class My_loading_window(QWidget): # класс загрузочного окна
             print("[I] показ загрузочного окна.")
 
             loading_window = QWidget(self) # первый виджет. первым появится, имеет размер всего окна загрузки, используется для фона загрузочного окна
-            loading_window.setFixedSize(width_loading,height_loading) # задание фиксированного рамера виджету
+            loading_window.setFixedSize(600,400) # задание фиксированного рамера виджету
             loading_window.setStyleSheet("background-color: white; border-radius: 10px;") # стиль через qss
             loading_window.move(0,0) # абсолютное позиционирование
 
@@ -95,7 +93,3 @@ class My_loading_window(QWidget): # класс загрузочного окна
             print("[I] закрытие окна")
             self.closed.emit() # отправка сигнала о том, что окно закрылось. отправляет сигнал closed.
             # emit — это «испустить» или «отправить» сигнал.
-
-if __name__ == "__main__": # если программы запущена с этого файла, в консоль выведется уведомление, что программу нужно запустить с главного файла
-    print("Пожалуйста, запустите программу через pyqt_general_file.py")
-    print("Сейчас запущен файл loading_window_pyqt.py")
