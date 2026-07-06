@@ -462,13 +462,7 @@ def generate_pdf_from_db(self, excel_file_path: str):
     output_pdf_name = self.parsing_save_folder_path
     os.makedirs(output_pdf_name, exist_ok=True)
 
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    template_file = os.path.join(project_root, "Протокол_шаблон.xlsx")
-
-    if not os.path.exists(template_file):
-        print(f"[E] Файл шаблона не найден: {template_file}")
-        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
-        return
+    EXCEL_FILE = excel_file_path
 
     processed_count = 0
 
@@ -517,7 +511,7 @@ def generate_pdf_from_db(self, excel_file_path: str):
         print_separator_points()
 
         # Загружаем шаблон (лист «Протокол») из того же файла
-        wb = load_workbook(template_file)
+        wb = load_workbook(EXCEL_FILE)
         ws = wb["Протокол"]
 
         # === Статические надписи (одинаковы для всех протоколов) ===
