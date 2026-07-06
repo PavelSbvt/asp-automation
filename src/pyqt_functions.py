@@ -550,7 +550,7 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         # === Запись текста приказа в A12 ===
         ws['A12'] = commission_text
-        ws['A12'].alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        ws['A12'].alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
         ws['A12'].font = Font(name='Times New Roman', size=12)
         ws.row_dimensions[12].height = 45
 
