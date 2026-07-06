@@ -468,11 +468,13 @@ class MyWindow(QWidget): # Класс главного окна программ
         # Третья вкладка
         # ============================================================
 
+        # виджет, используемый для фона для ралиокнопок выбора семестра и лейбла
         background_widget_for_choosing_term = QWidget(tabObjects_3)
         background_widget_for_choosing_term.setFixedSize(300, 200)
         background_widget_for_choosing_term.setStyleSheet("background-color: white; border-radius: 10px;")
         background_widget_for_choosing_term.move(10,10)
 
+        # виджет с лейблом, предлагающим пользователю выбрать семестр
         choose_the_term = QWidget(tabObjects_3)
         choose_the_term.setFixedSize(200, 50)
         choose_the_term.setStyleSheet("background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
@@ -483,6 +485,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         label_choose_the_term.setStyleSheet("font: bold; font-size: 18px; color: white;")
         label_choose_the_term.setGeometry(0, 0, 200, 50)
 
+        # первая радиокнока. по условию должна активировать работу с doc файлом комиссии по истории
         self.radio_button_1 = QRadioButton("Первый семестр", tabObjects_3) # активирует работу с файлом «Комиссии - История.doc»
         self.radio_button_1.setStyleSheet("color: black; font-size: 18px; font: bold;")
         self.radio_button_1.move(65, 90)
@@ -509,6 +512,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
 
+        # вторая радиокнока. по условию должна активировать работу с doc файлом комиссии по иностранному
         self.radio_button_2 = QRadioButton("Второй семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Иностранный.doc»
         self.radio_button_2.setStyleSheet("color: black; font-size: 18px; font: bold;")
         self.radio_button_2.move(65, 120)
@@ -534,7 +538,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                         border: 2px solid green;
                     }
                 """)
-
+        # третья радиокнока. по условию должна активировать работу с doc файлом комиссии по специальности
         self.radio_button_3 = QRadioButton("Третий семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Специальность.doc»
         self.radio_button_3.setStyleSheet("color: black; font-size: 18px; font: bold;")
         self.radio_button_3.move(65, 150)
@@ -573,6 +577,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         widget_for_label.move(320,10)
 
+        # лейбл для приказа о комиссиях. родителем для него будет виджет с input label
         label_commission = QLabel(widget_for_label)
         label_commission.setGeometry(10,5,700,30)
         label_commission.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -583,7 +588,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             font-size: 18px;
         """)
 
-        # поле ввода
+        # поле ввода для приказа о комиссиях
         self.input_commission = QLineEdit(widget_for_label)
         self.input_commission.setGeometry(10, 40, 700, 30)
         self.input_commission.setPlaceholderText(
@@ -608,6 +613,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
 
+        # Главная кнопка, запускающая и парсинг всех необходимых данных, и сбор этих данных в пдф. запускает выполнение функции parsing (функция, вызывающая все функции парсинга и сбора данных в пдф)
         parsing_button = QPushButton("Начать парсинг и генерацию PDF", tabObjects_3)
         parsing_button.setStyleSheet("""
         QPushButton {
@@ -634,18 +640,17 @@ class MyWindow(QWidget): # Класс главного окна программ
                 padding-bottom: 4px;
             }
         """)
-        # background-image: url(../images/icons/parsing_button_icon.png);
         parsing_button.setFixedSize(280,40)
         parsing_button.move(370,740)
         parsing_button.clicked.connect(lambda: parsing(self))
 
-        # background блок для выбора файлов
-
+        # background блок для выбора файлов - doc файлов и универсальной таблицы
         background_widget_for_choose_files = QWidget(tabObjects_3)
         background_widget_for_choose_files.setFixedSize(730,310)
         background_widget_for_choose_files.move(320,100)
         background_widget_for_choose_files.setStyleSheet("background-color: white; border-radius: 10px;")
 
+        # предложение для пользователя о выборе фалов. Виджет является родителем для самого лейбла с предложением выбора файлов
         widget_for_label_choosing_files = QWidget(tabObjects_3)
         widget_for_label_choosing_files.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         widget_for_label_choosing_files.setFixedSize(300, 50)
@@ -656,6 +661,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.label_for_choozing_files.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_for_choozing_files.setText("Пожалуйста, выберите файлы")
 
+        # кнопка для выбора .xlsx файла - таблицы с данными "универсальной таблицы"
         button_choose_universal_excel = QPushButton("Выберите таблицу для парсинга",tabObjects_3)
         button_choose_universal_excel.setFixedSize(360,50)
         button_choose_universal_excel.setStyleSheet("""
@@ -686,6 +692,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_choose_universal_excel.move(680,290)
         button_choose_universal_excel.clicked.connect(lambda: choose_universal_excel(self))
 
+        # виджет, который при выборе "универсальной таблицы", сменит свой стандартный текст на имя выбранной таблицы
         universal_excel_label_widget = QWidget(tabObjects_3)
         universal_excel_label_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         universal_excel_label_widget.setFixedSize(360,50)
@@ -696,6 +703,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.universal_excel_label.setText("Здесь будет имя выбранного файла...")
         self.universal_excel_label.setGeometry(0,0,360,50)
 
+        # кнопка для выбора doc файла с данными комиссии по истории
         button_choose_history_commission = QPushButton("Выберите таблицу 'Комиссия - история.doc'",tabObjects_3)
         button_choose_history_commission.setFixedSize(330,50)
         button_choose_history_commission.setStyleSheet("""
@@ -726,6 +734,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_choose_history_commission.move(330, 170)
         button_choose_history_commission.clicked.connect(lambda: choose_history_excel(self))
 
+        # виджет, который сменит свой стандартный текст на имя выбранного doc файла
         history_excel_choosed_widget = QWidget(tabObjects_3)
         history_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         history_excel_choosed_widget.setFixedSize(330, 50)
@@ -736,6 +745,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.history_excel_choosed_widget_label.setText("Здесь будет имя выбранного файла...")
         self.history_excel_choosed_widget_label.setGeometry(0, 0, 330, 50)
 
+        # кнопка для выбора doc файла с данными комиссии по иностранному
         button_choose_foreign_commission = QPushButton("Выберите таблицу 'Комиссия - иностранный.doc'", tabObjects_3)
         button_choose_foreign_commission.setFixedSize(360, 50)
         button_choose_foreign_commission.setStyleSheet("""
@@ -766,6 +776,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_choose_foreign_commission.move(680, 170)
         button_choose_foreign_commission.clicked.connect(lambda: choose_foreign_excel(self))
 
+        # виджет, который сменит свой стандартный текст на имя выбранного doc файла
         foreign_excel_choosed_widget = QWidget(tabObjects_3)
         foreign_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         foreign_excel_choosed_widget.setFixedSize(360, 50)
@@ -776,6 +787,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.foreign_excel_choosed_widget_label.setText("Здесь будет имя выбранного файла...")
         self.foreign_excel_choosed_widget_label.setGeometry(0, 0, 360, 50)
 
+        # кнопка для выбора doc файла с данными комиссии по специальности
         button_choose_specialization_commission = QPushButton("Выберите таблицу 'Комиссия - специальность.doc'", tabObjects_3)
         button_choose_specialization_commission.setFixedSize(330, 50)
         button_choose_specialization_commission.setStyleSheet("""
@@ -806,6 +818,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_choose_specialization_commission.move(330, 290)
         button_choose_specialization_commission.clicked.connect(lambda: choose_specialization_excel(self))
 
+        # виджет, который сменит свой стандартный текст на имя выбранного doc файла
         specialization_excel_choosed_widget = QWidget(tabObjects_3)
         specialization_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         specialization_excel_choosed_widget.setFixedSize(330, 50)
@@ -816,11 +829,13 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.specialization_excel_choosed_label.setText("Здесь будет имя выбранного файла...")
         self.specialization_excel_choosed_label.setGeometry(0, 0, 330, 50)
 
+        # виджет, используемый как фон для кнопки выбора пути сохранения готовых пдф документов
         widget_for_choose_save_way_for_parsed_pdf = QWidget(tabObjects_3)
         widget_for_choose_save_way_for_parsed_pdf.setFixedSize(300, 190)
         widget_for_choose_save_way_for_parsed_pdf.setStyleSheet("background-color: white; border-radius: 10px;")
         widget_for_choose_save_way_for_parsed_pdf.move(10, 220)
 
+        # label с предложением пользователю выбрать папку, в которой сохранятся готовые пдф файлы.
         widget_for_label_choosing_way = QWidget(tabObjects_3)
         widget_for_label_choosing_way.setFixedSize(280,50)
         widget_for_label_choosing_way.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
@@ -831,8 +846,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.label_for_choosing_way_save_for_parsing_pdf.setText("Выберите путь сохранения для PDF")
         self.label_for_choosing_way_save_for_parsing_pdf.setGeometry(0,0,280,50)
 
-        # # Кнопка выбора пути сохранения
-
+        # Кнопка выбора пути сохранения
         button_choose_save_path = QPushButton("Выбрать папку", tabObjects_3)
         button_choose_save_path.setFixedSize(250, 40)
         button_choose_save_path.move(35, 290)
@@ -865,6 +879,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         # Путь для сохранения PDF после парсинга (по умолчанию как основной)
         self.parsing_save_folder_path = self.save_folder_path
 
+        # лейбл отображает текущий путь к папке сохранения пдф. Дефолтный путь сохранения - папка results_folder на рабочем столе
         self.save_path_label = QLabel("Папка не выбрана", tabObjects_3)
         self.save_path_label.setGeometry(35, 335, 250, 40)
         self.save_path_label.setStyleSheet("""
@@ -881,8 +896,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_choose_save_path.clicked.connect(self.choose_parsing_save_folder)
 
 
-        # блок для пояснения к прогресс бару
-
+        # блок для пояснения к прогресс бару (показвает, что прогресс будет обновляться только при создании пдф, прогресс парсинга не влияет на обновление прогресса)
         widget_for_progress_bar = QWidget(tabObjects_3)
         widget_for_progress_bar.setFixedSize(1040,75)
         widget_for_progress_bar.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
@@ -951,6 +965,7 @@ class MyWindow(QWidget): # Класс главного окна программ
 
 
     def choose_parsing_save_folder(self):
+        """выбор папки сохранения для собранных пдф по таблице с собранным БД"""
         folder_path = QFileDialog.getExistingDirectory(
             self,
             "Выберите папку для сохранения PDF (парсинг)",
@@ -961,24 +976,27 @@ class MyWindow(QWidget): # Класс главного окна программ
             self.save_path_label.setText(folder_path)
 
     def update_progress(self, current, total):
+        """функция обновления прогресса qprogressbar."""
         if total > 0:
             progress = int((current / total) * 100)
             self.progress_bar.setValue(progress)
             QApplication.processEvents()
 
     def center_window(self):
+        """функция для центрирования главного окна, чтобы оно появлялось по центру экрана пользователя после исчезновения загрузочного окна"""
         qr = self.frameGeometry()
         cp = self.screen().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
     def mousePressEvent(self, event):
+        """функция, отслеживающая точку, где пользователь зажал ЛКМ"""
         if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = event.globalPosition().toPoint()
             event.accept()
 
-    #
     def mouseMoveEvent(self, event):
+        """функция для вычисления смещения по изменения позиции зажатой ЛКМ. Перемещает окно при движении мыши с зажатой ЛКМ."""
         if event.buttons() == Qt.MouseButton.LeftButton:
             delta = event.globalPosition().toPoint() - self.drag_position
             self.move(self.pos() + delta)

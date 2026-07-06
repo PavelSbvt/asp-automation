@@ -47,13 +47,15 @@ class My_loading_window(QWidget): # класс загрузочного окна
             now = datetime.now() # присваиваю переменной текущее время системы
             current_hour = now.hour # так как datatime.now возвращает точное время, отсекаю всё и оставляю только часы
             print(f"[I] текущее время {current_hour}")
-            if current_hour >= 6:
+            if current_hour < 6 and current_hour >= 0:
+                self.label_welcome_to_program.setText("Доброй ночи!")
+            if current_hour >= 6 and current_hour < 11:
                 self.label_welcome_to_program.setText("Доброе утро!")
-            if current_hour >= 11:
+            if current_hour >= 11  and current_hour < 17:
                 self.label_welcome_to_program.setText("Добрый день!")
-            if current_hour >= 17:
+            if current_hour >= 17  and current_hour < 21:
                 self.label_welcome_to_program.setText("Добрый вечер!")
-            if current_hour >= 21:
+            if current_hour >= 21 and current_hour < 25:
                 self.label_welcome_to_program.setText("Доброй ночи!")
 
             print("[I] показ гиф анимации процесса загрузки")

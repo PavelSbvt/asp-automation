@@ -44,6 +44,7 @@ def open_pdf_folder(self):
             f"Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке."
         )
         return
+    print(f"[E] Папка не найдена. Папка '{folder_path}' не существует. Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке.")
     os.startfile(folder_path)
 
 def choose_save_folder(self):
@@ -59,8 +60,8 @@ def choose_save_folder(self):
             short_path = "..." + short_path[-12:]
         self.path_value_label.setText(short_path)
         self.path_value_label.setToolTip(self.save_folder_path)
-        print_out_string(f"Папка для сохранения изменена: {folder_path}")
-        string_save_way = f"Папка для сохранения изменена: {folder_path}"
+        print_out_string(f"[I] Папка для сохранения изменена: {folder_path}")
+        string_save_way = f"[I] Папка для сохранения изменена: {folder_path}"
         self.output_text.append(string_save_way)
         QApplication.processEvents()
 
@@ -74,12 +75,13 @@ def choose_file(self):
 
     if file_path:
         self.excel_file_path = file_path
-        string = f"Выбран файл: {file_path}"
+        string = f"[I] Выбран файл: {file_path}"
         print_out_string(string)
         self.output_text.append(string)
         QApplication.processEvents()
 
 def get_pdf(self):
+    """Функция, собирающая PDF по таблицу, которую выбирает пользователь"""
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
     if not self.excel_file_path:
         print_big_separator()
@@ -380,7 +382,7 @@ def get_pdf(self):
         print_separator()
         self.output_text.append("-" * 80)
 
-    msg = f"[I] Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'"
+    msg = f"[S] Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'"
     print_big_separator()
     print_out_string(msg)
     self.output_text.append(msg)
@@ -705,8 +707,6 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         print_separator()
 
-    self.progress_bar_parsing.setValue(100)
-
     print(f"[S] Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'")
 
     print_big_separator()
@@ -719,6 +719,7 @@ def generate_pdf_from_db(self, excel_file_path: str):
         f"Папка сохранения: {output_pdf_name}",
         QMessageBox.StandardButton.Ok
     )
+    self.progress_bar_parsing.setValue(100)
     print(f"[S] Готово! Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
 
 
@@ -751,7 +752,6 @@ def parsing_universal_excel(self):
 
         try:
             print("[I] Через openpyxl...")
-            from openpyxl import load_workbook
             wb = load_workbook(self.universal_file_path, read_only=True, data_only=True)
             ws = wb.active
             print(f"[I] Активный лист: {ws.title}")
@@ -788,7 +788,7 @@ def parsing_universal_excel(self):
                 print(f"[I] pandas прочитал {len(df)} строк")
             except Exception as e2:
                 print(f"[E] pandas не сработал: {e2}")
-                raise
+                raise # ключевое слово для генерации (выброса) исключений. Оно используется, чтобы искусственно вызвать ошибку в программе
 
         if df is None or len(df) == 0:
             print("[E] Нет данных в файле!")
@@ -857,6 +857,7 @@ def parsing_universal_excel(self):
         )
 
 def parse_doc_with_tables(path: str):
+    """Извлекает все таблицы из документа word .doc и возвращает их как один DataFrame с текстом."""
     doc = aw.Document(path)
     text = doc.get_text()
 
@@ -987,14 +988,16 @@ def parsing_commissions(self):
                 for member in members:
                     print(f"[I]     - {member['fio']} ({member['role']})")
 
-            QMessageBox.information(
-                self,
-                "Готово!",
-                f"Комиссия успешно загружена!\n\n"
-                f"Найдено комиссий: {len(members_by_specialty)}\n"
-                f"Семестр: {semester_name}\n"
-                f"Файл: {os.path.basename(path)}"
-            )
+            # лень каждый раз при запуске закрывать, поэтому закомментировал
+            # QMessageBox.information(
+            #     self,
+            #     "Готово!",
+            #     f"Комиссия успешно загружена!\n\n"
+            #     f"Найдено комиссий: {len(members_by_specialty)}\n"
+            #     f"Семестр: {semester_name}\n"
+            #     f"Файл: {os.path.basename(path)}"
+            # )
+            print(f"[S] Готово. комиссия успешно загружена. Найдено комиссий: {len(members_by_specialty)}. Семестр: {semester_name}. Файл: {os.path.basename(path)}.")
         else:
             print("[E] Члены комиссии не найдены!")
             QMessageBox.warning(
@@ -1024,6 +1027,7 @@ def extract_code_number(text: str) -> str:
     return match.group(0) if match else text.strip()
 
 def _extract_commission_members(text, members_by_specialty, row=None, code_col=None):
+    """Извлечение членов комиссии из текста одной строки таблицы"""
     # Извлекает членов комиссии из текста одной строки таблицы
 
     # Получаем шифр специальности
@@ -1228,6 +1232,7 @@ def site_parce_main() -> List[Tuple[str, str]]:
 
 
 def get_specialty_code(profile: str) -> str:
+    """Возвращает код специальности по названию профиля из данных сайта."""
     try:
         # пробуем основной сайт
         specialties = site_parce_main()
@@ -1243,6 +1248,7 @@ def get_specialty_code(profile: str) -> str:
 
 
 def clean_excel_string(s: str) -> str:
+    """очистить строку от непечатаемых управляющих символов"""
     if not isinstance(s, str):
         return s
     # Удаляем все управляющие символы, кроме \t, \n, \r
@@ -1252,8 +1258,8 @@ def clean_excel_string(s: str) -> str:
 
 
 def fill_database_sheet(self):
-    print("[I] fill_database_sheet через pandas")
     """функция заполнения листа БД таблицы-шаблона"""
+    print("[I] fill_database_sheet через pandas")
 
     if not hasattr(self, 'students_data') or not self.students_data:
         print("[E] Нет студентов!")
@@ -1285,6 +1291,7 @@ def fill_database_sheet(self):
     print("[I] Ключи словаря комиссий:", list(commission_dict.keys()))
 
     def get_member_by_role(comm, role: str):
+        """поиск в комиссии члена по роли"""
         if not comm:
             return None
         for m in comm.get('members', []):
@@ -1458,7 +1465,6 @@ def _get_fio_initials(fio: str) -> str:
 
 
 def test_excel(): # тестовая функция - поиск ошибки
-
     """тестовая функция, созданная для поиска ошибки в коде. не используется в программе. только для отладки"""
 
     file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx" # только для отладки на моём пк. не будет использоваться в программе
@@ -1473,7 +1479,6 @@ def test_excel(): # тестовая функция - поиск ошибки
         print(f"[I] Колонки: {list(df.columns)}")
     except Exception as e:
         print(f"[E] Ошибка: {e}")
-        import traceback
         traceback.print_exc() # Нужно было использовать библиотеку, чтобы вывод ошибки был полным. Вывод ошибки в консоль
 
 
@@ -1595,8 +1600,7 @@ def parsing(self):
 
     except Exception as e:
         print(f"[E] Ошибка: {e}")
-        import traceback
-        traceback.print_exc()
+        # traceback.print_exc()
         QMessageBox.critical(self, "Ошибка", f"Не удалось прочитать файл:\n{str(e)}")
         return
 
@@ -1623,11 +1627,11 @@ def parsing(self):
             print("[E] Ошибка. Не удалось сохранить файл БД!")
             return
     except Exception as e:
-        import traceback
         traceback.print_exc()
         QMessageBox.critical(self, "Ошибка", f"Ошибка при создании БД или PDF:\n{str(e)}")
         print(f"[E] Ошибка. Ошибка при создании БД или PDF:{str(e)}")
         return
+    print("[I] КОНЕЦ ПАРСИНГА")
 
 def open_parsing_pdf_folder(self):
     """Открывает папку с созданными по напарсенным данным PDF"""
@@ -1642,5 +1646,3 @@ def open_parsing_pdf_folder(self):
         print("[E] ошибка с открытием папки с пдф")
         return
     os.startfile(folder_path)
-
-    print("[I] КОНЕЦ ПАРСИНГА")
