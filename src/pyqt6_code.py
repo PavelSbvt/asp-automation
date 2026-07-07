@@ -135,7 +135,8 @@ class MyWindow(QWidget): # Класс главного окна программ
         tabWidgetObjects.addTab(tabObjects_2, "") # кладка 3
         # порядок добавления определяет их положение среди вкладок
 
-        def rotate_icon(icon_path, size=65, angle=90): # Функция для поворота иконок на 90 градусов по пути файла и размер у всех 65
+        # Функция для поворота иконок на 90 градусов по пути файла и размер у всех 65
+        def rotate_icon(icon_path, size=65, angle=90):
             icon = QIcon(icon_path)
             pixmap = icon.pixmap(size, size)
             transform = QTransform().rotate(angle)
@@ -152,6 +153,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         tabWidgetObjects.setTabIcon(1, icon3)
         tabWidgetObjects.setTabIcon(2, icon2)
 
+        # кнопка закрытия всего прилодения. родитель - self, чтобы положение кнопки не менялось с переходом на другую вкладку и она была всегда видна
         button_close = QPushButton(self) # создание кастомной кнопки закрытия окна, так как стандартную я удалил
         button_close.setFixedSize(45, 45)
         button_close.move(1150, 5)
@@ -263,6 +265,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                     """)
         block_where_save_pdfs_now.move(460, 25)
 
+        # информационный лейбл. информирует пользователя, где смотреть текущий путь сохранения файлов (готовых пдф протоколов).
         block_where_save_pdfs_now_label = QLabel(block_where_save_pdfs_now)
         block_where_save_pdfs_now_label.setText("Путь сохранения:")
         block_where_save_pdfs_now_label.setGeometry(0, 0, 160, 50)
@@ -281,6 +284,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             """)
         block_way_save.move(630, 25)
 
+        # лейбл для отобрадения пути сохранения готовых пдф документов. находится на первой вкладке программы. может обрезать длинные пути, чтобы они помещались
         self.path_value_label = QLabel(block_way_save) # self — чтобы обновлять путь при изменении
         short_path = self.save_folder_path
         if len(short_path) > 150:
@@ -292,17 +296,20 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.path_value_label.setStyleSheet("color: white; font-size: 10px; font-weight: bold;")
         self.path_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.path_value_label.setWordWrap(True)
+
         block_way_save.setToolTip(self.save_folder_path)
 
-
+        # кнопка запуска сборки пдф документов на первой вкладке программы. запускает сборку пдф по готовому excel файлу с шаблоном протокола
+        # и страничкой БД, который выбирает пользователь
         button_do_operation = QPushButton(tabObjects_1)
         button_do_operation.setFixedSize(50, 50)
         button_do_operation.setCursor(Qt.CursorShape.ClosedHandCursor)
         button_do_operation.setStyleSheet(
             "background-image: url(../images/icons/do_op_new.png); color: white; font-size: 14px; font:bold; border-radius: 10px;")
         button_do_operation.move(980, 25)
-        button_do_operation.clicked.connect(lambda: get_pdf(self))
+        button_do_operation.clicked.connect(lambda: get_pdf(self)) # запуск основной функции сбора пдф по готовому эксель с шаблоном протокола и страничной БД
 
+        # виджет, содержащий лейбл с надписью для пользователя, предлагающей сменить тему цветового оформления программы
         widget_for_styles = QWidget(tabObjects_2)
         widget_for_styles.setFixedSize(300, 45)
         widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(45, 75, 30, 240)")
@@ -313,11 +320,13 @@ class MyWindow(QWidget): # Класс главного окна программ
         label_for_styles.setGeometry(0, 0, 300, 45)
         label_for_styles.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
+        # фоновый блок для кнопок выбора темы цветового оформления.
         window_for_choosing_styles = QWidget(tabObjects_2)
-        window_for_choosing_styles.setFixedSize(1030, 600)
+        window_for_choosing_styles.setFixedSize(795, 275)
         window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgba(45, 64, 30, 240)")
         window_for_choosing_styles.move(10, 100)
 
+        # кнопка смены цветового оформления на тёмный стиль
         button_from_choose_dark_theme = QPushButton(tabObjects_2)
         button_from_choose_dark_theme.setStyleSheet("background-image: url(../images/color_themes/dark_theme/dark_theme_icon.png); border-radius: 10px;")
         button_from_choose_dark_theme.setFixedSize(250, 250)
@@ -355,9 +364,390 @@ class MyWindow(QWidget): # Класс главного окна программ
                 ),
                 button_from_choose_dark_theme.move(20, 110)
             ))
+            block_background.setStyleSheet("background-image: url(../images/color_themes/dark_theme/image_from_dark_theme.JPG);")
+            self.progress_bar.setStyleSheet("""
+                            QProgressBar {
+                                color: rgb(255, 255, 255);
+                                font-weight: bold;
+                                font-size: 13px;
+                                text-align: center;
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                background: rgb(30, 30, 30);
+                            }
+                            QProgressBar::chunk {
+                                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                    stop: 0 rgb(100, 100, 100),
+                                    stop: 0.5 rgb(180, 180, 180),
+                                    stop: 1 rgb(100, 100, 100));
+                                border-radius: 8px;
+                            }
+                        """)
+
+            self.progress_bar_parsing.setStyleSheet("""
+                            QProgressBar {
+                                color: rgb(255, 255, 255);
+                                font-weight: bold;
+                                font-size: 13px;
+                                text-align: center;
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                background: rgb(30, 30, 30);
+                            }
+                            QProgressBar::chunk {
+                                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                    stop: 0 rgb(100, 100, 100),
+                                    stop: 0.5 rgb(180, 180, 180),
+                                    stop: 1 rgb(100, 100, 100));
+                                border-radius: 8px;
+                            }
+                        """)
+
+            choose_the_term.setStyleSheet(
+                "background-color: rgb(60, 60, 60); border-radius: 10px; color: rgb(255, 255, 255);")
+
+            radio_style_dark = """
+                            QRadioButton {
+                                color: rgb(220, 220, 220);
+                                font-size: 18px;
+                                font-weight: bold;
+                                spacing: 10px;
+                            }
+                            QRadioButton::indicator {
+                                width: 10px;
+                                height: 10px;
+                                border-radius: 3px;
+                                border: 2px solid rgb(80, 80, 80);
+                                background: rgb(40, 40, 40);
+                            }
+                            QRadioButton::indicator:checked {
+                                background-color: rgb(160, 160, 160);
+                                border: 2px solid rgb(200, 200, 200);
+                            }
+                            QRadioButton::indicator:hover {
+                                border: 2px solid rgb(200, 200, 200);
+                            }
+                        """
+            self.radio_button_1.setStyleSheet(radio_style_dark)
+            self.radio_button_2.setStyleSheet(radio_style_dark)
+            self.radio_button_3.setStyleSheet(radio_style_dark)
+
+            widget_for_label.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
+
+            self.input_commission.setStyleSheet("""
+                            QLineEdit {
+                                background: rgb(30, 30, 30);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(60, 60, 60);
+                                border-radius: 8px;
+                                padding: 5px 10px;
+                                font-size: 14px;
+                            }
+                            QLineEdit:focus {
+                                border: 2px solid rgb(120, 120, 120);
+                                background: rgb(45, 45, 45);
+                            }
+                            QLineEdit::placeholder {
+                                color: rgb(100, 100, 100);
+                                font-style: italic;
+                            }
+                        """)
+
+            parsing_button.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(60, 60, 60);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(80, 80, 80);
+                                border: 2px solid rgb(120, 120, 120);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            widget_for_label_choosing_files.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
+
+            self.open_folder_button.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(50, 50, 50);
+                                color: rgb(255, 255, 255);
+                                border: 1px solid rgb(70, 70, 70);
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(70, 70, 70);
+                                border: 1px solid rgb(100, 100, 100);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                            }
+                        """)
+
+            button_to_find_file_tabel.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(50, 50, 50);
+                                color: rgb(255, 255, 255);
+                                border: 1px solid rgb(70, 70, 70);
+                                border-radius: 12px;
+                                font-size: 14px;
+                                font-weight: bold;
+                                padding: 5px;
+                            }
+                            QPushButton:hover {
+                                background: rgb(70, 70, 70);
+                                border: 1px solid rgb(100, 100, 100);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            button_to_find_where_save.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(50, 50, 50);
+                                color: rgb(255, 255, 255);
+                                border: 1px solid rgb(70, 70, 70);
+                                border-radius: 12px;
+                                font-size: 14px;
+                                font-weight: bold;
+                                padding: 5px;
+                            }
+                            QPushButton:hover {
+                                background: rgb(70, 70, 70);
+                                border: 1px solid rgb(100, 100, 100);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            block_where_save_pdfs_now.setStyleSheet("""              
+                            background: rgb(50, 50, 50);
+                            color: rgb(255, 255, 255);
+                            border: 1px solid rgb(70, 70, 70);
+                            border-radius: 12px;
+                            font-size: 14px;
+                            font-weight: bold;
+                            padding: 5px;
+                        """)
+
+            tabWidgetObjects.setStyleSheet(""" 
+                            QTabWidget::pane {
+                                border: none;
+                                background: transparent;
+                            }
+                            QTabBar::tab {
+                                background: rgb(45, 45, 45);
+                                color: rgb(170, 170, 170);
+                                border: 1px solid rgb(60, 60, 60);
+                                border-radius: 8px;
+                                padding: 5px;
+                                padding-top: -10px;
+                                padding-bottom: 7px;
+                                margin: 4px;
+                                font-size: 12px;
+                                font-weight: bold;
+                            }
+                            QTabBar::tab:selected {
+                                background: rgb(70, 70, 70);
+                                color: rgb(255, 255, 255);
+                                border: 1px solid rgb(120, 120, 120);
+                            }
+                            QTabBar::tab:hover {
+                                background: rgb(60, 60, 60);
+                                border: 1px solid rgb(100, 100, 100);
+                                padding: 5px;
+                                padding-top: -10px;
+                                padding-bottom: 7px;
+                                margin: 4px;
+                            }
+                            QTabBar::tab:pressed {
+                                background: rgb(30, 30, 30);
+                                padding: 5px;
+                                padding-top: -10px;
+                                padding-bottom: 7px;
+                            }
+                        """)
+
+            button_choose_universal_excel.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(60, 60, 60);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(80, 80, 80);
+                                border: 2px solid rgb(120, 120, 120);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            button_choose_history_commission.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(60, 60, 60);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                font-size: 12px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(80, 80, 80);
+                                border: 2px solid rgb(120, 120, 120);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            button_choose_foreign_commission.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(60, 60, 60);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                font-size: 12px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(80, 80, 80);
+                                border: 2px solid rgb(120, 120, 120);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            button_choose_specialization_commission.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(60, 60, 60);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                font-size: 12px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(80, 80, 80);
+                                border: 2px solid rgb(120, 120, 120);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            button_choose_save_path.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(60, 60, 60);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(80, 80, 80);
+                                border: 2px solid rgb(120, 120, 120);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+            self.save_path_label.setStyleSheet("""
+                color: rgb(224, 224, 224);
+                font-size: 11px;
+                background: rgb(26, 26, 26);
+                border: 1px solid rgb(61, 61, 61);
+                border-radius: 8px;
+                padding: 5px;
+            """)
+
+            button_to_open_folder_with_done_pdf.setStyleSheet("""
+                            QPushButton {
+                                background: rgb(60, 60, 60);
+                                color: rgb(255, 255, 255);
+                                border: 2px solid rgb(80, 80, 80);
+                                border-radius: 10px;
+                                font-size: 14px;
+                                font-weight: bold;
+                            }
+                            QPushButton:hover {
+                                background: rgb(80, 80, 80);
+                                border: 2px solid rgb(120, 120, 120);
+                            }
+                            QPushButton:pressed {
+                                background: rgb(30, 30, 30);
+                                padding-top: 6px;
+                                padding-bottom: 4px;
+                            }
+                        """)
+
+            block_for_print_process.setStyleSheet("""
+                            background: rgb(26, 26, 26);
+                            border-radius: 10px;
+                            border: 1px solid rgb(50, 50, 50);
+                        """)
+
+            widget_for_label_choosing_way.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
+            widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(60, 60, 60, 240)")
+
+            universal_excel_label_widget.setStyleSheet("background-color: rgb(100, 100, 100); border-radius: 10px;")
+            history_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 100, 100); border-radius: 10px;")
+            foreign_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 100, 100); border-radius: 10px;")
+            specialization_excel_choosed_widget.setStyleSheet(
+                "background-color: rgb(100, 100, 100); border-radius: 10px;")
+            widget_for_progress_bar.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
+            self.output_text.setStyleSheet("""
+                background: rgb(13, 13, 13);
+                border-radius: 10px;
+                color: rgb(224, 224, 224);
+                font-family: 'Courier New';
+                font: bold;
+                font-size: 12px;
+                border: 1px solid rgb(50, 50, 50);
+            """)
+            block_way_save.setStyleSheet("""
+                background: rgb(30, 30, 30);
+                border: 1px solid rgb(60, 60, 60);
+                border-radius: 10px;
+            """)
+            window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgb(60, 60, 60);")
+
+            print("[I] [style] Применена тёмная тема")
+
 
         button_from_choose_dark_theme.clicked.connect(change_theme_to_dark)
 
+        # кнопка смены текущего цветового оформления на фиолетовую тему
         button_from_choose_violet_theme = QPushButton(tabObjects_2)
         button_from_choose_violet_theme.setStyleSheet(
             "background-image: url(../images/color_themes/violet_theme/violet_theme_icon.png); border-radius: 10px;")
@@ -394,16 +784,404 @@ class MyWindow(QWidget): # Класс главного окна программ
                 ),
                 button_from_choose_violet_theme.move(280, 110)
             ))
+            block_background.setStyleSheet("background-image: url(../images/color_themes/violet_theme/image_from_violet_theme.jpg);")
+            self.progress_bar.setStyleSheet("""
+                QProgressBar {
+                    color: rgb(255, 255, 255);
+                    font-weight: bold;
+                    font-size: 13px;
+                    text-align: center;
+                    border: 2px solid rgb(100, 70, 120);
+                    border-radius: 10px;
+                    background: rgb(30, 20, 40);
+                }
+                QProgressBar::chunk {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                        stop: 0 rgb(120, 80, 150),
+                        stop: 0.5 rgb(180, 140, 200),
+                        stop: 1 rgb(120, 80, 150));
+                    border-radius: 8px;
+                }
+            """)
+
+            self.progress_bar_parsing.setStyleSheet("""
+                QProgressBar {
+                    color: rgb(255, 255, 255);
+                    font-weight: bold;
+                    font-size: 13px;
+                    text-align: center;
+                    border: 2px solid rgb(100, 70, 120);
+                    border-radius: 10px;
+                    background: rgb(30, 20, 40);
+                }
+                QProgressBar::chunk {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                        stop: 0 rgb(120, 80, 150),
+                        stop: 0.5 rgb(180, 140, 200),
+                        stop: 1 rgb(120, 80, 150));
+                    border-radius: 8px;
+                }
+            """)
+
+            choose_the_term.setStyleSheet(
+                "background-color: rgb(60, 40, 80); border-radius: 10px; color: rgb(255, 255, 255);")
+
+            radio_style_violet = """
+                QRadioButton {
+                    color: rgb(220, 210, 230);
+                    font-size: 18px;
+                    font-weight: bold;
+                    spacing: 10px;
+                }
+                QRadioButton::indicator {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 3px;
+                    border: 2px solid rgb(100, 70, 120);
+                    background: rgb(40, 30, 50);
+                }
+                QRadioButton::indicator:checked {
+                    background-color: rgb(160, 120, 180);
+                    border: 2px solid rgb(200, 170, 220);
+                }
+                QRadioButton::indicator:hover {
+                    border: 2px solid rgb(200, 170, 220);
+                }
+            """
+            self.radio_button_1.setStyleSheet(radio_style_violet)
+            self.radio_button_2.setStyleSheet(radio_style_violet)
+            self.radio_button_3.setStyleSheet(radio_style_violet)
+
+            widget_for_label.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+
+            self.input_commission.setStyleSheet("""
+                QLineEdit {
+                    background: rgb(30, 20, 40);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(60, 40, 80);
+                    border-radius: 8px;
+                    padding: 5px 10px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid rgb(140, 100, 160);
+                    background: rgb(45, 35, 55);
+                }
+                QLineEdit::placeholder {
+                    color: rgb(100, 80, 120);
+                    font-style: italic;
+                }
+            """)
+
+            parsing_button.setStyleSheet("""
+                QPushButton {
+                    background: rgb(60, 40, 80);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(80, 60, 100);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(80, 60, 100);
+                    border: 2px solid rgb(120, 90, 140);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            widget_for_label_choosing_files.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+
+            self.open_folder_button.setStyleSheet("""
+                QPushButton {
+                    background: rgb(50, 35, 65);
+                    color: rgb(255, 255, 255);
+                    border: 1px solid rgb(70, 50, 90);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(70, 50, 90);
+                    border: 1px solid rgb(100, 75, 120);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                }
+            """)
+
+            button_to_find_file_tabel.setStyleSheet("""
+                QPushButton {
+                    background: rgb(50, 35, 65);
+                    color: rgb(255, 255, 255);
+                    border: 1px solid rgb(70, 50, 90);
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background: rgb(70, 50, 90);
+                    border: 1px solid rgb(100, 75, 120);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            button_to_find_where_save.setStyleSheet("""
+                QPushButton {
+                    background: rgb(50, 35, 65);
+                    color: rgb(255, 255, 255);
+                    border: 1px solid rgb(70, 50, 90);
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background: rgb(70, 50, 90);
+                    border: 1px solid rgb(100, 75, 120);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            block_where_save_pdfs_now.setStyleSheet("""              
+                background: rgb(50, 35, 65);
+                color: rgb(255, 255, 255);
+                border: 1px solid rgb(70, 50, 90);
+                border-radius: 12px;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 5px;
+            """)
+
+            tabWidgetObjects.setStyleSheet(""" 
+                QTabWidget::pane {
+                    border: none;
+                    background: transparent;
+                }
+                QTabBar::tab {
+                    background: rgb(45, 30, 60);
+                    color: rgb(180, 160, 200);
+                    border: 1px solid rgb(60, 40, 80);
+                    border-radius: 8px;
+                    padding: 5px;
+                    padding-top: -10px;
+                    padding-bottom: 7px;
+                    margin: 4px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QTabBar::tab:selected {
+                    background: rgb(70, 50, 90);
+                    color: rgb(255, 255, 255);
+                    border: 1px solid rgb(120, 90, 140);
+                }
+                QTabBar::tab:hover {
+                    background: rgb(60, 40, 80);
+                    border: 1px solid rgb(100, 75, 120);
+                    padding: 5px;
+                    padding-top: -10px;
+                    padding-bottom: 7px;
+                    margin: 4px;
+                }
+                QTabBar::tab:pressed {
+                    background: rgb(30, 20, 40);
+                    padding: 5px;
+                    padding-top: -10px;
+                    padding-bottom: 7px;
+                }
+            """)
+
+            button_choose_universal_excel.setStyleSheet("""
+                QPushButton {
+                    background: rgb(60, 40, 80);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(80, 60, 100);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(80, 60, 100);
+                    border: 2px solid rgb(120, 90, 140);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            button_choose_history_commission.setStyleSheet("""
+                QPushButton {
+                    background: rgb(60, 40, 80);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(80, 60, 100);
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(80, 60, 100);
+                    border: 2px solid rgb(120, 90, 140);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            button_choose_foreign_commission.setStyleSheet("""
+                QPushButton {
+                    background: rgb(60, 40, 80);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(80, 60, 100);
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(80, 60, 100);
+                    border: 2px solid rgb(120, 90, 140);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            button_choose_specialization_commission.setStyleSheet("""
+                QPushButton {
+                    background: rgb(60, 40, 80);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(80, 60, 100);
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(80, 60, 100);
+                    border: 2px solid rgb(120, 90, 140);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            button_choose_save_path.setStyleSheet("""
+                QPushButton {
+                    background: rgb(60, 40, 80);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(80, 60, 100);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(80, 60, 100);
+                    border: 2px solid rgb(120, 90, 140);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            self.save_path_label.setStyleSheet("""
+                color: rgb(220, 210, 230);
+                font-size: 11px;
+                background: rgb(30, 20, 40);
+                border: 1px solid rgb(60, 40, 80);
+                border-radius: 8px;
+                padding: 5px;
+            """)
+
+            button_to_open_folder_with_done_pdf.setStyleSheet("""
+                QPushButton {
+                    background: rgb(60, 40, 80);
+                    color: rgb(255, 255, 255);
+                    border: 2px solid rgb(80, 60, 100);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: rgb(80, 60, 100);
+                    border: 2px solid rgb(120, 90, 140);
+                }
+                QPushButton:pressed {
+                    background: rgb(30, 20, 40);
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+
+            block_for_print_process.setStyleSheet("""
+                background: rgb(30, 20, 40);
+                border-radius: 10px;
+                border: 1px solid rgb(50, 35, 65);
+            """)
+
+            widget_for_label_choosing_way.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+
+            widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(60, 40, 80, 240);")
+
+            universal_excel_label_widget.setStyleSheet("background-color: rgb(100, 75, 120); border-radius: 10px;")
+            history_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 75, 120); border-radius: 10px;")
+            foreign_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 75, 120); border-radius: 10px;")
+            specialization_excel_choosed_widget.setStyleSheet(
+                "background-color: rgb(100, 75, 120); border-radius: 10px;")
+
+            widget_for_progress_bar.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+
+            self.output_text.setStyleSheet("""
+                background: rgb(20, 12, 30);
+                border-radius: 10px;
+                color: rgb(220, 210, 230);
+                font-family: 'Courier New';
+                font: bold;
+                font-size: 12px;
+                border: 1px solid rgb(50, 35, 65);
+            """)
+
+            block_way_save.setStyleSheet("""
+                background: rgb(30, 20, 40);
+                border: 1px solid rgb(60, 40, 80);
+                border-radius: 10px;
+            """)
+
+            window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgb(60, 40, 80);")
+
+            print("[I] [style] Применена фиолетовая тема")
 
         button_from_choose_violet_theme.clicked.connect(change_theme_to_violet)
 
+        # кнопка для смены темы цветового оформления на стандартную тему
         button_from_choose_standart_theme = QPushButton(tabObjects_2)
         button_from_choose_standart_theme.setStyleSheet(
             "background-image: url(../images/color_themes/standard_theme/standard_theme_icon.png); border-radius: 10px;")
         button_from_choose_standart_theme.setFixedSize(250, 250)
         button_from_choose_standart_theme.move(540, 110)
-
         def change_theme_to_standard():
+            """функция, которая анимирует фон кнопки, лямбда функции меняют размер кнопок и их фон - плавно и возвращают к начальному виду.
+            картинки для заднего фона специально сделано по три штуки, чтобы выглядело достаточно плавно. реализовано специально без qpropertyanimation.
+            меняет стиль цветового оформления программы на стандартный"""
             QTimer.singleShot(10, lambda: (
                 button_from_choose_standart_theme.setFixedSize(245, 245),
                 button_from_choose_standart_theme.setStyleSheet(
@@ -435,10 +1213,561 @@ class MyWindow(QWidget): # Класс главного окна программ
                 ),
                 button_from_choose_standart_theme.move(540, 110)
             ))
+            block_background.setStyleSheet("background-image:url(../images/background_images/DSC_5174_1.jpg);")
+            self.progress_bar.setStyleSheet("""
+                        QProgressBar {
+                            color: white;
+                            font-weight: bold;
+                            font-size: 13px;
+                            text-align: center;
+                            border: 2px solid rgba(100, 140, 65, 200);
+                            border-radius: 10px;
+                            background: rgba(45, 70, 35, 150);
+                        }
+                        QProgressBar::chunk {
+                            background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                                stop: 0 rgba(60, 150, 40, 200),
+                                stop: 0.5 rgba(100, 200, 70, 220),
+                                stop: 1 rgba(60, 150, 40, 200));
+                            border-radius: 8px;
+                        }
+                    """)
+            self.output_text.setStyleSheet(
+                "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 rgba(60, 95, 45, 0.2),stop: 1 rgba(45, 75, 35, 0.25));border-radius: 10px;; color: white; font-family; font: bold; font-size: 12px;")
+            choose_the_term.setStyleSheet(
+                "background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
+            block_way_save.setStyleSheet("""
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(45, 70, 35, 0.7),
+                    stop: 1 rgba(35, 55, 25, 0.8));
+                border: 1px solid rgba(80, 120, 55, 150);
+                border-radius: 10px;
+            """)
+            widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(45, 75, 30, 240)")
+            self.radio_button_1.setStyleSheet("""
+                        QRadioButton {
+                            color: black;
+                            font-size: 18px;
+                            font-weight: bold;
+                            spacing: 10px;
+                        }
+                        QRadioButton::indicator {
+                            width: 10px;
+                            height: 10px;
+                            border-radius: 3px;
+                            border: 2px solid rgb(211,211,211);
+                            background: white;
+                        }
+                        QRadioButton::indicator:checked {
+                            background-color: rgb(105,208,73);
+                            border: 2px solid #27ae60;
+                        }
+                        QRadioButton::indicator:hover {
+                            border: 2px solid green;
+                        }
+                    """)
+            self.radio_button_2.setStyleSheet("""
+                                    QRadioButton {
+                                        color: black;
+                                        font-size: 18px;
+                                        font-weight: bold;
+                                        spacing: 10px;
+                                    }
+                                    QRadioButton::indicator {
+                                        width: 10px;
+                                        height: 10px;
+                                        border-radius: 3px;
+                                        border: 2px solid rgb(211,211,211);
+                                        background: white;
+                                    }
+                                    QRadioButton::indicator:checked {
+                                        background-color: rgb(105,208,73);
+                                        border: 2px solid #27ae60;
+                                    }
+                                    QRadioButton::indicator:hover {
+                                        border: 2px solid green;
+                                    }
+                                """)
+            universal_excel_label_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            history_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            foreign_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            specialization_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            self.save_path_label.setStyleSheet("""
+                color: white;
+                font-size: 11px;
+                background: rgba(45, 70, 35, 150);
+                border: 1px solid rgba(100, 140, 65, 150);
+                border-radius: 8px;
+                padding: 5px;
+            """)
+            self.radio_button_3.setStyleSheet("""
+                                    QRadioButton {
+                                        color: black;
+                                        font-size: 18px;
+                                        font-weight: bold;
+                                        spacing: 10px;
+                                    }
+                                    QRadioButton::indicator {
+                                        width: 10px;
+                                        height: 10px;
+                                        border-radius: 3px;
+                                        border: 2px solid rgb(211,211,211);
+                                        background: white;
+                                    }
+                                    QRadioButton::indicator:checked {
+                                        background-color: rgb(105,208,73);
+                                        border: 2px solid #27ae60;
+                                    }
+                                    QRadioButton::indicator:hover {
+                                        border: 2px solid green;
+                                    }
+                                """)
+            widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            self.input_commission.setStyleSheet("""
+                        QLineEdit {
+                            background: rgba(45, 70, 35, 180);
+                            color: white;
+                            border: 2px solid rgba(100, 140, 65, 200);
+                            border-radius: 8px;
+                            padding: 5px 10px;
+                            font-size: 14px;
+                        }
+                        QLineEdit:focus {
+                            border: 2px solid rgba(100, 200, 70, 220);
+                            background: rgba(55, 80, 45, 200);
+                        }
+                        QLineEdit::placeholder {
+                            color: rgba(200, 220, 180, 150);
+                            font-style: italic;
+                        }
+                    """)
+            parsing_button.setStyleSheet("""
+                    QPushButton {
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 rgba(60, 85, 45, 230),
+                                stop: 1 rgba(40, 65, 30, 230));
+                            color: white;
+                            border: 2px solid rgba(100, 140, 65, 200);
+                            border-radius: 10px;
+                            font-size: 14px;
+                            font-weight: bold;
+                        }
+                        QPushButton:hover {
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 rgba(100, 140, 70, 250),
+                                stop: 1 rgba(70, 110, 45, 250));
+                            border: 1px solid rgba(140, 190, 100, 230);
+                        }
+                        QPushButton:pressed {
+                            background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                                stop: 0 rgba(40, 65, 30, 230),
+                                stop: 1 rgba(30, 50, 20, 230));
+                            padding-top: 6px;
+                            padding-bottom: 4px;
+                        }
+                    """)
+            window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgba(45, 64, 30, 240)")
+            widget_for_label_choosing_files.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            self.open_folder_button.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 1px solid rgba(80, 110, 60, 200);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                }
+            """)
+            button_to_find_file_tabel.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(70, 110, 50, 240),
+                        stop: 1 rgba(50, 85, 35, 240));
+                    color: white;
+                    border: 1px solid rgba(100, 140, 70, 200);
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 150, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(45, 75, 30, 240),
+                        stop: 1 rgba(35, 60, 25, 240));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            button_to_find_where_save.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(70, 110, 50, 240),
+                        stop: 1 rgba(50, 85, 35, 240));
+                    color: white;
+                    border: 1px solid rgba(100, 140, 70, 200);
+                    border-radius: 12px;
+                    font-size: 14px;
+                    font-weight: bold;
+                    padding: 5px;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 150, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(45, 75, 30, 240),
+                        stop: 1 rgba(35, 60, 25, 240));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            block_where_save_pdfs_now.setStyleSheet("""              
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(70, 110, 50, 240),
+                    stop: 1 rgba(50, 85, 35, 240));
+                color: white;
+                border: 1px solid rgba(100, 140, 70, 200);
+                border-radius: 12px;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 5px;
+            """)
+            self.progress_bar.setStyleSheet("""
+                QProgressBar {
+                    color: white;
+                    font-weight: bold;
+                    font-size: 13px;
+                    text-align: center;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    background: rgba(45, 70, 35, 150);
+                }
+                QProgressBar::chunk {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                        stop: 0 rgba(60, 150, 40, 200),
+                        stop: 0.5 rgba(100, 200, 70, 220),
+                        stop: 1 rgba(60, 150, 40, 200));
+                    border-radius: 8px;
+                }
+            """)
+            self.progress_bar_parsing.setStyleSheet("""
+                QProgressBar {
+                    color: white;
+                    font-weight: bold;
+                    font-size: 13px;
+                    text-align: center;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    background: rgba(45, 70, 35, 150);
+                }
+                QProgressBar::chunk {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
+                        stop: 0 rgba(60, 150, 40, 200),
+                        stop: 0.5 rgba(100, 200, 70, 220),
+                        stop: 1 rgba(60, 150, 40, 200));
+                    border-radius: 8px;
+                }
+            """)
+            tabWidgetObjects.setStyleSheet(""" 
+                QTabWidget::pane {
+                    border: none;
+                    background: transparent;
+                }
+                QTabBar::tab {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(76, 110, 50, 230),    
+                        stop: 1 rgba(45, 75, 30, 230));   
+                    color: rgba(220, 240, 180, 220);   
+                    border: 1px solid rgba(100, 140, 65, 200);
+                    border-radius: 8px;
+                    padding: 5px;
+                    padding-top: -10px;
+                    padding-bottom: 7px;
+                    margin: 4px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QTabBar::tab:selected {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(120, 180, 80, 250),   
+                        stop: 1 rgba(80, 130, 50, 250)); 
+                    color: white;
+                    border: 1px solid rgba(160, 220, 110, 230);
+                }
+                QTabBar::tab:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 150, 65, 245),
+                        stop: 1 rgba(60, 100, 40, 245));
+                    border: 1px solid rgba(130, 180, 85, 220);
+                    padding: 5px;
+                    padding-top: -10px;
+                    padding-bottom: 7px;
+                    margin: 4px;
+                }
+                QTabBar::tab:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 90, 35, 250),
+                        stop: 1 rgba(35, 60, 20, 250));
+                    padding: 5px;
+                    padding-top: -10px;
+                    padding-bottom: 7px;
+                }
+            """)
+            parsing_button.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            button_choose_universal_excel.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            button_choose_history_commission.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            button_choose_foreign_commission.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            button_choose_specialization_commission.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            button_choose_save_path.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            button_to_open_folder_with_done_pdf.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(60, 85, 45, 230),
+                        stop: 1 rgba(40, 65, 30, 230));
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 10px;
+                    font-size: 14px;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(100, 140, 70, 250),
+                        stop: 1 rgba(70, 110, 45, 250));
+                    border: 1px solid rgba(140, 190, 100, 230);
+                }
+                QPushButton:pressed {
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop: 0 rgba(40, 65, 30, 230),
+                        stop: 1 rgba(30, 50, 20, 230));
+                    padding-top: 6px;
+                    padding-bottom: 4px;
+                }
+            """)
+            block_for_print_process.setStyleSheet(
+                "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba(60, 85, 45, 230),stop: 1 rgba(40, 65, 30, 230)); border-radius: 10px;")
+            choose_the_term.setStyleSheet(
+                "background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
+            widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            widget_for_label_choosing_files.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            widget_for_label_choosing_way.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            widget_for_progress_bar.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            self.input_commission.setStyleSheet("""
+                QLineEdit {
+                    background: rgba(45, 70, 35, 180);
+                    color: white;
+                    border: 2px solid rgba(100, 140, 65, 200);
+                    border-radius: 8px;
+                    padding: 5px 10px;
+                    font-size: 14px;
+                }
+                QLineEdit:focus {
+                    border: 2px solid rgba(100, 200, 70, 220);
+                    background: rgba(55, 80, 45, 200);
+                }
+                QLineEdit::placeholder {
+                    color: rgba(200, 220, 180, 150);
+                    font-style: italic;
+                }
+            """)
+            radio_style = """
+                QRadioButton {
+                    color: black;
+                    font-size: 18px;
+                    font-weight: bold;
+                    spacing: 10px;
+                }
+                QRadioButton::indicator {
+                    width: 10px;
+                    height: 10px;
+                    border-radius: 3px;
+                    border: 2px solid rgb(211,211,211);
+                    background: white;
+                }
+                QRadioButton::indicator:checked {
+                    background-color: rgb(105,208,73);
+                    border: 2px solid #27ae60;
+                }
+                QRadioButton::indicator:hover {
+                    border: 2px solid green;
+                }
+            """
+            self.radio_button_1.setStyleSheet(radio_style)
+            self.radio_button_2.setStyleSheet(radio_style)
+            self.radio_button_3.setStyleSheet(radio_style)
+            print("[I] [style] применена стандартная тема")
 
         button_from_choose_standart_theme.clicked.connect(change_theme_to_standard)
 
-        QTimer.singleShot(1, self.center_window)
+
+        QTimer.singleShot(1, self.center_window) # запуск центрирования главного окна. сработает спустя 1 мс после закрытия загрузочного окна
 
         self.progress_bar = QProgressBar(tabObjects_1)
         self.progress_bar.setFixedSize(980, 25)
