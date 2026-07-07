@@ -172,7 +172,7 @@ pip install auto-py-to-exe
  }
 }
 ```
-## Теперь выберите этот файл для импорта в пункте "Settings":
+## Теперь выберите этот файл для импорта в пункте "Settings -> Configuration":
 ![auto-py-to-exe](files_from_README/auto_py_to_exe_1.png)
 ## После импорта нажмите на кнопку "CONVERT .PY TO .EXE" в нижней части окна. После завершения процесса нажмите на кнопку "OPEN OUTPUT FOLDER". Скопируйте из неё папку "main" себе на диск. 
 ![auto-py-to-exe](files_from_README/auto_py_to_exe_2.png)
