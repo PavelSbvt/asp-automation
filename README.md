@@ -46,3 +46,138 @@
 Чтобы выбрать тему, необходимо нажать по ней левой кнопкой мыши
 
 ## Для работы программы необходим установленный excel
+
+
+![auto-py-to-exe](files_from_README/icon_pdf_maker.png)
+# PDF_Maker_exe
+Собрал проект в exe через auto-py-to-exe (иными способами - pyinstaller - не удалось, к сожалению)
+### Крайне важно. Необходимо, чтобы в файлах loading_pyqt_window.py и pyqt6_code.py пути к изображениям имели вид: "images/" (не "../images/")
+## Скопировать файлы с правильными путями для создания exe файла можно из папки "files_from_README". Скопируйте их и замените файлы в папке src/ вашего проекта перед сборкой.
+## для самостоятельной сборки через auto-py-to-exe сначала установите библиотеку командой в терминале PyCharm:
+```bash
+
+pip install auto-py-to-exe
+```
+## после установки библиотеки в проект введите в консоль следующую команду:
+```bash
+
+ auto-py-to-exe
+```
+## После ввода команды в консоль появится виртуальная оболочка "Auto Py To Exe". Чтобы быстро собрать проект создайте в любом месте на своём диске файл с расширением .json. Скопируйте и вставьте в него следующую конфигурацию:
+```bash
+
+ {
+ "version": "auto-py-to-exe-configuration_v1",
+ "pyinstallerOptions": [
+  {
+   "optionDest": "noconfirm",
+   "value": true
+  },
+  {
+   "optionDest": "filenames",
+   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/src/main.py"
+  },
+  {
+   "optionDest": "onefile",
+   "value": false
+  },
+  {
+   "optionDest": "console",
+   "value": false
+  },
+  {
+   "optionDest": "icon_file",
+   "value": "C:/Users/Maini/Downloads/icon_pdf_maker_255_size.ico"
+  },
+  {
+   "optionDest": "clean_build",
+   "value": false
+  },
+  {
+   "optionDest": "strip",
+   "value": false
+  },
+  {
+   "optionDest": "noupx",
+   "value": false
+  },
+  {
+   "optionDest": "disable_windowed_traceback",
+   "value": false
+  },
+  {
+   "optionDest": "uac_admin",
+   "value": false
+  },
+  {
+   "optionDest": "uac_uiaccess",
+   "value": false
+  },
+  {
+   "optionDest": "argv_emulation",
+   "value": false
+  },
+  {
+   "optionDest": "bootloader_ignore_signals",
+   "value": false
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/src;src/"
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/images;images/"
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b_\u0448\u0430\u0431\u043b\u043e\u043d.xlsx;."
+  },
+  {
+   "optionDest": "datas",
+   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/\u0428\u0430\u0431\u043b\u043e\u043d \u043f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u0430 \u0434\u043b\u044f \u041f\u0420.xlsx;."
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "pandas"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "PyQt6"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "openpyxl"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "aspose.words"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "lxml"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "requests"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "bs4"
+  }
+ ],
+ "nonPyinstallerOptions": {
+  "increaseRecursionLimit": true,
+  "manualArguments": ""
+ }
+}
+```
+## Теперь выберите этот файл для импорта в пункте "Settings":
+![auto-py-to-exe](files_from_README/auto_py_to_exe_1.png)
+## После импорта нажмите на кнопку "CONVERT .PY TO .EXE" в нижней части окна. После завершения процесса нажмите на кнопку "OPEN OUTPUT FOLDER". Скопируйте из неё папку "main" себе на диск. 
+![auto-py-to-exe](files_from_README/auto_py_to_exe_2.png)
+### Важно! Для правильного отображение изображений скопируйте папку "images" из ветки "development" и вставьте в папку "main", которую Вы только что скопировали себе на диск.
+## Готовая папка с exe файлом должна иметь вид:
+![auto-py-to-exe](files_from_README/finish.png)
+### Теперь по двойному клику на иконку exe файла у Вас должен запускаться проект.
+### Быстро скачать архив можно с гугл диска по ссылке: https://drive.google.com/file/d/1nSZuArhKmq_YVUYNhM8eU9A5Kd0wobPu/view?usp=sharing
