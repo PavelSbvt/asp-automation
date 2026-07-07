@@ -50,3 +50,4 @@ exe = EXE(
     entitlements_file=None,
     icon=['Images\\icons\\icon_pdf_maker_255_size.ico'],
 )
+
