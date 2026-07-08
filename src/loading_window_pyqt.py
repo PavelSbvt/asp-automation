@@ -5,6 +5,7 @@ from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt # Импорт клас�
 from PyQt6.QtGui import QMovie # класс из pyqt6 для показа гиф-анимации
 from PyQt6.QtWidgets import QWidget # базовый класс для виджетов
 from datetime import datetime # питоновский модуль для работы со временем и датой
+from pathlib import Path
 
 class My_loading_window(QWidget): # класс загрузочного окна
         closed = pyqtSignal() # как раз кастомный сигнал для закрытия окна (здесь инициализируется)
@@ -60,7 +61,8 @@ class My_loading_window(QWidget): # класс загрузочного окна
 
             print("[I] показ гиф анимации процесса загрузки")
 
-            gif_loading = QMovie("../images/gifs/loading_animation.gif") # создаю объект класса qmovie. как аргумент передаётся путь к гиф анимации
+            path_gif_loading = str(Path(__file__).parent.parent / "images" / "gifs" / "loading_animation.gif")
+            gif_loading = QMovie(path_gif_loading) # создаю объект класса qmovie. как аргумент передаётся путь к гиф анимации
             movie_widget = QLabel(self) # метод setMovie можно применить к qlabel, поэтому создал его
             movie_widget.setFixedSize(64,66)
             movie_widget.setMovie(gif_loading) # устанавливаю гиф изображение на qlabel
