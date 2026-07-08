@@ -54,7 +54,7 @@ ___
 ## Для работы программы необходим установленный excel
 ___
 ___
-![auto-py-to-exe](files_from_README/icon_pdf_maker.png)
+![auto-py-to-exe](images/images_from_README/icon_pdf_maker.png)
 # PDF_Maker_exe
 Собрал проект в exe через auto-py-to-exe (иными способами - pyinstaller - не удалось, к сожалению)
 ___
@@ -85,7 +85,7 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "filenames",
-   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/src/main.py"
+   "value": "src/main.py"
   },
   {
    "optionDest": "onefile",
@@ -97,7 +97,7 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "icon_file",
-   "value": "C:/Users/Maini/Downloads/icon_pdf_maker_255_size.ico"
+   "value": "images/icons/icon_pdf_maker_255_size.ico"
   },
   {
    "optionDest": "clean_build",
@@ -133,19 +133,19 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/src;src/"
+   "value": "src;src/"
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/images;images/"
+   "value": "images;images/"
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/\u041f\u0440\u043e\u0442\u043e\u043a\u043e\u043b_\u0448\u0430\u0431\u043b\u043e\u043d.xlsx;."
+   "value": "Протокол_шаблон.xlsx;."
   },
   {
    "optionDest": "datas",
-   "value": "C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/\u0428\u0430\u0431\u043b\u043e\u043d \u043f\u0440\u043e\u0442\u043e\u043a\u043e\u043b\u0430 \u0434\u043b\u044f \u041f\u0420.xlsx;."
+   "value": "Шаблон протокола для ПР.xlsx;."
   },
   {
    "optionDest": "hiddenimports",
@@ -183,11 +183,11 @@ pip install auto-py-to-exe
 }
 ```
 ### Теперь выберите этот файл для импорта в пункте "Settings -> Configuration":
-![auto-py-to-exe](files_from_README/auto_py_to_exe_1.png)
+![auto-py-to-exe](images/images_from_README/auto_py_to_exe_1.png)
 ### После импорта нажмите на кнопку "CONVERT .PY TO .EXE" в нижней части окна. После завершения процесса нажмите на кнопку "OPEN OUTPUT FOLDER". Скопируйте из неё папку "main" себе на диск. 
-![auto-py-to-exe](files_from_README/auto_py_to_exe_2.png)
+![auto-py-to-exe](images/images_from_README/auto_py_to_exe_2.png)
 ### Важно! Для правильного отображение изображений скопируйте папку "images" из ветки "development" и вставьте в папку "main", которую Вы только что скопировали себе на диск.
 ## Готовая папка с exe файлом должна иметь вид:
-![auto-py-to-exe](files_from_README/finish.png)
+![auto-py-to-exe](images/images_from_README/finish.png)
 ### Теперь по двойному клику на иконку exe файла у Вас должен запускаться проект.
 ### Быстро скачать архив можно с гугл диска по ссылке: https://drive.google.com/file/d/1nSZuArhKmq_YVUYNhM8eU9A5Kd0wobPu/view?usp=sharing
