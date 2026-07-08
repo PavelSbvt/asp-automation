@@ -53,14 +53,24 @@ ___
 
 ## Для работы программы необходим установленный excel
 ___
+# Запуск проекта в PyCharm
+___
+### Для запуска проекта следуйте инструкции:
+#### В верхней правой части интерфейса PyCharm найдите зелёную кнопку пуска:
+![auto-py-to-exe](images/images_from_README/run_button.png)
+#### Нажмите на кнопку, открывающую выпадающий список и выберите в нём "Edit Configurations"
+![auto-py-to-exe](images/images_from_README/create_run.png)
+#### В поле Name введите название .run.xml файла запуска - теперь так будет называться файл, с которого будет запускаться проект (название появится рядом с кнопкой выпадающего списка по завершении инструкции).
+#### В поле напротив script можно нажать на иконку папки и выбрать исполнительный файл, который находится в папке имя_проекта/scr/main.py
+#### В поле working directory должна быть выбрана корневая папка проекта, но можете вписать формулу: $PROJECT_DIR$, как в примере на скриншоте
+####  завершение инструкции нажмите кнопку Apply и Ok. Теперь у Вас должна появиться иконка созданного файла типа:
+![auto-py-to-exe](images/images_from_README/run_button.png)
+#### Запускайте проект только по этому файлу
 ___
 ![auto-py-to-exe](images/images_from_README/icon_pdf_maker.png)
 # PDF_Maker_exe
 Собрал проект в exe через auto-py-to-exe (иными способами - pyinstaller - не удалось, к сожалению)
 ___
-## Крайне важно. Необходимо, чтобы в файлах loading_pyqt_window.py и pyqt6_code.py пути к изображениям имели вид: "images/" (не "../images/")
-___
-### Скопировать файлы с правильными путями для создания exe файла можно из папки "images/images_from_README". Скопируйте их и замените файлы в папке src/ вашего проекта перед сборкой.
 ### Для самостоятельной сборки через auto-py-to-exe сначала установите библиотеку командой в терминале PyCharm:
 ```bash
 
@@ -72,7 +82,7 @@ pip install auto-py-to-exe
  auto-py-to-exe
 ```
 ### После ввода команды в консоль появится виртуальная оболочка "Auto Py To Exe". 
-Чтобы быстро собрать проект создайте в любом месте на своём диске файл с расширением .json. Скопируйте и вставьте в него следующую конфигурацию.
+### Чтобы быстро собрать проект создайте в любом месте на своём диске файл с расширением .json. Скопируйте и вставьте в него следующую конфигурацию (не забудьте добавить свои пути до папки с проектами там, где это указано! Ващ путь должен иметь вид: C:/Users/Maini/PycharmProjects/PythonProject_PDF_maker_rebuild/src/main.py).
 # Configuration.json:
 ```bash
 
@@ -85,7 +95,7 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "filenames",
-   "value": "src/main.py"
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/src/main.py"
   },
   {
    "optionDest": "onefile",
@@ -97,7 +107,7 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "icon_file",
-   "value": "images/icons/icon_pdf_maker_255_size.ico"
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/images/icons/icon_pdf_maker_255_size.ico"
   },
   {
    "optionDest": "clean_build",
@@ -133,19 +143,15 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "datas",
-   "value": "src;src/"
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/src;src/"
   },
   {
    "optionDest": "datas",
-   "value": "images;images/"
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/images;images/"
   },
   {
    "optionDest": "datas",
-   "value": "Протокол_шаблон.xlsx;."
-  },
-  {
-   "optionDest": "datas",
-   "value": "Шаблон протокола для ПР.xlsx;."
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/Protocol_template.xlsx;."
   },
   {
    "optionDest": "hiddenimports",
@@ -157,15 +163,7 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "hiddenimports",
-   "value": "openpyxl"
-  },
-  {
-   "optionDest": "hiddenimports",
-   "value": "aspose.words"
-  },
-  {
-   "optionDest": "hiddenimports",
-   "value": "lxml"
+   "value": "xlsx"
   },
   {
    "optionDest": "hiddenimports",
@@ -174,6 +172,14 @@ pip install auto-py-to-exe
   {
    "optionDest": "hiddenimports",
    "value": "bs4"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "aspose.words"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "openpyxl"
   }
  ],
  "nonPyinstallerOptions": {
@@ -186,8 +192,7 @@ pip install auto-py-to-exe
 ![auto-py-to-exe](images/images_from_README/auto_py_to_exe_1.png)
 ### После импорта нажмите на кнопку "CONVERT .PY TO .EXE" в нижней части окна. После завершения процесса нажмите на кнопку "OPEN OUTPUT FOLDER". Скопируйте из неё папку "main" себе на диск. 
 ![auto-py-to-exe](images/images_from_README/auto_py_to_exe_2.png)
-### Важно! Для правильного отображение изображений скопируйте папку "images" из ветки "development" и вставьте в папку "main", которую Вы только что скопировали себе на диск.
+### Важно! Для правильного отображение изображений скопируйте папку "images" из ветки "development" и вставьте в папку "main", которую Вы только что скопировали себе на диск. Таким же образом скопируйте из папки проекта файл Protocol_template.xlsx и вставьте его в папку с exe.
 ## Готовая папка с exe файлом должна иметь вид:
 ![auto-py-to-exe](images/images_from_README/finish.png)
 ### Теперь по двойному клику на иконку exe файла у Вас должен запускаться проект.
-### Быстро скачать архив можно с гугл диска по ссылке: https://drive.google.com/file/d/1nSZuArhKmq_YVUYNhM8eU9A5Kd0wobPu/view?usp=sharing
