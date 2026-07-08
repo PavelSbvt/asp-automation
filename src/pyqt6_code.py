@@ -1,8 +1,10 @@
 from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder, choose_universal_excel # импорт функций из файла pyqt_functions.py - функции для работы интерфейса основного окна, вынесенные в отдельный файл
-import os # Для работы с файловой системой (пути, папки)
+#import os # Для работы с файловой системой (пути, папки)
 from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QFileDialog # Основные виджеты PyQt6
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize # QPoint — для перетаскивания окон, QTimer — для задержек, Qt — константы, QSize — размеры
 from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
+
+from pathlib import Path
 
 from pyqt_functions import parsing, choose_foreign_excel, choose_history_excel, choose_specialization_excel, open_parsing_pdf_folder # разделил файл на два - в один написал код pyqt, в другой написал код функций, чтобы было удобнее ориентироваться по коду
 
@@ -21,13 +23,20 @@ class MyWindow(QWidget): # Класс главного окна программ
         self.foreign_commission_path = None
         self.specialization_commission_path = None
 
-        desktop_path = os.path.join(os.environ["USERPROFILE"], "Desktop") # Путь к рабочему столу пользователя
+        # desktop_path = os.path.join(os.environ["USERPROFILE"], "Desktop") # Путь к рабочему столу пользователя
 
-        self.save_folder_path = os.path.join(desktop_path, "results_folder") # Папка для сохранения результатов
+        desktop_path = Path.home() / "Desktop"
+
+        self.save_folder_path = str(Path.home() / "Desktop" / "results_folder")
+
+        # self.save_folder_path = os.path.join(desktop_path, "results_folder") # Папка для сохранения результатов
 
         block_background = QWidget(self)  # первый виджет. первым появится, имеет размер всего окна загрузки, используется для фона загрузочного окна
         block_background.setFixedSize(1200, 800)
-        block_background.setStyleSheet("background-image:url(../images/background_images/DSC_5174_1.jpg);")
+
+        back_path = Path("../images/background_images/DSC_5174_1.jpg")
+        block_background.setStyleSheet(f'background-image:url({back_path.as_posix()});')
+
         block_background.move(0, 0)
 
         self.drag_position = QPoint() # Это создан атрибут для хранения позиции мыши, это будет объект класса qpoint. для начала точка будет иметь координаты 0.0
@@ -144,22 +153,28 @@ class MyWindow(QWidget): # Класс главного окна программ
             return QIcon(rotated_pixmap)
 
         # вызов функций поворота иконок, потому что изначально иконки находятся в неправильном положении
-        icon1 = rotate_icon("../images/icons/pdf.png")
-        icon2 = rotate_icon("../images/icons/settings.png")
-        icon3 = rotate_icon("../images/icons/parsing_ill.png")
+
+        icon1_path = Path("../images/icons/pdf.png")
+        icon2_path = Path("../images/icons/settings.png")
+        icon3_path = Path("../images/icons/parsing_ill.png")
+
+        icon1 = rotate_icon(icon1_path.as_posix())
+        icon2 = rotate_icon(icon2_path.as_posix())
+        icon3 = rotate_icon(icon3_path.as_posix())
 
         # устанавливаю иконки на вкладки
         tabWidgetObjects.setTabIcon(0, icon1)
         tabWidgetObjects.setTabIcon(1, icon3)
         tabWidgetObjects.setTabIcon(2, icon2)
 
-        # кнопка закрытия всего прилодения. родитель - self, чтобы положение кнопки не менялось с переходом на другую вкладку и она была всегда видна
+        # кнопка закрытия всего приложения. родитель - self, чтобы положение кнопки не менялось с переходом на другую вкладку и она была всегда видна
         button_close = QPushButton(self) # создание кастомной кнопки закрытия окна, так как стандартную я удалил
         button_close.setFixedSize(45, 45)
         button_close.move(1150, 5)
         button_close.setCursor(Qt.CursorShape.DragMoveCursor) # при наведении на кнопку курсор сменится на выбранный в методе
-        button_close.setStyleSheet("""
-            background-image:url(../images/icons/close_icon.png);
+        close_button_path = Path("../images/icons/close_icon.png")
+        button_close.setStyleSheet(f"""
+            background-image:url({close_button_path.as_posix()});
             background-color: transparent;
             border: none;
             background-repeat: no-repeat;
@@ -304,8 +319,9 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_do_operation = QPushButton(tabObjects_1)
         button_do_operation.setFixedSize(50, 50)
         button_do_operation.setCursor(Qt.CursorShape.ClosedHandCursor)
+        do_operation_button_path = Path("../images/icons/do_op_new.png")
         button_do_operation.setStyleSheet(
-            "background-image: url(../images/icons/do_op_new.png); color: white; font-size: 14px; font:bold; border-radius: 10px;")
+            f"background-image: url({do_operation_button_path.as_posix()}); color: white; font-size: 14px; font:bold; border-radius: 10px;")
         button_do_operation.move(980, 25)
         button_do_operation.clicked.connect(lambda: get_pdf(self)) # запуск основной функции сбора пдф по готовому эксель с шаблоном протокола и страничной БД
 
@@ -328,15 +344,21 @@ class MyWindow(QWidget): # Класс главного окна программ
 
         # кнопка смены цветового оформления на тёмный стиль
         button_from_choose_dark_theme = QPushButton(tabObjects_2)
-        button_from_choose_dark_theme.setStyleSheet("background-image: url(../images/color_themes/dark_theme/dark_theme_icon.png); border-radius: 10px;")
+        button_from_choose_dark_theme_path = Path("../images/color_themes/dark_theme/dark_theme_icon.png")
+        button_from_choose_dark_theme.setStyleSheet(f"background-image: url({button_from_choose_dark_theme_path.as_posix()}); border-radius: 10px;")
         button_from_choose_dark_theme.setFixedSize(250, 250)
         button_from_choose_dark_theme.move(20, 110)
+
+        button_from_choose_dark_theme_path = Path("../images/color_themes/dark_theme/dark_theme_icon.png")
+        button_from_choose_dark_medium_theme_path = Path("../images/color_themes/dark_theme/dark_theme_icon_medium.png")
+        button_from_choose_dark_mini_theme_path = Path("../images/color_themes/dark_theme/dark_theme_icon_mini.png")
+
 
         def change_theme_to_dark():
             QTimer.singleShot(10, lambda: (
                 button_from_choose_dark_theme.setFixedSize(245, 245),
                 button_from_choose_dark_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/dark_theme/dark_theme_icon_medium.png); border-radius: 10px;"
+                    f"background-image: url({button_from_choose_dark_medium_theme_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(22, 112)
             ))
@@ -344,7 +366,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(45, lambda: (
                 button_from_choose_dark_theme.setFixedSize(240, 240),
                 button_from_choose_dark_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/dark_theme/dark_theme_icon_mini.png); border-radius: 10px;"
+                    f"background-image: url({button_from_choose_dark_mini_theme_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(25, 115)
             ))
@@ -352,7 +374,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(125, lambda: (
                 button_from_choose_dark_theme.setFixedSize(245, 245),
                 button_from_choose_dark_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/dark_theme/dark_theme_icon_medium.png); border-radius: 10px;"
+                    f"background-image: url({button_from_choose_dark_medium_theme_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(22, 112)
             ))
@@ -360,11 +382,12 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(160, lambda: (
                 button_from_choose_dark_theme.setFixedSize(250, 250),
                 button_from_choose_dark_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/dark_theme/dark_theme_icon.png); border-radius: 10px;"
+                    f"background-image: url({button_from_choose_dark_theme_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(20, 110)
             ))
-            block_background.setStyleSheet("background-image: url(../images/color_themes/dark_theme/image_from_dark_theme.JPG);")
+            back_dark_path = Path("../images/color_themes/dark_theme/image_from_dark_theme.JPG")
+            block_background.setStyleSheet(f"background-image: url({back_dark_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                             QProgressBar {
                                 color: rgb(255, 255, 255);
@@ -749,16 +772,22 @@ class MyWindow(QWidget): # Класс главного окна программ
 
         # кнопка смены текущего цветового оформления на фиолетовую тему
         button_from_choose_violet_theme = QPushButton(tabObjects_2)
+        button_violet_theme_path = Path("../images/color_themes/violet_theme/violet_theme_icon.png")
         button_from_choose_violet_theme.setStyleSheet(
-            "background-image: url(../images/color_themes/violet_theme/violet_theme_icon.png); border-radius: 10px;")
+            f"background-image: url({button_violet_theme_path.as_posix()}); border-radius: 10px;")
         button_from_choose_violet_theme.setFixedSize(250, 250)
         button_from_choose_violet_theme.move(280, 110)
+
+        button_violet_theme_path = Path("../images/color_themes/violet_theme/violet_theme_icon.png")
+        button_violet_theme_medium_path = Path("../images/color_themes/violet_theme/violet_theme_icon_medium.png")
+        button_violet_theme_mini_path = Path("../images/color_themes/violet_theme/violet_theme_icon_mini.png")
+
 
         def change_theme_to_violet():
             QTimer.singleShot(10, lambda: (
                 button_from_choose_violet_theme.setFixedSize(245, 245),
                 button_from_choose_violet_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/violet_theme/violet_theme_icon_medium.png); border-radius: 10px;"
+                    f"background-image: url({button_violet_theme_medium_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(282, 112)
             ))
@@ -766,25 +795,26 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(45, lambda: (
                 button_from_choose_violet_theme.setFixedSize(240, 240),
                 button_from_choose_violet_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/violet_theme/violet_theme_icon_mini.png); border-radius: 10px;"
+                    f"background-image: url({button_violet_theme_mini_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(285, 115)
             ))
             QTimer.singleShot(125, lambda: (
                 button_from_choose_violet_theme.setFixedSize(245, 245),
                 button_from_choose_violet_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/violet_theme/violet_theme_icon_medium.png); border-radius: 10px;"
+                    f"background-image: url({button_violet_theme_medium_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(282, 112)
             ))
             QTimer.singleShot(160, lambda: (
                 button_from_choose_violet_theme.setFixedSize(250, 250),
                 button_from_choose_violet_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/violet_theme/violet_theme_icon.png); border-radius: 10px;"
+                    f"background-image: url({button_violet_theme_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(280, 110)
             ))
-            block_background.setStyleSheet("background-image: url(../images/color_themes/violet_theme/image_from_violet_theme.jpg);")
+            back_violet_path = Path("../images/color_themes/violet_theme/image_from_violet_theme.jpg")
+            block_background.setStyleSheet(f"background-image: url({back_violet_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                 QProgressBar {
                     color: rgb(255, 255, 255);
@@ -1174,10 +1204,17 @@ class MyWindow(QWidget): # Класс главного окна программ
 
         # кнопка для смены темы цветового оформления на стандартную тему
         button_from_choose_standart_theme = QPushButton(tabObjects_2)
+        button_standard_path = Path("../images/color_themes/standard_theme/standard_theme_icon.png")
         button_from_choose_standart_theme.setStyleSheet(
-            "background-image: url(../images/color_themes/standard_theme/standard_theme_icon.png); border-radius: 10px;")
+            f"background-image: url({button_standard_path.as_posix()}); border-radius: 10px;")
         button_from_choose_standart_theme.setFixedSize(250, 250)
         button_from_choose_standart_theme.move(540, 110)
+
+        button_standard_path = Path("../images/color_themes/standard_theme/standard_theme_icon.png")
+        button_standard_medium_path = Path("../images/color_themes/standard_theme/standard_theme_icon_medium.png")
+        button_standard_mini_path = Path("../images/color_themes/standard_theme/standard_theme_icon_mini.png")
+
+
         def change_theme_to_standard():
             """функция, которая анимирует фон кнопки, лямбда функции меняют размер кнопок и их фон - плавно и возвращают к начальному виду.
             картинки для заднего фона специально сделано по три штуки, чтобы выглядело достаточно плавно. реализовано специально без qpropertyanimation.
@@ -1185,7 +1222,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(10, lambda: (
                 button_from_choose_standart_theme.setFixedSize(245, 245),
                 button_from_choose_standart_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/standard_theme/standard_theme_icon_medium.png); border-radius: 10px;"
+                    f"background-image: url({button_standard_medium_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(542, 112)
             ))
@@ -1193,7 +1230,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(45, lambda: (
                 button_from_choose_standart_theme.setFixedSize(240, 240),
                 button_from_choose_standart_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/standard_theme/standard_theme_icon_mini.png); border-radius: 10px;"
+                    f"background-image: url({button_standard_mini_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(545, 115)
             ))
@@ -1201,7 +1238,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(125, lambda: (
                 button_from_choose_standart_theme.setFixedSize(245, 245),
                 button_from_choose_standart_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/standard_theme/standard_theme_icon_medium.png); border-radius: 10px;"
+                    f"background-image: url({button_standard_medium_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(542, 112)
             ))
@@ -1209,11 +1246,12 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(160, lambda: (
                 button_from_choose_standart_theme.setFixedSize(250, 250),
                 button_from_choose_standart_theme.setStyleSheet(
-                    "background-image: url(../images/color_themes/standard_theme/standard_theme_icon.png); border-radius: 10px;"
+                    f"background-image: url({button_standard_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(540, 110)
             ))
-            block_background.setStyleSheet("background-image:url(../images/background_images/DSC_5174_1.jpg);")
+            back_standard_path = Path("../images/background_images/DSC_5174_1.jpg")
+            block_background.setStyleSheet(f"background-image:url({back_standard_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                         QProgressBar {
                             color: white;
