@@ -9,6 +9,7 @@ import subprocess
 import aspose.words as aw
 import re
 import traceback
+from pathlib import Path
 
 import requests
 from bs4 import BeautifulSoup
@@ -36,7 +37,7 @@ def print_big_separator():
 
 def open_pdf_folder(self):
     folder_path = self.save_folder_path
-    if not os.path.exists(folder_path):
+    if not Path(folder_path).exists():
         QMessageBox.warning(
             self,
             "Папка не найдена",

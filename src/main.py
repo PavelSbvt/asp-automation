@@ -1,8 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QApplication # так как qapplication должен быть один пришлось создать его в отдельном файле,
 # чтобы окно загрузки программы и основное окно работали правильно и запускались оба
-from src.loading_window_pyqt import My_loading_window # Импорт класса для загрузочного окна, которое запускается до основного окна
-from src.pyqt6_code import MyWindow # Импорт класса для визуального интерфейса на pyqt6
+from loading_window_pyqt import My_loading_window # Импорт класса для загрузочного окна, которое запускается до основного окна
+from pyqt6_code import MyWindow # Импорт класса для визуального интерфейса на pyqt6
 
 def main():
     app = QApplication(sys.argv) # Как раз один qapplication на два py файла с окнами - один окно загрузки, другой основная программы. в их коде qapplication соответственно нет. их qapplication один и находится здесь
