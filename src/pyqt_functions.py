@@ -1165,26 +1165,27 @@ def site_parce_dn() -> List[Tuple[str, str]]:
 
     soup = BeautifulSoup(response.text, 'html.parser')
     target_table = None
-    for table in soup.find_all('table'):
+    for table in soup.find_all('table'): #Цикл по всем таблицам на сайте
         headers = [th.get_text(strip=True) for th in table.find_all('th')]
-        if 'Шифр и наименование научной специальности' in headers:
+        if 'Шифр и наименование научной специальности' in headers: #Поиск нужной таблицы
             target_table = table
             break
     if target_table is None:
         return []
 
     specialties = []
-    for row in target_table.find_all('tr'):
+    for row in target_table.find_all('tr'): #Добавление кода + профиль в список как кортеж
         cols = row.find_all('td')
         if not cols:
             continue
 
-        if len(cols) == 3:
+#Проверяем сколько яйчеек в строке
+        if len(cols) == 3: #Если 3, то берём код и специальность из 2 и 3
             code = cols[1].get_text(strip=True)
             name = cols[2].get_text(strip=True)
             if code and code.endswith('.') and ' ' not in code:
                 specialties.append((code, name))
-        elif len(cols) == 2:
+        elif len(cols) == 2: #Если 2, то код и специальность из 1 и 2
             code = cols[0].get_text(strip=True)
             name = cols[1].get_text(strip=True)
             if code and code.endswith('.') and ' ' not in code:
@@ -1198,19 +1199,19 @@ def site_parce_main() -> List[Tuple[str, str]]:
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-    }
-    response = requests.get(url, headers=headers, timeout=10)
+    } #Имитируем браузер
+    response = requests.get(url, headers=headers, timeout=10) #Пытаемся получить ответ от сайта
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
     target_table = None
-    for header in soup.find_all(['h4', 'font'], class_='head4'):
+    for header in soup.find_all(['h4', 'font'], class_='head4'): #цикл по всем элементам, чтобы найти таблицу с заголовком "Аспирантура"
         if header.get_text(strip=True) == 'Аспирантура':
             target_table = header.find_next('table')
             break
 
-    if target_table is None:
+    if target_table is None: #Поиск по якорю, если не нашлось по тегам
         anchor = soup.find('a', attrs={'name': '4'})
         if anchor:
             next_tag = anchor.find_next()
@@ -1219,13 +1220,13 @@ def site_parce_main() -> List[Tuple[str, str]]:
             target_table = next_tag
 
     specialties = []
-    for row in target_table.find_all('tr'):
+    for row in target_table.find_all('tr'): #Добавляем каждый код и каждый профиль в список как кортеж
         cols = row.find_all('td')
         if not cols:
             continue
-        if len(cols) >= 2:
-            code = cols[-2].get_text(strip=True)
-            name = cols[-1].get_text(strip=True)
+        if len(cols) >= 2: #Проверяем сколько яйчеек в строке
+            code = cols[-2].get_text(strip=True) #Код профиля из предпоследней ячейки
+            name = cols[-1].get_text(strip=True) #Название профиля из последней ячейки
             if code and '.' in code and ' ' not in code:
                 specialties.append((code, name))
 
