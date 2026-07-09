@@ -1364,15 +1364,15 @@ def fill_database_sheet(self):
 
     # Путь к выходному файлу
     # output_path = os.path.abspath(
-    #     os.path.join(os.path.dirname(__file__), "..", "temporary_protocol_db_sheet.xlsx")
+    #     os.path.join(os.path.dirname(__file__), "..", "..temporary_protocol_db_sheet.xlsx")
     # )
-    output_path = Path(__file__).parent.parent / "temporary_protocol_db_sheet.xlsx"
+    output_path = Path(__file__).parent.parent / "resources" / "temporary_protocol_db_sheet.xlsx"
     output_path = str(output_path.absolute())
 
     # Определяем путь к файлу-шаблону (корень проекта)
     # project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     # template_file = os.path.join(project_root, "Protocol_template.xlsx")  # имя шаблона
-    template_file = Path(__file__).parent.parent / "Protocol_template.xlsx"
+    template_file = Path(__file__).parent.parent / "resources" / "Protocol_template.xlsx"
     template_file = str(template_file.absolute())
 
     if not os.path.exists(template_file):

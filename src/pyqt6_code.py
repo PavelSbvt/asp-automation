@@ -34,7 +34,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         block_background = QWidget(self)  # первый виджет. первым появится, имеет размер всего окна загрузки, используется для фона загрузочного окна
         block_background.setFixedSize(1200, 800)
 
-        back_path = Path("images/background_images/DSC_5174_1.jpg")
+        back_path = Path("resources/images/background_images/DSC_5174_1.jpg")
         block_background.setStyleSheet(f'background-image:url({back_path.as_posix()});')
 
         block_background.move(0, 0)
@@ -154,9 +154,9 @@ class MyWindow(QWidget): # Класс главного окна программ
 
         # вызов функций поворота иконок, потому что изначально иконки находятся в неправильном положении
 
-        icon1_path = Path("images/icons/pdf.png")
-        icon2_path = Path("images/icons/settings.png")
-        icon3_path = Path("images/icons/parsing_ill.png")
+        icon1_path = Path("resources/images/icons/pdf.png")
+        icon2_path = Path("resources/images/icons/settings.png")
+        icon3_path = Path("resources/images/icons/parsing_ill.png")
 
         icon1 = rotate_icon(icon1_path.as_posix())
         icon2 = rotate_icon(icon2_path.as_posix())
@@ -172,7 +172,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_close.setFixedSize(45, 45)
         button_close.move(1150, 5)
         button_close.setCursor(Qt.CursorShape.DragMoveCursor) # при наведении на кнопку курсор сменится на выбранный в методе
-        close_button_path = Path("images/icons/close_icon.png")
+        close_button_path = Path("resources/images/icons/close_icon.png")
         button_close.setStyleSheet(f"""
             background-image:url({close_button_path.as_posix()});
             background-color: transparent;
@@ -319,7 +319,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_do_operation = QPushButton(tabObjects_1)
         button_do_operation.setFixedSize(50, 50)
         button_do_operation.setCursor(Qt.CursorShape.ClosedHandCursor)
-        do_operation_button_path = Path("images/icons/do_op_new.png")
+        do_operation_button_path = Path("resources/images/icons/do_op_new.png")
         button_do_operation.setStyleSheet(
             f"background-image: url({do_operation_button_path.as_posix()}); color: white; font-size: 14px; font:bold; border-radius: 10px;")
         button_do_operation.move(980, 25)
@@ -344,14 +344,14 @@ class MyWindow(QWidget): # Класс главного окна программ
 
         # кнопка смены цветового оформления на тёмный стиль
         button_from_choose_dark_theme = QPushButton(tabObjects_2)
-        button_from_choose_dark_theme_path = Path("images/color_themes/dark_theme/dark_theme_icon.png")
+        button_from_choose_dark_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon.png")
         button_from_choose_dark_theme.setStyleSheet(f"background-image: url({button_from_choose_dark_theme_path.as_posix()}); border-radius: 10px;")
         button_from_choose_dark_theme.setFixedSize(250, 250)
         button_from_choose_dark_theme.move(20, 110)
 
-        button_from_choose_dark_theme_path = Path("images/color_themes/dark_theme/dark_theme_icon.png")
-        button_from_choose_dark_medium_theme_path = Path("images/color_themes/dark_theme/dark_theme_icon_medium.png")
-        button_from_choose_dark_mini_theme_path = Path("images/color_themes/dark_theme/dark_theme_icon_mini.png")
+        button_from_choose_dark_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon.png")
+        button_from_choose_dark_medium_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon_medium.png")
+        button_from_choose_dark_mini_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon_mini.png")
 
 
         def change_theme_to_dark():
@@ -386,7 +386,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 ),
                 button_from_choose_dark_theme.move(20, 110)
             ))
-            back_dark_path = Path("images/color_themes/dark_theme/image_from_dark_theme.JPG")
+            back_dark_path = Path("resources/images/color_themes/dark_theme/image_from_dark_theme.JPG")
             block_background.setStyleSheet(f"background-image: url({back_dark_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                             QProgressBar {
@@ -772,15 +772,15 @@ class MyWindow(QWidget): # Класс главного окна программ
 
         # кнопка смены текущего цветового оформления на фиолетовую тему
         button_from_choose_violet_theme = QPushButton(tabObjects_2)
-        button_violet_theme_path = Path("images/color_themes/violet_theme/violet_theme_icon.png")
+        button_violet_theme_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon.png")
         button_from_choose_violet_theme.setStyleSheet(
             f"background-image: url({button_violet_theme_path.as_posix()}); border-radius: 10px;")
         button_from_choose_violet_theme.setFixedSize(250, 250)
         button_from_choose_violet_theme.move(280, 110)
 
-        button_violet_theme_path = Path("images/color_themes/violet_theme/violet_theme_icon.png")
-        button_violet_theme_medium_path = Path("images/color_themes/violet_theme/violet_theme_icon_medium.png")
-        button_violet_theme_mini_path = Path("images/color_themes/violet_theme/violet_theme_icon_mini.png")
+        button_violet_theme_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon.png")
+        button_violet_theme_medium_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon_medium.png")
+        button_violet_theme_mini_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon_mini.png")
 
 
         def change_theme_to_violet():
@@ -813,7 +813,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 ),
                 button_from_choose_violet_theme.move(280, 110)
             ))
-            back_violet_path = Path("images/color_themes/violet_theme/image_from_violet_theme.jpg")
+            back_violet_path = Path("resources/images/color_themes/violet_theme/image_from_violet_theme.jpg")
             block_background.setStyleSheet(f"background-image: url({back_violet_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                 QProgressBar {
@@ -1204,15 +1204,15 @@ class MyWindow(QWidget): # Класс главного окна программ
 
         # кнопка для смены темы цветового оформления на стандартную тему
         button_from_choose_standart_theme = QPushButton(tabObjects_2)
-        button_standard_path = Path("images/color_themes/standard_theme/standard_theme_icon.png")
+        button_standard_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon.png")
         button_from_choose_standart_theme.setStyleSheet(
             f"background-image: url({button_standard_path.as_posix()}); border-radius: 10px;")
         button_from_choose_standart_theme.setFixedSize(250, 250)
         button_from_choose_standart_theme.move(540, 110)
 
-        button_standard_path = Path("images/color_themes/standard_theme/standard_theme_icon.png")
-        button_standard_medium_path = Path("images/color_themes/standard_theme/standard_theme_icon_medium.png")
-        button_standard_mini_path = Path("images/color_themes/standard_theme/standard_theme_icon_mini.png")
+        button_standard_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon.png")
+        button_standard_medium_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon_medium.png")
+        button_standard_mini_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon_mini.png")
 
 
         def change_theme_to_standard():
@@ -1250,7 +1250,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 ),
                 button_from_choose_standart_theme.move(540, 110)
             ))
-            back_standard_path = Path("images/background_images/DSC_5174_1.jpg")
+            back_standard_path = Path("resources/images/background_images/DSC_5174_1.jpg")
             block_background.setStyleSheet(f"background-image:url({back_standard_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                         QProgressBar {
