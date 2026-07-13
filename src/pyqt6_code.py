@@ -474,7 +474,7 @@ class MyWindow(QWidget):
 
             radio_style_dark = """
                             QRadioButton {
-                                color: rgb(220, 220, 220);
+                                color: rgb(56, 53, 53);
                                 font-size: 18px;
                                 font-weight: bold;
                                 spacing: 10px;
@@ -483,12 +483,12 @@ class MyWindow(QWidget):
                                 width: 10px;
                                 height: 10px;
                                 border-radius: 3px;
-                                border: 2px solid rgb(80, 80, 80);
-                                background: rgb(40, 40, 40);
+                                border: 2px solid rgb(145, 145, 145);
+                                background: rgb(128, 128, 128);
                             }
                             QRadioButton::indicator:checked {
-                                background-color: rgb(160, 160, 160);
-                                border: 2px solid rgb(200, 200, 200);
+                                background-color: rgb(18, 18, 18);
+                                border: 2px solid rgb(0, 0, 0);
                             }
                             QRadioButton::indicator:hover {
                                 border: 2px solid rgb(200, 200, 200);
@@ -926,7 +926,7 @@ class MyWindow(QWidget):
 
             radio_style_violet = """
                 QRadioButton {
-                    color: rgb(220, 210, 230);
+                    color: rgb(60, 43, 77);
                     font-size: 18px;
                     font-weight: bold;
                     spacing: 10px;
@@ -939,8 +939,8 @@ class MyWindow(QWidget):
                     background: rgb(40, 30, 50);
                 }
                 QRadioButton::indicator:checked {
-                    background-color: rgb(160, 120, 180);
-                    border: 2px solid rgb(200, 170, 220);
+                    background-color: rgb(140, 48, 201);
+                    border: 2px solid rgb(199, 137, 240);
                 }
                 QRadioButton::indicator:hover {
                     border: 2px solid rgb(200, 170, 220);
