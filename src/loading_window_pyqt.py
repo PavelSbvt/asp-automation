@@ -1,9 +1,10 @@
 from datetime import datetime
 from pathlib import Path
 
-from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
+from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt, QEvent
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QLabel, QWidget
+
 
 class MyLoadingWindow(QWidget):
     """
@@ -13,9 +14,13 @@ class MyLoadingWindow(QWidget):
     closed = pyqtSignal() # как раз кастомный сигнал для закрытия окна
 
     def __init__(self) -> None: # конструктор класса
+        """
+        Инициализация загрузочного окна с гиф-анимацией.
+        """
+
         super().__init__() # метод вызова конструктора родительского класса
 
-        self.drag_position = QPoint()
+        self.drag_position: QPoint = QPoint()
         # Это создан атрибут для хранения позиции мыши, объект класса qpoint.
 
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
@@ -37,13 +42,13 @@ class MyLoadingWindow(QWidget):
         blс_mes_load.setFixedSize(400,50) # задание размера
         blс_mes_load.setStyleSheet("background-color:white; border-radius: 10px;")
         blс_mes_load.move(100, 175)
-        self.LbBlсMesLoad = QLabel(blс_mes_load)
-        self.LbBlсMesLoad.setText(""
+        self.lb_blс_m_load = QLabel(blс_mes_load)
+        self.lb_blс_m_load.setText(""
             "Приложение загружается, подождите, пожалуйста..."
         )
-        self.LbBlсMesLoad.setStyleSheet("color: black; font-size: 14px; font: bold;")
-        self.LbBlсMesLoad.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.LbBlсMesLoad.setGeometry(0,0,400,50)
+        self.lb_blс_m_load.setStyleSheet("color: black; font-size: 14px; font: bold;")
+        self.lb_blс_m_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lb_blс_m_load.setGeometry(0,0,400,50)
 
         print("[I] вывод приветствия в соответствии с текущим времени")
 
@@ -128,7 +133,7 @@ class MyLoadingWindow(QWidget):
             # обновление сохранённой позиции курсора.
             event.accept() # Подтверждает, что событие обработано (не передаёт дальше)
 
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: QEvent) -> None:
         """
         Обработчик события закрытия окна, для текущего окна,
          event - объект события закрытия.

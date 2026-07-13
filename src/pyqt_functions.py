@@ -4,7 +4,7 @@ import shutil # встроенная библиотека Python для рабо
 import subprocess
 import traceback
 from pathlib import Path
-from typing import List, Tuple
+from typing import Dict, Optional, List, Tuple
 
 import aspose.words as aw
 import pandas as pd
@@ -74,7 +74,7 @@ def open_pdf_folder(self) -> None:
             f"'Запустить' на первой вкладке."
         )
         print(f"[E] Папка не найдена. Папка '{folder_path}' не существует."
-              f" Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке.")
+        f" Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке.")
         return
     os.startfile(folder_path)
 
@@ -182,7 +182,7 @@ def get_pdf(self) -> None:
         processed_count += 1
         self.update_progress(processed_count, len(df))
 
-        if surname_datelnyi_p == "nan" or surname_name_p == "nan" or surname_name_p == "":
+        if surname_datelnyi_p == "nan" or surname_name_p == "nan" or surname_name_p =="":
             continue
 
         code = direction.split()[0] if direction and direction != "nan" else "unknown"
@@ -216,11 +216,12 @@ def get_pdf(self) -> None:
         cell = ws['A1']
         text = (
             "МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ\n"
-            "Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
+"Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
             "«Тамбовский государственный технический университет»"
         )
         cell.value = text
-        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.alignment = Alignment(horizontal='center',
+                                   vertical='center', wrap_text=True)
         cell.font = Font(name='Times New Roman', size=12)
 
         ws.row_dimensions[1].height = 42
@@ -230,7 +231,8 @@ def get_pdf(self) -> None:
             "ПРОТОКОЛ №___________"
         )
         cell.value = text_pr
-        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=False)
+        cell.alignment = Alignment(horizontal='center',
+                                   vertical='center', wrap_text=False)
         cell.font = Font(name='Times New Roman', size=14, bold=True)
         ws.row_dimensions[8].height = 20
 
@@ -248,7 +250,8 @@ def get_pdf(self) -> None:
             "___________Д.Ю. Муромцев"
         )
         cell.value = text_M
-        cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=False)
+        cell.alignment = Alignment(horizontal='left',
+                                   vertical='center', wrap_text=False)
         cell.font = Font(name='Times New Roman', size=12)
         ws.row_dimensions[5].height = 15
 
@@ -257,17 +260,20 @@ def get_pdf(self) -> None:
             "«___»______________20___г."
         )
         cell.value = text_d
-        cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=False)
+        cell.alignment = Alignment(horizontal='left',
+                                   vertical='center', wrap_text=False)
         cell.font = Font(name='Times New Roman', size=12)
         ws.row_dimensions[6].height = 15
 
         cell = ws.cell(row=29, column=3, value=surname_datelnyi_p)
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False,
+                                   vertical='center', horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12, italic=True)
 
         cell = ws.cell(row=39, column=4, value=surname_name_p)
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False,
+                                   vertical='center', horizontal='center')
 
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12, italic=True)
@@ -275,7 +281,8 @@ def get_pdf(self) -> None:
         cell = ws['J39']
         cell.value = ""
         cell.border = thin_border
-        cell.alignment = Alignment(horizontal='left', vertical='center', wrap_text=False)
+        cell.alignment = Alignment(horizontal='left',
+                                   vertical='center', wrap_text=False)
         cell.font = Font(name='Times New Roman', size=12)
 
         ws.row_dimensions[21].height = 5
@@ -283,13 +290,15 @@ def get_pdf(self) -> None:
         ws.row_dimensions[28].height = 5
 
         cell = ws.cell(row=26, column=4, value=str(df.iloc[string_number, 1]))
-        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.alignment = Alignment(wrap_text=True,
+                                   vertical='bottom')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12, italic=True)
         ws.row_dimensions[26].height = 30
 
         cell = ws.cell(row=23, column=1, value=direction)
-        cell.alignment = Alignment(wrap_text=True, vertical='bottom')
+        cell.alignment = Alignment(wrap_text=True,
+                                   vertical='bottom')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12, italic=True)
         ws.row_dimensions[23].height = 30
@@ -300,7 +309,8 @@ def get_pdf(self) -> None:
         cell.font = Font(name='Times New Roman', size=12, italic=True)
 
         cell = ws.cell(row=42, column=9, value=str(df.iloc[string_number, 4]))
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12)
 
@@ -310,7 +320,8 @@ def get_pdf(self) -> None:
         cell.font = Font(name='Times New Roman', size=12, italic=True)
 
         cell = ws.cell(row=45, column=9, value=str(df.iloc[string_number, 6]))
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12)
 
@@ -320,7 +331,8 @@ def get_pdf(self) -> None:
         cell.font = Font(name='Times New Roman', size=12, italic=True)
 
         cell = ws.cell(row=47, column=9, value=str(df.iloc[string_number, 8]))
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12)
 
@@ -390,12 +402,15 @@ def get_pdf(self) -> None:
         cell.font = Font(name='Times New Roman', size=12)
 
         if len(surname_name_p) > 35:
-            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=8, italic=True)
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman',
+                                                  size=8, italic=True)
         else:
-            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=12, italic=True)
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman',
+                                                  size=12, italic=True)
 
         file_name = f"{code} {surname_name_p}.xlsx"
-        file_name = file_name.replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_")
+        file_name = file_name.replace("/", "_").replace(
+            "\\", "_").replace(":", "_").replace("*", "_")
         wb.save(file_name)
 
         excel_path = os.path.abspath(file_name)
@@ -429,7 +444,8 @@ def get_pdf(self) -> None:
         print_separator()
         self.output_text.append("-" * 80)
 
-    msg = f"[S] Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'"
+    msg = (f"[S] Программа завершила работу. "
+           f"Документы PDF сохранены в папке '{output_pdf_name}'")
     print_big_separator()
     print_out_string(msg)
     self.output_text.append(msg)
@@ -448,7 +464,8 @@ def get_pdf(self) -> None:
         f"Папка сохранения: {output_pdf_name}",
         QMessageBox.StandardButton.Ok
     )
-    print(f"[S] Готово! Создано PDF документов: {len(df)}. Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
+    print(f"[S] Готово! Создано PDF документов: {len(df)}. "
+          f"Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
 
 def choose_universal_excel(self) -> None:
     """
@@ -470,18 +487,20 @@ def choose_universal_excel(self) -> None:
 
         # Обновляем label (показываем имя файла)
         if len(f"{os.path.basename(file_path)}") > 30:
-            self.universal_excel_label.setStyleSheet("font-size: 12px; color: white; background-color: rgb(105,208,73);")
+            self.universal_excel_label.setStyleSheet(
+                "font-size: 12px; color: white; background-color: rgb(105,208,73);")
             self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
         else:
             self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
-            self.universal_excel_label.setStyleSheet("font-size: 14px; color: white; background-color: rgb(105,208,73);")
+            self.universal_excel_label.setStyleSheet(
+                "font-size: 14px; color: white; background-color: rgb(105,208,73);")
 
         # return selected_file
 
         # Выводим в лог
         print(f"[I] Выбран файл: {file_path}")
 
-def generate_pdf_from_db(self, excel_file_path: str):
+def generate_pdf_from_db(self, excel_file_path: str) -> None:
     """
     Генерация PDF-протоколов на основе сгенерированного Excel-файла,
     содержащего листы «БД» и «Протокол».
@@ -555,11 +574,13 @@ def generate_pdf_from_db(self, excel_file_path: str):
         QApplication.processEvents()
 
         # Пропускаем пустые строки
-        if surname_genitive == "nan" or surname_nominative == "nan" or surname_nominative == "":
+        if (surname_genitive == "nan" or surname_nominative == "nan"
+                or surname_nominative == ""):
             continue
 
         # Из направления берём первую часть (шифр) для имени файла
-        code = direction_raw.split()[0] if direction_raw and direction_raw != "nan" else "unknown"
+        code = direction_raw.split()[0] if direction_raw and direction_raw != "nan" \
+            else "unknown"
 
         print(f"[I] Делаю PDF для: {surname_nominative}")
 
@@ -574,11 +595,12 @@ def generate_pdf_from_db(self, excel_file_path: str):
         cell = ws['A1']
         text = (
             "МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ\n"
-            "Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
+"Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
             "«Тамбовский государственный технический университет»"
         )
         cell.value = text
-        cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+        cell.alignment = Alignment(horizontal='center', vertical='center',
+                                   wrap_text=True)
         cell.font = Font(name='Times New Roman', size=12)
 
         ws.row_dimensions[1].height = 42
@@ -605,7 +627,8 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         # === Запись текста приказа в A12 ===
         ws['A12'] = commission_text
-        ws['A12'].alignment = Alignment(horizontal='left', vertical='center', wrap_text=True)
+        ws['A12'].alignment = Alignment(horizontal='left', vertical='center',
+                                        wrap_text=True)
         ws['A12'].font = Font(name='Times New Roman', size=12)
         ws.row_dimensions[12].height = 45
 
@@ -636,13 +659,15 @@ def generate_pdf_from_db(self, excel_file_path: str):
         # === Заполнение переменных данных ===
         # Фамилия в родительном падеже (СЛУШАЛИ)
         cell = ws.cell(row=29, column=3, value=surname_genitive)
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12, italic=True)
 
         # ФИО в именительном падеже (ПОСТАНОВИЛИ)
         cell = ws.cell(row=39, column=4, value=surname_nominative)
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12, italic=True)
 
@@ -668,7 +693,8 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         # Инициалы председателя
         cell = ws.cell(row=42, column=9, value=chair_initials)
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12)
 
@@ -680,7 +706,8 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         # Инициалы зама
         cell = ws.cell(row=45, column=9, value=deputy_initials)
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12)
 
@@ -692,7 +719,8 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         # Инициалы члена
         cell = ws.cell(row=47, column=9, value=member_initials)
-        cell.alignment = Alignment(wrap_text=False, vertical='center', horizontal='center')
+        cell.alignment = Alignment(wrap_text=False, vertical='center',
+                                   horizontal='center')
         cell.border = thin_border
         cell.font = Font(name='Times New Roman', size=12)
 
@@ -711,13 +739,16 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         # Если фамилия слишком длинная, уменьшаем шрифт
         if len(surname_nominative) > 35:
-            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=8, italic=True)
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman',
+                                                  size=8, italic=True)
         else:
-            ws.cell(row=39, column=4).font = Font(name='Times New Roman', size=12, italic=True)
+            ws.cell(row=39, column=4).font = Font(name='Times New Roman',
+                                                  size=12, italic=True)
 
         # Сохраняем временный xlsx
         file_name = f"{code} {surname_nominative}.xlsx"
-        file_name = file_name.replace("/", "_").replace("\\", "_").replace(":", "_").replace("*", "_")
+        file_name = file_name.replace("/", "_").replace(
+            "\\", "_").replace(":", "_").replace("*", "_")
         wb.save(file_name)
         excel_path = os.path.abspath(file_name)
 
@@ -739,14 +770,16 @@ def generate_pdf_from_db(self, excel_file_path: str):
             f.write(vba_script)
 
         try:
-            subprocess.run(["cscript", "//Nologo", "temp_convert.vbs"], shell=True, check=True, timeout=30)
+            subprocess.run(["cscript", "//Nologo", "temp_convert.vbs"],
+                           shell=True, check=True, timeout=30)
         except subprocess.CalledProcessError as e:
             print(f"[E] Ошибка конвертации Excel: {e}")
             os.remove("temp_convert.vbs")
             os.remove(file_name)
             continue
         except FileNotFoundError:
-            print("[E] Не удалось запустить cscript (Windows Script Host). Проверьте установку.")
+            print("[E] Не удалось запустить cscript (Windows Script Host). "
+                  "Проверьте установку.")
             os.remove("temp_convert.vbs")
             os.remove(file_name)
             QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
@@ -760,7 +793,8 @@ def generate_pdf_from_db(self, excel_file_path: str):
 
         print_separator()
 
-    print(f"[S] Программа завершила работу. Документы PDF сохранены в папке '{output_pdf_name}'")
+    print(f"[S] Программа завершила работу. Документы PDF сохранены в папке "
+          f"'{output_pdf_name}'")
 
     print_big_separator()
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
@@ -773,7 +807,8 @@ def generate_pdf_from_db(self, excel_file_path: str):
         QMessageBox.StandardButton.Ok
     )
     self.progress_bar_parsing.setValue(100)
-    print(f"[S] Готово! Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
+    print(f"[S] Готово! Создано PDF документов: {len(df)}. Папка сохранения: "
+          f"{output_pdf_name}")
 
 
 def parsing_universal_excel(self) -> None:
@@ -790,7 +825,8 @@ def parsing_universal_excel(self) -> None:
         # Проверяем существование файла
         if not os.path.exists(self.universal_file_path):
             print(f"[E] Файл не существует: {self.universal_file_path}")
-            QMessageBox.critical(self, "Ошибка", f"Файл не существует:\n{self.universal_file_path}")
+            QMessageBox.critical(self, "Ошибка",
+                                 f"Файл не существует:\n{self.universal_file_path}")
 
             return
 
@@ -845,7 +881,8 @@ def parsing_universal_excel(self) -> None:
                 print(f"[I] pandas прочитал {len(df)} строк")
             except Exception as e2:
                 print(f"[E] pandas не сработал: {e2}")
-                raise # ключевое слово для генерации (выброса) исключений. Оно используется, чтобы искусственно вызвать ошибку в программе
+                raise
+                # ключевое слово для генерации (выброса) исключений.
 
         if df is None or len(df) == 0:
             print("[E] Нет данных в файле!")
@@ -913,9 +950,10 @@ def parsing_universal_excel(self) -> None:
             f"Не удалось прочитать файл:\n{str(e)}"
         )
 
-def parse_doc_with_tables(path: str) -> None:
+def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
     """
-    Извлекает все таблицы из документа word .doc и возвращает их как один DataFrame с текстом.
+    Извлекает все таблицы из документа word .doc и возвращает
+    их как один DataFrame с текстом.
     :return: None
     """
 
@@ -949,11 +987,12 @@ def parse_doc_with_tables(path: str) -> None:
         df['table_index'] = idx
         tables_data.append(df)
 
-    tables_df = pd.concat(tables_data, ignore_index=True) if tables_data else pd.DataFrame()
+    tables_df = pd.concat(tables_data, ignore_index=True)\
+        if tables_data else pd.DataFrame()
     return tables_df, text
 
 
-def parsing_commissions(self) -> None:
+def parsing_commissions(self) -> Optional[List[Dict]]:
     """
     Парсит файл комиссии и извлекает членов комиссии с ролями для каждой специальности
     :return: None
@@ -977,7 +1016,8 @@ def parsing_commissions(self) -> None:
 
     # Проверяем, что файл выбран
     if not path:
-        QMessageBox.warning(self, "Ошибка", f"Сначала выберите файл комиссии '{commission_name}'!")
+        QMessageBox.warning(self, "Ошибка",
+                            f"Сначала выберите файл комиссии '{commission_name}'!")
         print("[E] Ошибка. сначала выберите файл комиссии")
         return None
 
@@ -995,7 +1035,8 @@ def parsing_commissions(self) -> None:
         # Если есть таблицы
         if tables_df is not None and not tables_df.empty:
             print(
-                f"[I] Найдено таблиц: {len(tables_df['table_index'].unique()) if 'table_index' in tables_df.columns else 1}")
+                f"[I] Найдено таблиц: {len(tables_df['table_index'].unique())
+                if 'table_index' in tables_df.columns else 1}")
 
             # Получаем колонки
             cols = list(tables_df.columns)
@@ -1010,7 +1051,8 @@ def parsing_commissions(self) -> None:
                     col_lower = col.lower()
                     if 'фамил' in col_lower or 'инициал' in col_lower:
                         fio_col = col
-                    elif 'шифр' in col_lower or 'наименование' in col_lower or 'специальност' in col_lower:
+                    elif ('шифр' in col_lower or 'наименование'
+                          in col_lower or 'специальност' in col_lower):
                         code_col = col
 
             print(f"[I] Колонка ФИО: {fio_col}")
@@ -1024,12 +1066,14 @@ def parsing_commissions(self) -> None:
                         if col not in ['source_file', 'table_index']:
                             value = str(row[col]).strip() if pd.notna(row[col]) else ""
                             if value and len(value) > 10:
-                                _extract_commission_members(value, members_by_specialty, row, code_col)
+                                _extract_commission_members(value,
+                                                    members_by_specialty, row, code_col)
                 else:
                     # Берём значение из колонки с ФИО
                     value = str(row[fio_col]).strip() if pd.notna(row[fio_col]) else ""
                     if value and len(value) > 10:
-                        _extract_commission_members(value, members_by_specialty, row, code_col)
+                        _extract_commission_members(value, members_by_specialty,
+                                                    row, code_col)
 
         # Если не нашли в таблицах - ищем в тексте документа
         if not members_by_specialty and full_text:
@@ -1053,7 +1097,10 @@ def parsing_commissions(self) -> None:
                 for member in members:
                     print(f"[I]     - {member['fio']} ({member['role']})")
 
-            print(f"[S] Готово. комиссия успешно загружена. Найдено комиссий: {len(members_by_specialty)}. Семестр: {semester_name}. Файл: {os.path.basename(path)}.")
+            print(
+                f"[S] Готово. комиссия успешно загружена. Найдено комиссий: "
+                f"{len(members_by_specialty)}. Семестр: {semester_name}."
+                f" Файл: {os.path.basename(path)}.")
         else:
             print("[E] Члены комиссии не найдены!")
             QMessageBox.warning(
@@ -1086,7 +1133,8 @@ def extract_code_number(text: str) -> str:
     match = re.search(r'\d{1,2}\.\d{1,2}\.\d{1,2}', text)
     return match.group(0) if match else text.strip()
 
-def _extract_commission_members(text, members_by_specialty: str, row=None, code_col=None) -> None:
+def _extract_commission_members(text: str, members_by_specialty: List[Dict],
+                                row=None, code_col=None) -> None:
     """
     Извлечение членов комиссии из текста одной строки таблицы
     :return: None
@@ -1109,7 +1157,8 @@ def _extract_commission_members(text, members_by_specialty: str, row=None, code_
             continue
 
         fio_match = re.search(
-            r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?|[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+)',
+            r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?|'
+            r'[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+)',
             part
         )
 
@@ -1157,11 +1206,13 @@ def choose_history_excel(self) -> None:
         # Обновляем label
         short_name = os.path.basename(file_path)
         if len(short_name) > 30:
-            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
-            self.history_excel_choosed_widget_label.setText(short_name)
+            self.history_xl_choused_label.setStyleSheet(
+                "font-size: 11px; color: white; background-color: rgb(105,208,73);")
+            self.history_xl_choused_label.setText(short_name)
         else:
-            self.history_excel_choosed_widget_label.setText(short_name)
-            self.history_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+            self.history_xl_choused_label.setText(short_name)
+            self.history_xl_choused_label.setStyleSheet(
+                "font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"[I] Выбран файл комиссии по истории: {file_path}")
 
 def choose_foreign_excel(self) -> None:
@@ -1180,11 +1231,13 @@ def choose_foreign_excel(self) -> None:
         self.foreign_commission_path = file_path
         short_name = os.path.basename(file_path)
         if len(short_name) > 30:
-            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
-            self.foreign_excel_choosed_widget_label.setText(short_name)
+            self.foreign_xl_choosed_label.setStyleSheet(
+                "font-size: 11px; color: white; background-color: rgb(105,208,73);")
+            self.foreign_xl_choosed_label.setText(short_name)
         else:
-            self.foreign_excel_choosed_widget_label.setText(short_name)
-            self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+            self.foreign_xl_choosed_label.setText(short_name)
+            self.foreign_xl_choosed_label.setStyleSheet(
+                "font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"[I] Выбран файл комиссии по иностранному: {file_path}")
 
 def choose_specialization_excel(self) -> None:
@@ -1203,11 +1256,13 @@ def choose_specialization_excel(self) -> None:
         self.specialization_commission_path = file_path
         short_name = os.path.basename(file_path)
         if len(short_name) > 30:
-            self.specialization_excel_choosed_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
-            self.specialization_excel_choosed_label.setText(short_name)
+            self.specialization_xl_choosed_lb.setStyleSheet(
+                "font-size: 11px; color: white; background-color: rgb(105,208,73);")
+            self.specialization_xl_choosed_lb.setText(short_name)
         else:
-            self.specialization_excel_choosed_label.setText(short_name)
-            self.specialization_excel_choosed_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+            self.specialization_xl_choosed_lb.setText(short_name)
+            self.specialization_xl_choosed_lb.setStyleSheet(
+                "font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"[I] Выбран файл комиссии по специальности: {file_path}")
 
 def choose_save_folder_path(self) -> None:
@@ -1216,21 +1271,22 @@ def choose_save_folder_path(self) -> None:
     :return: None
     """
 
-    file_path, _ = QFileDialog.getOpenFileName(
+    file_path, _ = QFileDialog.getExistingDirectory(
         self,
         "Выберите папку сохранения для PDF",
-        "",
-        "Word files (*.doc *.docx);;All files (*.*)"
+
     )
     if file_path:
-        self.specialization_commission_path = file_path
+        self.lb_choosing_way_save_parsing_pdf = file_path
         short_name = os.path.basename(file_path)
         if len(short_name) > 30:
-            self.specialization_excel_choosed_label.setStyleSheet("font-size: 11px; color: white; background-color: rgb(105,208,73);")
-            self.specialization_excel_choosed_label.setText(short_name)
+            self.lb_choosing_way_save_parsing_pdf.setStyleSheet(
+                "font-size: 11px; color: white; background-color: rgb(105,208,73);")
+            self.lb_choosing_way_save_parsing_pdf.setText(short_name)
         else:
-            self.specialization_excel_choosed_label.setText(short_name)
-            self.specialization_excel_choosed_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
+            self.lb_choosing_way_save_parsing_pdf.setText(short_name)
+            self.lb_choosing_way_save_parsing_pdf.setStyleSheet(
+                "font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"[I] Выбран файл комиссии по специальности: {file_path}")
 
 def site_parce_dn() -> List[Tuple[str, str]]:
@@ -1254,7 +1310,7 @@ def site_parce_dn() -> List[Tuple[str, str]]:
         return []
 
     specialties = []
-    for row in target_table.find_all('tr'): #Добавление кода + профиль в список как кортеж
+    for row in target_table.find_all('tr'): #Добавление кода, профиль в список как кортеж
         cols = row.find_all('td')
         if not cols:
             continue
@@ -1280,17 +1336,21 @@ def site_parce_main() -> List[Tuple[str, str]]:
 
     url = 'https://www.tstu.ru/r.php?r=postup.abitur.na_sp'
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,'
+                'application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
     } #Имитируем браузер
-    response = requests.get(url, headers=headers, timeout=10) #Пытаемся получить ответ от сайта
+    response = requests.get(url, headers=headers, timeout=10)
+    #Пытаемся получить ответ от сайта
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
     target_table = None
-    for header in soup.find_all(['h4', 'font'], class_='head4'): #цикл по всем элементам, чтобы найти таблицу с заголовком "Аспирантура"
+    for header in soup.find_all(['h4', 'font'], class_='head4'):
+        # цикл по всем элементам, чтобы найти таблицу с заголовком "Аспирантура"
         if header.get_text(strip=True) == 'Аспирантура':
             target_table = header.find_next('table')
             break
@@ -1304,7 +1364,8 @@ def site_parce_main() -> List[Tuple[str, str]]:
             target_table = next_tag
 
     specialties = []
-    for row in target_table.find_all('tr'): #Добавляем каждый код и каждый профиль в список как кортеж
+    for row in target_table.find_all('tr'):
+        # Добавляем каждый код и каждый профиль в список как кортеж
         cols = row.find_all('td')
         if not cols:
             continue
@@ -1349,7 +1410,7 @@ def clean_excel_string(s: str) -> str:
     cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', s)
     return cleaned
 
-def fill_database_sheet(self) -> None:
+def fill_database_sheet(self) -> Optional[str]:
     """
     функция заполнения листа БД таблицы-шаблона
     :return: None
@@ -1386,8 +1447,12 @@ def fill_database_sheet(self) -> None:
 
     print("[I] Ключи словаря комиссий:", list(commission_dict.keys()))
 
-    def get_member_by_role(comm: str, role: str) -> None:
-        """поиск в комиссии члена по роли"""
+    def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
+        """
+        поиск в комиссии члена по роли
+        :return: Optional[Dict]
+        """
+
         if not comm:
             return None
         for m in comm.get('members', []):
@@ -1458,11 +1523,13 @@ def fill_database_sheet(self) -> None:
     df = pd.DataFrame(data_rows, columns=columns)
 
     # Путь к выходному файлу
-    output_path = Path(__file__).parent.parent / "resources" / "temporary_protocol_db_sheet.xlsx"
+    output_path = (Path(__file__).parent.parent / "resources" /
+                   "temporary_protocol_db_sheet.xlsx")
     output_path = str(output_path.absolute())
 
     # Определяем путь к файлу-шаблону (корень проекта)
-    template_file = Path(__file__).parent.parent / "resources" / "Protocol_template.xlsx"
+    template_file = (Path(__file__).parent.parent / "resources" /
+                     "Protocol_template.xlsx")
     template_file = str(template_file.absolute())
 
     if not os.path.exists(template_file):
@@ -1497,7 +1564,11 @@ def fill_database_sheet(self) -> None:
 
 
 def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
-    """функция для склонения ФИО из И.п. в Р.п. - слушали."""
+    """
+    функция для склонения ФИО из И.п. в Р.п. - слушали.
+    :return: string
+    """
+
     # Преобразует ФИО в родительный падеж
     # Для граждан РФ - склоняем, для иностранцев - нет
     if citizenship != "Россия":
@@ -1545,7 +1616,10 @@ def _get_fio_genitive(fio: str, citizenship: str = "РФ") -> str:
     return f"{surname_gen} {name_gen} {patronymic_gen}"
 
 def _get_fio_initials(fio: str) -> str:
-    """ Преобразует ФИО в формат / И.О. Фамилия / """
+    """
+    Преобразует ФИО в формат / И.О. Фамилия /
+    :return: string
+    """
     parts = fio.split()
     if len(parts) < 2:
         return fio
@@ -1557,40 +1631,60 @@ def _get_fio_initials(fio: str) -> str:
     initials = '.'.join(letters) + '.'
     return f"/ {initials} {surname} /"
 
+def test_excel() -> None:
+    """
+    тестовая функция, созданная для поиска ошибки в коде.
+    не используется в программе. только для отладки
+    :return: None
+    """
 
+    file_path = \
+    (r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы"
+     r"/Универсальный список.xlsx")
 
-def test_excel(): # тестовая функция - поиск ошибки
-    """тестовая функция, созданная для поиска ошибки в коде. не используется в программе. только для отладки"""
-
-    file_path = r"C:/Users/Maini/Desktop/ПР по формированию протоколов/Разнообразные документы/Универсальный список.xlsx" # только для отладки на моём пк. не будет использоваться в программе
-
-    print(f"[I] Тест: читаю файл {file_path}") # так как филе пас это путь я просто прописываю, какой файл тестируется на чтение
+    print(f"[I] Тест: читаю файл {file_path}")
     print(f"[I] Файл существует: {os.path.exists(file_path)}") # вернёт булево
-    print(f"[I] Размер: {os.path.getsize(file_path)} байт") # если сколько-нибудь весит, то файл точно есть
+    print(f"[I] Размер: {os.path.getsize(file_path)} байт")
 
     try:
-        df = pd.read_excel(file_path, dtype=str, engine='openpyxl') # read_excel - функция, которая читает Excel файл и превращает его в DataFrame, все данные читает как текст, для чтения используется движок openpyxl - можно сделать чисто через pandas
-        print(f"[S] Успешно! Загружено {len(df)} строк") # SUCCESS - успешное завершение оперции
+        df = pd.read_excel(file_path, dtype=str, engine='openpyxl')
+        # read_excel - функция, которая читает Excel файл и превращает его в DataFrame,
+        # все данные читает как текст
+        print(f"[S] Успешно! Загружено {len(df)} строк")
         print(f"[I] Колонки: {list(df.columns)}")
     except Exception as e:
         print(f"[E] Ошибка: {e}")
-        traceback.print_exc() # Нужно было использовать библиотеку, чтобы вывод ошибки был полным. Вывод ошибки в консоль
+        traceback.print_exc()
 
 
-def parsing(self):
+def parsing(self) -> None:
+    """
+    Функция парсинга данных
+    :param self:
+    :return: None
+    """
+
     print("[I] НАЧАЛО ПАРСИНГА")
 
     # Проверки
     print("[I] Проверяю наличие файлов...")
-    if not hasattr(self, 'universal_file_path') or not self.universal_file_path: # Если у объекта self нет атрибута с именем 'universal_file_path' или атрибут существует, но он пустой
-        QMessageBox.warning(self, "Ошибка", "Сначала выберите универсальную таблицу!") # Выскочит короткий QMessageBox с предупреждением
+    if (not hasattr(self, 'universal_file_path')
+            or not self.universal_file_path):
+        # Если у объекта self нет атрибута с именем
+        # 'universal_file_path' или атрибут существует, но он пустой
+        QMessageBox.warning(self, "Ошибка",
+                    "Сначала выберите универсальную таблицу!")
+        # Выскочит короткий QMessageBox с предупреждением
         print("[E] Не выбрана универсальная таблица")
         return
 
     print("[I] Универсальный файл есть")
 
-    if not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked() and not self.radio_button_3.isChecked(): # Если ни одна кнопка QRadioButton не выбрана
-        QMessageBox.warning(self, "Ошибка", "Выберите семестр!") # Тоже появится предупреждение, о том что не выбран семестр
+    if (not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked()
+            and not self.radio_button_3.isChecked()):
+        # Если ни одна кнопка QRadioButton не выбрана
+        QMessageBox.warning(self, "Ошибка", "Выберите семестр!")
+        # Тоже появится предупреждение, о том что не выбран семестр
         print("[E] Не выбран семестр")
         return
 
@@ -1598,9 +1692,9 @@ def parsing(self):
 
     # Сохраняем текст приказа
     print("[I] Сохраняю текст приказа") # лог для отладки
-    self.commission_text = self.input_commission.text().strip() # атрибуту класса присваивается значение того, что было
-    # введено в поле ввода QLineEdit, берет только текст и удаляет пробелы в начале и конце строки
-    print(f"[I] Текст приказа: {self.commission_text[:30]}...") # для отладки - вывод кусочка вписанного в поле приказа
+    self.commission_text = self.input_commission.text().strip()
+    print(f"[I] Текст приказа: {self.commission_text[:30]}...")
+    # для отладки - вывод кусочка вписанного в поле приказа
 
     # Определяем семестр
     print("[I] Определение семестра.")
@@ -1610,19 +1704,27 @@ def parsing(self):
     elif self.radio_button_2.isChecked(): ## ели вторая нажата, то вернёт True
         self.selected_semester = 2
         self.semester_name = "Второй семестр"
-    else: # иначе приравняет вспомогательные переменные к 3 семестру. Проверка на выбор была где-то выше, поэтому не было необходимости на дополнительную
+    else: # иначе приравняет вспомогательные переменные к 3 семестру.
         self.selected_semester = 3
         self.semester_name = "Третий семестр"
 
-    print(f"[I] Семестр: {self.semester_name}") # соответственно после предыдущего блока кода переменная имя семестра будет вмещать имя текущего выбранного семестра и выведет в лог
+    print(f"[I] Семестр: {self.semester_name}")
+    # соответственно после предыдущего блока кода переменная имя
+    # семестра будет вмещать имя текущего выбранного семестра и выведет в лог
 
     # Читаем Excel файл
     print("[I] Чтение универсальной таблицы.")
     try:
-        df = pd.read_excel( # df - сокращение от dataframe - таблицы в пандас, обращаемся к библиотеке пандас, методу чтения таблиц, присваивая таблицу, которую возвращает метод чтения переменной
-            self.universal_file_path, # путь к таблице. он принадлежит классу и прописан ранее в коде
-            dtype=str, # читать данные как текст
-            engine='openpyxl' # использовать библиотеку openpyxl для чтения файла. движок
+        df = pd.read_excel(
+            # df - сокращение от dataframe - таблицы в пандас,
+            # обращаемся к библиотеке пандас, методу чтения таблиц, присваивая таблицу,
+            # которую возвращает метод чтения переменной
+            self.universal_file_path,
+            # путь к таблице. он принадлежит классу и прописан ранее в коде
+            dtype=str,
+            # читать данные как текст
+            engine='openpyxl'
+            # использовать библиотеку openpyxl для чтения файла. движок
         )
         print(f"[I] Загружено {len(df)} строк")
 
@@ -1652,15 +1754,18 @@ def parsing(self):
         if citizenship_idx is None:
             citizenship_idx = 40  # ГРАЖДАНСТВО
 
-        print(f"[I] Индексы: ФИО={fio_idx}, Профиль={profile_idx}, Гражданство={citizenship_idx}")
+        print(f"[I] Индексы: ФИО={fio_idx}, Профиль={profile_idx}, "
+              f"Гражданство={citizenship_idx}")
 
         # Извлекаем данные
         students_data = []
         for index, row in df.iterrows():
             try:
                 fio = str(row.iloc[fio_idx]).strip() if len(row) > fio_idx else ""
-                profile = str(row.iloc[profile_idx]).strip() if len(row) > profile_idx else ""
-                citizenship = str(row.iloc[citizenship_idx]).strip() if len(row) > citizenship_idx else ""
+                profile = str(row.iloc[profile_idx]).strip() \
+                    if len(row) > profile_idx else ""
+                citizenship = str(row.iloc[citizenship_idx]).strip() \
+                    if len(row) > citizenship_idx else ""
 
                 if fio and fio != "nan" and fio != "":
                     if profile == "nan":
@@ -1704,7 +1809,8 @@ def parsing(self):
     # Проверяем данные
     print("[I] Проверяю данные студентов...")
     if not hasattr(self, 'students_data') or not self.students_data:
-        QMessageBox.warning(self, "Ошибка", "Не удалось загрузить данные из универсальной таблицы!")
+        QMessageBox.warning(self, "Ошибка",
+                            "Не удалось загрузить данные из универсальной таблицы!")
         return
     print(f"[I] Загружено {len(self.students_data)} студентов")
 
@@ -1723,14 +1829,16 @@ def parsing(self):
             return
     except Exception as e:
         traceback.print_exc()
-        QMessageBox.critical(self, "Ошибка", f"Ошибка при создании БД или PDF:\n{str(e)}")
+        QMessageBox.critical(self,"Ошибка", f"Ошибка при создании БД или PDF:\n{str(e)}")
         print(f"[E] Ошибка. Ошибка при создании БД или PDF:{str(e)}")
         return
     print("[I] КОНЕЦ ПАРСИНГА")
 
-def open_parsing_pdf_folder(self):
+def open_parsing_pdf_folder(self) -> None:
     """
     Открывает папку с созданными по напарсенным данным PDF
+    :param self:
+    :return: None
     """
 
     folder_path = self.parsing_save_folder_path
@@ -1739,7 +1847,8 @@ def open_parsing_pdf_folder(self):
             self,
                 "Папка не найдена",
                 f"Папка '{folder_path}' не существует.\n\n"
-                f"Сначала создайте PDF файлы, нажав кнопку 'Начать парсинг и генерацию PDF' на второй вкладке."
+                f"Сначала создайте PDF файлы, нажав кнопку "
+                f"'Начать парсинг и генерацию PDF' на второй вкладке."
         )
         print("[E] ошибка с открытием папки с пдф")
         return
