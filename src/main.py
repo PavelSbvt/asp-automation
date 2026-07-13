@@ -2,8 +2,8 @@ import sys
 
 from PyQt6.QtWidgets import QApplication
 
-from loading_window_pyqt import MyLoadingWindow # Импорт класса для загрузочного окна
-from pyqt6_code import MyWindow # Импорт класса для визуального интерфейса на pyqt6
+from loading_window_pyqt import MyLoadingWindow
+from pyqt6_code import MyWindow
 
 
 def main() -> None:
@@ -12,12 +12,9 @@ def main() -> None:
      после чего откроется основное окно программы. Функция-связка.
     """
 
-    app = QApplication(sys.argv) # Один qapplication на два py файла с окнами
-    # - один окно загрузки, другой основная программы. В их коде qapplication
-    # соответственно нет. Их qapplication один и находится здесь
-
-    loading_win = MyLoadingWindow() # Создаётся объект класса загрузочного окна
-    loading_win.show() # Показ окна загрузки программы
+    app = QApplication(sys.argv)
+    loading_win = MyLoadingWindow()
+    loading_win.show()
 
     def on_loading_closed() -> None:
         """
@@ -27,12 +24,10 @@ def main() -> None:
 
         main_win = MyWindow()
         main_win.show()
-        loading_win.hide() # скрывает загрузочное окно
+        loading_win.hide()
 
     loading_win.closed.connect(on_loading_closed)
-    # при срабатывании сигнале выполнит функцию, которая закроет загрузочное окно
-
-    sys.exit(app.exec()) # завершает выполнение основного цикла обработки событий
+    sys.exit(app.exec())
 
 if __name__ == "__main__":
     main()
