@@ -1,61 +1,68 @@
-from pyqt_functions import get_pdf, choose_file, choose_save_folder, open_pdf_folder, choose_universal_excel # импорт функций из файла pyqt_functions.py - функции для работы интерфейса основного окна, вынесенные в отдельный файл
-#import os # Для работы с файловой системой (пути, папки)
-from PyQt6.QtWidgets import QWidget, QLabel, QTabWidget, QPushButton, QTextEdit, QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QFileDialog # Основные виджеты PyQt6
-from PyQt6.QtCore import QPoint, QTimer, Qt, QSize # QPoint — для перетаскивания окон, QTimer — для задержек, Qt — константы, QSize — размеры
-from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
-
 from pathlib import Path
+from typing import Optional, List, Dict, Any
 
-from pyqt_functions import parsing, choose_foreign_excel, choose_history_excel, choose_specialization_excel, open_parsing_pdf_folder # разделил файл на два - в один написал код pyqt, в другой написал код функций, чтобы было удобнее ориентироваться по коду
+from PyQt6.QtCore import QPoint, QTimer, Qt, QSize # QPoint — для перетаскивания окон
+from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
+from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
+QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QFileDialog)
 
-class MyWindow(QWidget): # Класс главного окна программы (наследуется от QWidget)
-    def __init__(self): # конструктор
-        super().__init__() # Вызов конструктора родительского класса QWidget
+from pyqt_functions import (parsing, choose_foreign_excel, choose_history_excel,
+choose_specialization_excel, open_parsing_pdf_folder, get_pdf, choose_file,
+choose_save_folder, open_pdf_folder, choose_universal_excel)
+
+
+class MyWindow(QWidget):
+    """
+    Главное окно приложения для генерации PDF и парсинга данных.
+
+    Включает функции обработки данных, парсинга, анимаций и пр.
+
+    Обеспечивает выбор файлов, смену тем оформления, вывод логов
+    и координацию процессов генерации PDF-документов.
+    """
+
+    def __init__(self) -> None:
+        super().__init__()
 
         # устанавливаю дефолтные пути к файлам пустыми
-        self.excel_file_path = None
-        self.universal_file_path = None
-        self.students_data = None
-        self.commission_members = None
+        self.excel_file_path: Optional[str] = None # путь к файлу - шаблон для ЛР
+        self.universal_file_path: Optional[str] = None # путь к универсальной таблице
+        self.students_data: Optional[List[Dict[str, Any]]] = None # данные студентов
+        self.commission_members: Optional[List[str]] = None # члены комиссии
 
         # Пути к файлам комиссий
-        self.history_commission_path = None
-        self.foreign_commission_path = None
-        self.specialization_commission_path = None
+        self.history_commission_path: Optional[str] = None
+        self.foreign_commission_path: Optional[str] = None
+        self.specialization_commission_path: Optional[str] = None
 
-        # desktop_path = os.path.join(os.environ["USERPROFILE"], "Desktop") # Путь к рабочему столу пользователя
+        # стандартная папка сохранения пдф фалов в результате работы функций
+        self.save_folder_path: str = str(Path.home() / "Desktop" / "results_folder")
 
-        desktop_path = Path.home() / "Desktop"
+        # атрибут для хранения позиции мыши(x,y), объект класса qpoint
+        self.drag_position: QPoint = QPoint()
 
-        self.save_folder_path = str(Path.home() / "Desktop" / "results_folder")
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
-        # self.save_folder_path = os.path.join(desktop_path, "results_folder") # Папка для сохранения результатов
+        # блок для фона программы
+        background_block = QWidget(self)
+        background_block.setFixedSize(1200, 800)
+        back_path = Path("resources/images/background_images/DSC_5174_1.jpg") # pathlib
+        background_block.setStyleSheet(f'background-image:url({back_path.as_posix()});')
+        background_block.move(0, 0)
 
-        block_background = QWidget(self)  # первый виджет. первым появится, имеет размер всего окна загрузки, используется для фона загрузочного окна
-        block_background.setFixedSize(1200, 800)
+        tab_widget = QTabWidget(self) # виджет вкладок
 
-        back_path = Path("resources/images/background_images/DSC_5174_1.jpg")
-        block_background.setStyleSheet(f'background-image:url({back_path.as_posix()});')
+        tab_widget.setFixedSize(1200, 800)  # Размер виджета вкладок
 
-        block_background.move(0, 0)
+        tab_widget.setTabPosition(QTabWidget.TabPosition.West) # позиция вкладок слева
 
-        self.drag_position = QPoint() # Это создан атрибут для хранения позиции мыши, это будет объект класса qpoint. для начала точка будет иметь координаты 0.0
+        tab_widget.setIconSize(QSize(65, 65)) # Размер иконок на вкладках
 
-        self.setWindowFlag(Qt.WindowType.FramelessWindowHint) #  удаление стандартной рамки окна (заголовок, кнопки свернуть, развернуть, закрыть)
-        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground) # включение прозрачного фона для окна, скрывается рамка окна
-
-        tabWidgetObjects = QTabWidget(self) # виджет вкладок
-
-        tabWidgetObjects.setFixedSize(1200, 800)  # Размер виджета вкладок
-
-        tabWidgetObjects.setTabPosition(QTabWidget.TabPosition.West) # позиция вкладок слева
-
-        tabWidgetObjects.setIconSize(QSize(65, 65)) # Размер иконок на вкладках
-
-        tabWidgetObjects.setTabBarAutoHide(False) # Вкладки всегда видны
+        tab_widget.setTabBarAutoHide(False) # Вкладки всегда видны
 
         # стиль вкладок через qss
-        tabWidgetObjects.setStyleSheet(""" 
+        tab_widget.setStyleSheet(""" 
                 QTabWidget::pane {
                     border: none;
                     background: transparent;
@@ -102,14 +109,14 @@ class MyWindow(QWidget): # Класс главного окна программ
             """)
 
         # создание виджетов для вкладок
-        tabObjects_1 = QWidget() # вкладка 1
+        tab_1 = QWidget()
 
-        tabObjects_2 = QWidget() # вкладка 2
+        tab_2 = QWidget()
 
-        tabObjects_3 = QWidget() # вкладка 3
+        tab_3 = QWidget()
 
         # кнопка открытия папки с пдф (первая вкладка)
-        self.open_folder_button = QPushButton("Открыть папку с PDF", tabObjects_1)
+        self.open_folder_button = QPushButton("Открыть папку с PDF", tab_1)
         self.open_folder_button.setFixedSize(300, 50)
         self.open_folder_button.move(370, 730)
         self.open_folder_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -136,16 +143,25 @@ class MyWindow(QWidget): # Класс главного окна программ
                         stop: 1 rgba(30, 50, 20, 230));
                 }
             """)
-        self.open_folder_button.clicked.connect(lambda: open_pdf_folder(self)) # При клике открывает папку с пдф, но чтобы передать аргумент self к функции, которую я вывел в отдельный файл, пришлось использовать лямбда функцию
+        self.open_folder_button.clicked.connect(lambda: open_pdf_folder(self))
+        # чтобы передать аргумент self к функции использую лямбда функцию
 
         # добавление вкладок
-        tabWidgetObjects.addTab(tabObjects_1, "") # кладка 1
-        tabWidgetObjects.addTab(tabObjects_3, "") # кладка 2
-        tabWidgetObjects.addTab(tabObjects_2, "") # кладка 3
+        tab_widget.addTab(tab_1, "") # кладка 1
+        tab_widget.addTab(tab_3, "") # кладка 2
+        tab_widget.addTab(tab_2, "") # кладка 3
         # порядок добавления определяет их положение среди вкладок
 
         # Функция для поворота иконок на 90 градусов по пути файла и размер у всех 65
-        def rotate_icon(icon_path, size=65, angle=90):
+        def rotate_icon(icon_path: str, size: int =65, angle: int =90) -> QIcon:
+            """
+            Функция для поворота иконок(изображений на 90 против часовой стрелки)
+
+            :param icon_path: путь к файлу иконки
+            :param size: размер иконки в пикселях
+            :param angle: угол поворота в градусах
+            :return: повёрнутая иконка
+            """
             icon = QIcon(icon_path)
             pixmap = icon.pixmap(size, size)
             transform = QTransform().rotate(angle)
@@ -163,15 +179,15 @@ class MyWindow(QWidget): # Класс главного окна программ
         icon3 = rotate_icon(icon3_path.as_posix())
 
         # устанавливаю иконки на вкладки
-        tabWidgetObjects.setTabIcon(0, icon1)
-        tabWidgetObjects.setTabIcon(1, icon3)
-        tabWidgetObjects.setTabIcon(2, icon2)
+        tab_widget.setTabIcon(0, icon1)
+        tab_widget.setTabIcon(1, icon3)
+        tab_widget.setTabIcon(2, icon2)
 
-        # кнопка закрытия всего приложения. родитель - self, чтобы положение кнопки не менялось с переходом на другую вкладку и она была всегда видна
-        button_close = QPushButton(self) # создание кастомной кнопки закрытия окна, так как стандартную я удалил
+        # кнопка закрытия основного окна приложения.
+        button_close = QPushButton(self) # создание кастомной кнопки закрытия окна
         button_close.setFixedSize(45, 45)
         button_close.move(1150, 5)
-        button_close.setCursor(Qt.CursorShape.DragMoveCursor) # при наведении на кнопку курсор сменится на выбранный в методе
+        button_close.setCursor(Qt.CursorShape.PointingHandCursor)
         close_button_path = Path("resources/images/icons/close_icon.png")
         button_close.setStyleSheet(f"""
             background-image:url({close_button_path.as_posix()});
@@ -180,23 +196,28 @@ class MyWindow(QWidget): # Класс главного окна программ
             background-repeat: no-repeat;
             background-position: center;
             """)
-        button_close.clicked.connect(self.close) # При клике закрывает окно
+        button_close.clicked.connect(self.close)
 
-        # блок для логгирования процесса работы программы, дублирования логгирования вывода из консоли
-        block_for_print_process = QWidget(tabObjects_1) # Виджет-контейнер для текстового поля
+        # блок для логгирования процесса работы программы
+        block_for_print_process = QWidget(tab_1) # Виджет-контейнер для текстового поля
         block_for_print_process.setFixedSize(1020, 620)
         block_for_print_process.setStyleSheet(
-            "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba(60, 85, 45, 230),stop: 1 rgba(40, 65, 30, 230)); border-radius: 10px;")
+        "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+        " stop: 0 rgba(60, 85, 45, 230),stop: 1 rgba(40, 65, 30, 230));"
+        "border-radius: 10px;")
         block_for_print_process.move(10, 100)
 
-        self.output_text = QTextEdit(block_for_print_process) # Поле для вывода лога (self — чтобы использовать в других методах)
+        self.output_text = QTextEdit(block_for_print_process)
+        # Поле для вывода лога (self — чтобы использовать в других методах)
         self.output_text.setGeometry(5, 35, 1010, 580)
         self.output_text.setStyleSheet(
-            "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 rgba(60, 95, 45, 0.2),stop: 1 rgba(45, 75, 35, 0.25));border-radius: 10px;; color: white; font-family; font: bold; font-size: 12px;")
-        self.output_text.setReadOnly(True) # Только для чтения (пользователь не может редактировать)
+        "background: qlineargradient(x1: 0, y1: 0, x2: 0,"
+        " y2: 1,stop: 0 rgba(60, 95, 45, 0.2),stop: 1 rgba(45, 75, 35, 0.25));"
+        "border-radius: 10px;; color: white; font-family; font: bold; font-size: 12px;")
+        self.output_text.setReadOnly(True)
 
         # кнопка выбора файла эксель
-        button_to_find_file_tabel = QPushButton(tabObjects_1)
+        button_to_find_file_tabel = QPushButton(tab_1)
         button_to_find_file_tabel.setFixedSize(180, 50)
         button_to_find_file_tabel.setCursor(Qt.CursorShape.PointingHandCursor)
         button_to_find_file_tabel.setStyleSheet("""
@@ -227,10 +248,12 @@ class MyWindow(QWidget): # Класс главного окна программ
             """)
         button_to_find_file_tabel.move(10, 25)
         button_to_find_file_tabel.setText("Выберите файл")
-        button_to_find_file_tabel.clicked.connect(lambda: choose_file(self)) # При клике открывает диалог выбора файла, но чтобы передать аргумент self к функции, которую я вывел в отдельный файл, пришлось использовать лямбда функцию
+        button_to_find_file_tabel.clicked.connect(lambda: choose_file(self))
+        # При клике открывает диалог выбора файла.
+        # Чтобы передать аргумент self к функции использовал лямбда функцию
 
         # кнопка изменения пути сохранения
-        button_to_find_where_save = QPushButton(tabObjects_1)
+        button_to_find_where_save = QPushButton(tab_1)
         button_to_find_where_save.setFixedSize(250, 50)
         button_to_find_where_save.setCursor(Qt.CursorShape.PointingHandCursor)
         button_to_find_where_save.setStyleSheet("""
@@ -261,10 +284,10 @@ class MyWindow(QWidget): # Класс главного окна программ
             """)
         button_to_find_where_save.move(200, 25)
         button_to_find_where_save.setText("Изменить путь для сохранения")
-        button_to_find_where_save.clicked.connect(lambda: choose_save_folder(self)) # вызов функции выбора пути сохранения
+        button_to_find_where_save.clicked.connect(lambda: choose_save_folder(self))
 
         # блок сообщения пути отображения пути сохранения пдф файлов
-        block_where_save_pdfs_now = QWidget(tabObjects_1)
+        block_where_save_pdfs_now = QWidget(tab_1)
         block_where_save_pdfs_now.setFixedSize(160, 50)
         block_where_save_pdfs_now.setStyleSheet("""              
                             background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -280,15 +303,16 @@ class MyWindow(QWidget): # Класс главного окна программ
                     """)
         block_where_save_pdfs_now.move(460, 25)
 
-        # информационный лейбл. информирует пользователя, где смотреть текущий путь сохранения файлов (готовых пдф протоколов).
+        # указатель на текущий путь сохранения файлов (готовых пдф протоколов).
         block_where_save_pdfs_now_label = QLabel(block_where_save_pdfs_now)
         block_where_save_pdfs_now_label.setText("Путь сохранения:")
         block_where_save_pdfs_now_label.setGeometry(0, 0, 160, 50)
-        block_where_save_pdfs_now_label.setStyleSheet("color:white; font: bold; font-size: 14px;")
+        block_where_save_pdfs_now_label.setStyleSheet(
+            "color:white; font: bold; font-size: 14px;")
         block_where_save_pdfs_now_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # отображение текущего пути сохранения файлов
-        block_way_save = QWidget(tabObjects_1)
+        block_way_save = QWidget(tab_1)
         block_way_save.setFixedSize(340, 50)
         block_way_save.setStyleSheet("""
                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -299,8 +323,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             """)
         block_way_save.move(630, 25)
 
-        # лейбл для отобрадения пути сохранения готовых пдф документов. находится на первой вкладке программы. может обрезать длинные пути, чтобы они помещались
-        self.path_value_label = QLabel(block_way_save) # self — чтобы обновлять путь при изменении
+        # лейбл для отображения пути сохранения готовых пдф документов.
+        self.path_value_label = QLabel(block_way_save)
         short_path = self.save_folder_path
         if len(short_path) > 150:
             short_path = "..." + short_path[-150:]
@@ -308,27 +332,29 @@ class MyWindow(QWidget): # Класс главного окна программ
             short_path = self.save_folder_path
         self.path_value_label.setText(short_path)
         self.path_value_label.setGeometry(5, 5, 330, 40)
-        self.path_value_label.setStyleSheet("color: white; font-size: 10px; font-weight: bold;")
+        self.path_value_label.setStyleSheet(
+            "color: white; font-size: 10px; font-weight: bold;")
         self.path_value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.path_value_label.setWordWrap(True)
 
         block_way_save.setToolTip(self.save_folder_path)
 
-        # кнопка запуска сборки пдф документов на первой вкладке программы. запускает сборку пдф по готовому excel файлу с шаблоном протокола
-        # и страничкой БД, который выбирает пользователь
-        button_do_operation = QPushButton(tabObjects_1)
+        # кнопка запуска сборки пдф документов
+        button_do_operation = QPushButton(tab_1)
         button_do_operation.setFixedSize(50, 50)
         button_do_operation.setCursor(Qt.CursorShape.ClosedHandCursor)
         do_operation_button_path = Path("resources/images/icons/do_op_new.png")
         button_do_operation.setStyleSheet(
-            f"background-image: url({do_operation_button_path.as_posix()}); color: white; font-size: 14px; font:bold; border-radius: 10px;")
+            f"background-image: url({do_operation_button_path.as_posix()});"
+            f" color: white; font-size: 14px; font:bold; border-radius: 10px;")
         button_do_operation.move(980, 25)
-        button_do_operation.clicked.connect(lambda: get_pdf(self)) # запуск основной функции сбора пдф по готовому эксель с шаблоном протокола и страничной БД
+        button_do_operation.clicked.connect(lambda: get_pdf(self))
 
-        # виджет, содержащий лейбл с надписью для пользователя, предлагающей сменить тему цветового оформления программы
-        widget_for_styles = QWidget(tabObjects_2)
+        # виджет-указатель на то, что можно менять темы
+        widget_for_styles = QWidget(tab_2)
         widget_for_styles.setFixedSize(300, 45)
-        widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(45, 75, 30, 240)")
+        widget_for_styles.setStyleSheet(
+            "border-radius:10px; background-color: rgba(45, 75, 30, 240)")
         widget_for_styles.move(10, 27)
         label_for_styles = QLabel(widget_for_styles)
         label_for_styles.setStyleSheet("color:white; font: bold; font-size: 18px;")
@@ -337,28 +363,40 @@ class MyWindow(QWidget): # Класс главного окна программ
         label_for_styles.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # фоновый блок для кнопок выбора темы цветового оформления.
-        window_for_choosing_styles = QWidget(tabObjects_2)
+        window_for_choosing_styles = QWidget(tab_2)
         window_for_choosing_styles.setFixedSize(795, 275)
-        window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgba(45, 64, 30, 240)")
+        window_for_choosing_styles.setStyleSheet(
+            "border-radius: 10px; background-color: rgba(45, 64, 30, 240)")
         window_for_choosing_styles.move(10, 100)
 
         # кнопка смены цветового оформления на тёмный стиль
-        button_from_choose_dark_theme = QPushButton(tabObjects_2)
-        button_from_choose_dark_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon.png")
-        button_from_choose_dark_theme.setStyleSheet(f"background-image: url({button_from_choose_dark_theme_path.as_posix()}); border-radius: 10px;")
+        button_from_choose_dark_theme = QPushButton(tab_2)
+        btn_from_dark_thm_path = Path(
+            "resources/images/color_themes/dark_theme/dark_theme_icon.png")
+        button_from_choose_dark_theme.setStyleSheet(
+            f"background-image: url({btn_from_dark_thm_path.as_posix()});"
+            f" border-radius: 10px;")
         button_from_choose_dark_theme.setFixedSize(250, 250)
         button_from_choose_dark_theme.move(20, 110)
 
-        button_from_choose_dark_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon.png")
-        button_from_choose_dark_medium_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon_medium.png")
-        button_from_choose_dark_mini_theme_path = Path("resources/images/color_themes/dark_theme/dark_theme_icon_mini.png")
+        btn_from_dark_thm_path = Path(
+            "resources/images/color_themes/dark_theme/dark_theme_icon.png")
+        btn_from_dark_med_thm_path = Path(
+            "resources/images/color_themes/dark_theme/dark_theme_icon_medium.png")
+        btn_from_dark_mini_thm_path = Path(
+            "resources/images/color_themes/dark_theme/dark_theme_icon_mini.png")
 
 
-        def change_theme_to_dark():
+        def change_theme_to_dark() -> None:
+            """
+            Функция смены темы цветового оформления на тёмную.
+            :return: None
+            """
             QTimer.singleShot(10, lambda: (
                 button_from_choose_dark_theme.setFixedSize(245, 245),
                 button_from_choose_dark_theme.setStyleSheet(
-                    f"background-image: url({button_from_choose_dark_medium_theme_path.as_posix()}); border-radius: 10px;"
+                f"background-image: url({btn_from_dark_med_thm_path.as_posix()});"
+                f" border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(22, 112)
             ))
@@ -366,7 +404,7 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(45, lambda: (
                 button_from_choose_dark_theme.setFixedSize(240, 240),
                 button_from_choose_dark_theme.setStyleSheet(
-                    f"background-image: url({button_from_choose_dark_mini_theme_path.as_posix()}); border-radius: 10px;"
+                    f"background-image: url({btn_from_dark_mini_thm_path.as_posix()}); border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(25, 115)
             ))
@@ -374,7 +412,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(125, lambda: (
                 button_from_choose_dark_theme.setFixedSize(245, 245),
                 button_from_choose_dark_theme.setStyleSheet(
-                    f"background-image: url({button_from_choose_dark_medium_theme_path.as_posix()}); border-radius: 10px;"
+                    f"background-image: url({btn_from_dark_med_thm_path.as_posix()});"
+                    f" border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(22, 112)
             ))
@@ -382,12 +421,15 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(160, lambda: (
                 button_from_choose_dark_theme.setFixedSize(250, 250),
                 button_from_choose_dark_theme.setStyleSheet(
-                    f"background-image: url({button_from_choose_dark_theme_path.as_posix()}); border-radius: 10px;"
+                    f"background-image: url({btn_from_dark_thm_path.as_posix()});"
+                    f" border-radius: 10px;"
                 ),
                 button_from_choose_dark_theme.move(20, 110)
             ))
-            back_dark_path = Path("resources/images/color_themes/dark_theme/image_from_dark_theme.JPG")
-            block_background.setStyleSheet(f"background-image: url({back_dark_path.as_posix()});")
+            back_dark_path = Path(
+                "resources/images/color_themes/dark_theme/image_from_dark_theme.JPG")
+            background_block.setStyleSheet(
+                f"background-image: url({back_dark_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                             QProgressBar {
                                 color: rgb(255, 255, 255);
@@ -427,7 +469,8 @@ class MyWindow(QWidget): # Класс главного окна программ
                         """)
 
             choose_the_term.setStyleSheet(
-                "background-color: rgb(60, 60, 60); border-radius: 10px; color: rgb(255, 255, 255);")
+                "background-color: rgb(60, 60, 60); "
+                "border-radius: 10px; color: rgb(255, 255, 255);")
 
             radio_style_dark = """
                             QRadioButton {
@@ -455,7 +498,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             self.radio_button_2.setStyleSheet(radio_style_dark)
             self.radio_button_3.setStyleSheet(radio_style_dark)
 
-            widget_for_label.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
+            widget_for_label.setStyleSheet("background-color: rgb(60, 60, 60);"
+                                           " border-radius: 10px;")
 
             self.input_commission.setStyleSheet("""
                             QLineEdit {
@@ -496,7 +540,8 @@ class MyWindow(QWidget): # Класс главного окна программ
                             }
                         """)
 
-            widget_for_label_choosing_files.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
+            widget_for_label_choosing_files.setStyleSheet(
+                "background-color: rgb(60, 60, 60); border-radius: 10px;")
 
             self.open_folder_button.setStyleSheet("""
                             QPushButton {
@@ -568,7 +613,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                             padding: 5px;
                         """)
 
-            tabWidgetObjects.setStyleSheet(""" 
+            tab_widget.setStyleSheet(""" 
                             QTabWidget::pane {
                                 border: none;
                                 background: transparent;
@@ -606,7 +651,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                             }
                         """)
 
-            button_choose_universal_excel.setStyleSheet("""
+            btn_choose_universal_xl.setStyleSheet("""
                             QPushButton {
                                 background: rgb(60, 60, 60);
                                 color: rgb(255, 255, 255);
@@ -626,7 +671,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                             }
                         """)
 
-            button_choose_history_commission.setStyleSheet("""
+            btn_choose_history_commission.setStyleSheet("""
                             QPushButton {
                                 background: rgb(60, 60, 60);
                                 color: rgb(255, 255, 255);
@@ -646,7 +691,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                             }
                         """)
 
-            button_choose_foreign_commission.setStyleSheet("""
+            btn_chouse_foreign_commission.setStyleSheet("""
                             QPushButton {
                                 background: rgb(60, 60, 60);
                                 color: rgb(255, 255, 255);
@@ -666,7 +711,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                             }
                         """)
 
-            button_choose_specialization_commission.setStyleSheet("""
+            btn_choose_specialization_commission.setStyleSheet("""
                             QPushButton {
                                 background: rgb(60, 60, 60);
                                 color: rgb(255, 255, 255);
@@ -740,15 +785,21 @@ class MyWindow(QWidget): # Класс главного окна программ
                             border: 1px solid rgb(50, 50, 50);
                         """)
 
-            widget_for_label_choosing_way.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
-            widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(60, 60, 60, 240)")
+            widget_for_label_choosing_way.setStyleSheet(
+                "background-color: rgb(60, 60, 60); border-radius: 10px;")
+            widget_for_styles.setStyleSheet(
+                "border-radius:10px; background-color: rgba(60, 60, 60, 240)")
 
-            universal_excel_label_widget.setStyleSheet("background-color: rgb(100, 100, 100); border-radius: 10px;")
-            history_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 100, 100); border-radius: 10px;")
-            foreign_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 100, 100); border-radius: 10px;")
+            universal_excel_label_widget.setStyleSheet(
+                "background-color: rgb(100, 100, 100); border-radius: 10px;")
+            history_excel_choosed_widget.setStyleSheet(
+                "background-color: rgb(100, 100, 100); border-radius: 10px;")
+            foreign_excel_choosed_widget.setStyleSheet(
+                "background-color: rgb(100, 100, 100); border-radius: 10px;")
             specialization_excel_choosed_widget.setStyleSheet(
                 "background-color: rgb(100, 100, 100); border-radius: 10px;")
-            widget_for_progress_bar.setStyleSheet("background-color: rgb(60, 60, 60); border-radius: 10px;")
+            widget_for_progress_bar.setStyleSheet(
+                "background-color: rgb(60, 60, 60); border-radius: 10px;")
             self.output_text.setStyleSheet("""
                 background: rgb(13, 13, 13);
                 border-radius: 10px;
@@ -763,7 +814,8 @@ class MyWindow(QWidget): # Класс главного окна программ
                 border: 1px solid rgb(60, 60, 60);
                 border-radius: 10px;
             """)
-            window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgb(60, 60, 60);")
+            window_for_choosing_styles.setStyleSheet(
+                "border-radius: 10px; background-color: rgb(60, 60, 60);")
 
             print("[I] [style] Применена тёмная тема")
 
@@ -771,23 +823,33 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_from_choose_dark_theme.clicked.connect(change_theme_to_dark)
 
         # кнопка смены текущего цветового оформления на фиолетовую тему
-        button_from_choose_violet_theme = QPushButton(tabObjects_2)
-        button_violet_theme_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon.png")
+        button_from_choose_violet_theme = QPushButton(tab_2)
+        button_violet_theme_path = Path(
+            "resources/images/color_themes/violet_theme/violet_theme_icon.png")
         button_from_choose_violet_theme.setStyleSheet(
-            f"background-image: url({button_violet_theme_path.as_posix()}); border-radius: 10px;")
+            f"background-image: url({button_violet_theme_path.as_posix()});"
+            f" border-radius: 10px;")
         button_from_choose_violet_theme.setFixedSize(250, 250)
         button_from_choose_violet_theme.move(280, 110)
 
-        button_violet_theme_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon.png")
-        button_violet_theme_medium_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon_medium.png")
-        button_violet_theme_mini_path = Path("resources/images/color_themes/violet_theme/violet_theme_icon_mini.png")
+        button_violet_theme_path = Path(
+            "resources/images/color_themes/violet_theme/violet_theme_icon.png")
+        button_violet_theme_medium_path = Path(
+            "resources/images/color_themes/violet_theme/violet_theme_icon_medium.png")
+        button_violet_theme_mini_path = Path(
+            "resources/images/color_themes/violet_theme/violet_theme_icon_mini.png")
 
 
-        def change_theme_to_violet():
+        def change_theme_to_violet() -> None:
+            """
+            Функция для смены темы цветового оформления на фиолетовый.
+            :return: None
+            """
             QTimer.singleShot(10, lambda: (
                 button_from_choose_violet_theme.setFixedSize(245, 245),
                 button_from_choose_violet_theme.setStyleSheet(
-                    f"background-image: url({button_violet_theme_medium_path.as_posix()}); border-radius: 10px;"
+                f"background-image: url({button_violet_theme_medium_path.as_posix()});"
+                f" border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(282, 112)
             ))
@@ -795,26 +857,31 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(45, lambda: (
                 button_from_choose_violet_theme.setFixedSize(240, 240),
                 button_from_choose_violet_theme.setStyleSheet(
-                    f"background-image: url({button_violet_theme_mini_path.as_posix()}); border-radius: 10px;"
+                f"background-image: url({button_violet_theme_mini_path.as_posix()});"
+                f" border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(285, 115)
             ))
             QTimer.singleShot(125, lambda: (
                 button_from_choose_violet_theme.setFixedSize(245, 245),
                 button_from_choose_violet_theme.setStyleSheet(
-                    f"background-image: url({button_violet_theme_medium_path.as_posix()}); border-radius: 10px;"
+                f"background-image: url({button_violet_theme_medium_path.as_posix()});"
+                f" border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(282, 112)
             ))
             QTimer.singleShot(160, lambda: (
                 button_from_choose_violet_theme.setFixedSize(250, 250),
                 button_from_choose_violet_theme.setStyleSheet(
-                    f"background-image: url({button_violet_theme_path.as_posix()}); border-radius: 10px;"
+                f"background-image: url({button_violet_theme_path.as_posix()});"
+                f" border-radius: 10px;"
                 ),
                 button_from_choose_violet_theme.move(280, 110)
             ))
-            back_violet_path = Path("resources/images/color_themes/violet_theme/image_from_violet_theme.jpg")
-            block_background.setStyleSheet(f"background-image: url({back_violet_path.as_posix()});")
+            back_violet_path = Path(
+            "resources/images/color_themes/violet_theme/image_from_violet_theme.jpg")
+            background_block.setStyleSheet(
+                f"background-image: url({back_violet_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                 QProgressBar {
                     color: rgb(255, 255, 255);
@@ -854,7 +921,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             """)
 
             choose_the_term.setStyleSheet(
-                "background-color: rgb(60, 40, 80); border-radius: 10px; color: rgb(255, 255, 255);")
+                "background-color: rgb(60, 40, 80);"
+                " border-radius: 10px; color: rgb(255, 255, 255);")
 
             radio_style_violet = """
                 QRadioButton {
@@ -882,7 +950,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             self.radio_button_2.setStyleSheet(radio_style_violet)
             self.radio_button_3.setStyleSheet(radio_style_violet)
 
-            widget_for_label.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+            widget_for_label.setStyleSheet("background-color: rgb(60, 40, 80);"
+                                           " border-radius: 10px;")
 
             self.input_commission.setStyleSheet("""
                 QLineEdit {
@@ -923,7 +992,8 @@ class MyWindow(QWidget): # Класс главного окна программ
                 }
             """)
 
-            widget_for_label_choosing_files.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+            widget_for_label_choosing_files.setStyleSheet(
+                "background-color: rgb(60, 40, 80); border-radius: 10px;")
 
             self.open_folder_button.setStyleSheet("""
                 QPushButton {
@@ -995,7 +1065,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 padding: 5px;
             """)
 
-            tabWidgetObjects.setStyleSheet(""" 
+            tab_widget.setStyleSheet(""" 
                 QTabWidget::pane {
                     border: none;
                     background: transparent;
@@ -1033,7 +1103,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 }
             """)
 
-            button_choose_universal_excel.setStyleSheet("""
+            btn_choose_universal_xl.setStyleSheet("""
                 QPushButton {
                     background: rgb(60, 40, 80);
                     color: rgb(255, 255, 255);
@@ -1053,7 +1123,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 }
             """)
 
-            button_choose_history_commission.setStyleSheet("""
+            btn_choose_history_commission.setStyleSheet("""
                 QPushButton {
                     background: rgb(60, 40, 80);
                     color: rgb(255, 255, 255);
@@ -1073,7 +1143,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 }
             """)
 
-            button_choose_foreign_commission.setStyleSheet("""
+            btn_chouse_foreign_commission.setStyleSheet("""
                 QPushButton {
                     background: rgb(60, 40, 80);
                     color: rgb(255, 255, 255);
@@ -1093,7 +1163,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                 }
             """)
 
-            button_choose_specialization_commission.setStyleSheet("""
+            btn_choose_specialization_commission.setStyleSheet("""
                 QPushButton {
                     background: rgb(60, 40, 80);
                     color: rgb(255, 255, 255);
@@ -1168,17 +1238,23 @@ class MyWindow(QWidget): # Класс главного окна программ
                 border: 1px solid rgb(50, 35, 65);
             """)
 
-            widget_for_label_choosing_way.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+            widget_for_label_choosing_way.setStyleSheet(
+                "background-color: rgb(60, 40, 80); border-radius: 10px;")
 
-            widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(60, 40, 80, 240);")
+            widget_for_styles.setStyleSheet(
+                "border-radius:10px; background-color: rgba(60, 40, 80, 240);")
 
-            universal_excel_label_widget.setStyleSheet("background-color: rgb(100, 75, 120); border-radius: 10px;")
-            history_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 75, 120); border-radius: 10px;")
-            foreign_excel_choosed_widget.setStyleSheet("background-color: rgb(100, 75, 120); border-radius: 10px;")
+            universal_excel_label_widget.setStyleSheet(
+                "background-color: rgb(100, 75, 120); border-radius: 10px;")
+            history_excel_choosed_widget.setStyleSheet(
+                "background-color: rgb(100, 75, 120); border-radius: 10px;")
+            foreign_excel_choosed_widget.setStyleSheet(
+                "background-color: rgb(100, 75, 120); border-radius: 10px;")
             specialization_excel_choosed_widget.setStyleSheet(
                 "background-color: rgb(100, 75, 120); border-radius: 10px;")
 
-            widget_for_progress_bar.setStyleSheet("background-color: rgb(60, 40, 80); border-radius: 10px;")
+            widget_for_progress_bar.setStyleSheet(
+                "background-color: rgb(60, 40, 80); border-radius: 10px;")
 
             self.output_text.setStyleSheet("""
                 background: rgb(20, 12, 30);
@@ -1196,33 +1272,40 @@ class MyWindow(QWidget): # Класс главного окна программ
                 border-radius: 10px;
             """)
 
-            window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgb(60, 40, 80);")
+            window_for_choosing_styles.setStyleSheet(
+                "border-radius: 10px; background-color: rgb(60, 40, 80);")
 
             print("[I] [style] Применена фиолетовая тема")
 
         button_from_choose_violet_theme.clicked.connect(change_theme_to_violet)
 
         # кнопка для смены темы цветового оформления на стандартную тему
-        button_from_choose_standart_theme = QPushButton(tabObjects_2)
-        button_standard_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon.png")
+        button_from_choose_standart_theme = QPushButton(tab_2)
+        button_standard_path = Path(
+            "resources/images/color_themes/standard_theme/standard_theme_icon.png")
         button_from_choose_standart_theme.setStyleSheet(
-            f"background-image: url({button_standard_path.as_posix()}); border-radius: 10px;")
+            f"background-image: url({button_standard_path.as_posix()});"
+            f" border-radius: 10px;")
         button_from_choose_standart_theme.setFixedSize(250, 250)
         button_from_choose_standart_theme.move(540, 110)
 
-        button_standard_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon.png")
-        button_standard_medium_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon_medium.png")
-        button_standard_mini_path = Path("resources/images/color_themes/standard_theme/standard_theme_icon_mini.png")
+        button_standard_path = Path(
+            "resources/images/color_themes/standard_theme/standard_theme_icon.png")
+        button_standard_medium_path = Path(
+        "resources/images/color_themes/standard_theme/standard_theme_icon_medium.png")
+        button_standard_mini_path = Path(
+            "resources/images/color_themes/standard_theme/standard_theme_icon_mini.png")
 
 
-        def change_theme_to_standard():
-            """функция, которая анимирует фон кнопки, лямбда функции меняют размер кнопок и их фон - плавно и возвращают к начальному виду.
-            картинки для заднего фона специально сделано по три штуки, чтобы выглядело достаточно плавно. реализовано специально без qpropertyanimation.
-            меняет стиль цветового оформления программы на стандартный"""
+        def change_theme_to_standard() -> None:
+            """
+            функция смены темы цветового оформления приложения на стандартный
+            """
             QTimer.singleShot(10, lambda: (
                 button_from_choose_standart_theme.setFixedSize(245, 245),
                 button_from_choose_standart_theme.setStyleSheet(
-                    f"background-image: url({button_standard_medium_path.as_posix()}); border-radius: 10px;"
+                    f"background-image: url({button_standard_medium_path.as_posix()});"
+                    f" border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(542, 112)
             ))
@@ -1230,7 +1313,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(45, lambda: (
                 button_from_choose_standart_theme.setFixedSize(240, 240),
                 button_from_choose_standart_theme.setStyleSheet(
-                    f"background-image: url({button_standard_mini_path.as_posix()}); border-radius: 10px;"
+                    f"background-image: url({button_standard_mini_path.as_posix()});"
+                    f" border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(545, 115)
             ))
@@ -1238,7 +1322,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(125, lambda: (
                 button_from_choose_standart_theme.setFixedSize(245, 245),
                 button_from_choose_standart_theme.setStyleSheet(
-                    f"background-image: url({button_standard_medium_path.as_posix()}); border-radius: 10px;"
+                    f"background-image: url({button_standard_medium_path.as_posix()});"
+                    f" border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(542, 112)
             ))
@@ -1246,12 +1331,15 @@ class MyWindow(QWidget): # Класс главного окна программ
             QTimer.singleShot(160, lambda: (
                 button_from_choose_standart_theme.setFixedSize(250, 250),
                 button_from_choose_standart_theme.setStyleSheet(
-                    f"background-image: url({button_standard_path.as_posix()}); border-radius: 10px;"
+                    f"background-image: url({button_standard_path.as_posix()});"
+                    f" border-radius: 10px;"
                 ),
                 button_from_choose_standart_theme.move(540, 110)
             ))
-            back_standard_path = Path("resources/images/background_images/DSC_5174_1.jpg")
-            block_background.setStyleSheet(f"background-image:url({back_standard_path.as_posix()});")
+            back_standard_path = Path(
+                "resources/images/background_images/DSC_5174_1.jpg")
+            background_block.setStyleSheet(
+                f"background-image:url({back_standard_path.as_posix()});")
             self.progress_bar.setStyleSheet("""
                         QProgressBar {
                             color: white;
@@ -1271,9 +1359,13 @@ class MyWindow(QWidget): # Класс главного окна программ
                         }
                     """)
             self.output_text.setStyleSheet(
-                "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,stop: 0 rgba(60, 95, 45, 0.2),stop: 1 rgba(45, 75, 35, 0.25));border-radius: 10px;; color: white; font-family; font: bold; font-size: 12px;")
+            "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+            "stop: 0 rgba(60, 95, 45, 0.2),stop: 1 rgba(45, 75, 35, 0.25));"
+            "border-radius: 10px;; color: white; font-family; font: bold;"
+            " font-size: 12px;")
             choose_the_term.setStyleSheet(
-                "background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
+                "background-color: rgba(100, 140, 65, 200); border-radius: 10px;"
+                " color: white;")
             block_way_save.setStyleSheet("""
                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                     stop: 0 rgba(45, 70, 35, 0.7),
@@ -1281,7 +1373,8 @@ class MyWindow(QWidget): # Класс главного окна программ
                 border: 1px solid rgba(80, 120, 55, 150);
                 border-radius: 10px;
             """)
-            widget_for_styles.setStyleSheet("border-radius:10px; background-color: rgba(45, 75, 30, 240)")
+            widget_for_styles.setStyleSheet("border-radius:10px;"
+                        " background-color: rgba(45, 75, 30, 240)")
             self.radio_button_1.setStyleSheet("""
                         QRadioButton {
                             color: black;
@@ -1326,10 +1419,14 @@ class MyWindow(QWidget): # Класс главного окна программ
                                         border: 2px solid green;
                                     }
                                 """)
-            universal_excel_label_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
-            history_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
-            foreign_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
-            specialization_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            universal_excel_label_widget.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            history_excel_choosed_widget.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            foreign_excel_choosed_widget.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            specialization_excel_choosed_widget.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
             self.save_path_label.setStyleSheet("""
                 color: white;
                 font-size: 11px;
@@ -1360,7 +1457,8 @@ class MyWindow(QWidget): # Класс главного окна программ
                                         border: 2px solid green;
                                     }
                                 """)
-            widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1);"
+                                           " border-radius: 10px;")
             self.input_commission.setStyleSheet("""
                         QLineEdit {
                             background: rgba(45, 70, 35, 180);
@@ -1404,8 +1502,10 @@ class MyWindow(QWidget): # Класс главного окна программ
                             padding-bottom: 4px;
                         }
                     """)
-            window_for_choosing_styles.setStyleSheet("border-radius: 10px; background-color: rgba(45, 64, 30, 240)")
-            widget_for_label_choosing_files.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            window_for_choosing_styles.setStyleSheet(
+                "border-radius: 10px; background-color: rgba(45, 64, 30, 240)")
+            widget_for_label_choosing_files.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
             self.open_folder_button.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -1528,7 +1628,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                     border-radius: 8px;
                 }
             """)
-            tabWidgetObjects.setStyleSheet(""" 
+            tab_widget.setStyleSheet(""" 
                 QTabWidget::pane {
                     border: none;
                     background: transparent;
@@ -1598,7 +1698,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                     padding-bottom: 4px;
                 }
             """)
-            button_choose_universal_excel.setStyleSheet("""
+            btn_choose_universal_xl.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                         stop: 0 rgba(60, 85, 45, 230),
@@ -1623,7 +1723,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                     padding-bottom: 4px;
                 }
             """)
-            button_choose_history_commission.setStyleSheet("""
+            btn_choose_history_commission.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                         stop: 0 rgba(60, 85, 45, 230),
@@ -1648,7 +1748,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                     padding-bottom: 4px;
                 }
             """)
-            button_choose_foreign_commission.setStyleSheet("""
+            btn_chouse_foreign_commission.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                         stop: 0 rgba(60, 85, 45, 230),
@@ -1673,7 +1773,7 @@ class MyWindow(QWidget): # Класс главного окна программ
                     padding-bottom: 4px;
                 }
             """)
-            button_choose_specialization_commission.setStyleSheet("""
+            btn_choose_specialization_commission.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                         stop: 0 rgba(60, 85, 45, 230),
@@ -1749,14 +1849,20 @@ class MyWindow(QWidget): # Класс главного окна программ
                 }
             """)
             block_for_print_process.setStyleSheet(
-                "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1, stop: 0 rgba(60, 85, 45, 230),stop: 1 rgba(40, 65, 30, 230)); border-radius: 10px;")
+                "background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,"
+                " stop: 0 rgba(60, 85, 45, 230),stop: 1 rgba(40, 65, 30, 230));"
+                " border-radius: 10px;")
             choose_the_term.setStyleSheet(
-                "background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
-            widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+                "background-color: rgba(100, 140, 65, 200);"
+                " border-radius: 10px; color: white;")
+            widget_for_label.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
             widget_for_label_choosing_files.setStyleSheet(
                 "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
-            widget_for_label_choosing_way.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
-            widget_for_progress_bar.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            widget_for_label_choosing_way.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+            widget_for_progress_bar.setStyleSheet(
+                "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
             self.input_commission.setStyleSheet("""
                 QLineEdit {
                     background: rgba(45, 70, 35, 180);
@@ -1802,12 +1908,12 @@ class MyWindow(QWidget): # Класс главного окна программ
             self.radio_button_3.setStyleSheet(radio_style)
             print("[I] [style] применена стандартная тема")
 
+
         button_from_choose_standart_theme.clicked.connect(change_theme_to_standard)
 
+        QTimer.singleShot(1, self.center_window) # запуск центрирования главного окна.
 
-        QTimer.singleShot(1, self.center_window) # запуск центрирования главного окна. сработает спустя 1 мс после закрытия загрузочного окна
-
-        self.progress_bar = QProgressBar(tabObjects_1)
+        self.progress_bar = QProgressBar(tab_1)
         self.progress_bar.setFixedSize(980, 25)
         self.progress_bar.move(20, 110)
         self.progress_bar.setRange(0, 100)  # диапазон от 0 до 100
@@ -1831,20 +1937,18 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
 
-        # ============================================================
-        # Третья вкладка
-        # ============================================================
-
         # виджет, используемый для фона для ралиокнопок выбора семестра и лейбла
-        background_widget_for_choosing_term = QWidget(tabObjects_3)
+        background_widget_for_choosing_term = QWidget(tab_3)
         background_widget_for_choosing_term.setFixedSize(300, 200)
-        background_widget_for_choosing_term.setStyleSheet("background-color: white; border-radius: 10px;")
+        background_widget_for_choosing_term.setStyleSheet(
+            "background-color: white; border-radius: 10px;")
         background_widget_for_choosing_term.move(10,10)
 
         # виджет с лейблом, предлагающим пользователю выбрать семестр
-        choose_the_term = QWidget(tabObjects_3)
+        choose_the_term = QWidget(tab_3)
         choose_the_term.setFixedSize(200, 50)
-        choose_the_term.setStyleSheet("background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
+        choose_the_term.setStyleSheet(
+        "background-color: rgba(100, 140, 65, 200); border-radius: 10px; color: white;")
         choose_the_term.move(60, 20)
         label_choose_the_term = QLabel(choose_the_term)
         label_choose_the_term.setText("Выберите семестр:")
@@ -1852,8 +1956,9 @@ class MyWindow(QWidget): # Класс главного окна программ
         label_choose_the_term.setStyleSheet("font: bold; font-size: 18px; color: white;")
         label_choose_the_term.setGeometry(0, 0, 200, 50)
 
-        # первая радиокнока. по условию должна активировать работу с doc файлом комиссии по истории
-        self.radio_button_1 = QRadioButton("Первый семестр", tabObjects_3) # активирует работу с файлом «Комиссии - История.doc»
+        # активирует работу с doc файлом комиссии по истории
+        self.radio_button_1 = QRadioButton("Первый семестр", tab_3)
+        # активирует работу с файлом «Комиссии - История.doc»
         self.radio_button_1.setStyleSheet("color: black; font-size: 18px; font: bold;")
         self.radio_button_1.move(65, 90)
         self.radio_button_1.setStyleSheet("""
@@ -1879,8 +1984,9 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
 
-        # вторая радиокнока. по условию должна активировать работу с doc файлом комиссии по иностранному
-        self.radio_button_2 = QRadioButton("Второй семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Иностранный.doc»
+        # активирует работу с doc файлом комиссии по иностранному
+        self.radio_button_2 = QRadioButton("Второй семестр", tab_3)
+        # активирует работу с файлом «Комиссии - Иностранный.doc»
         self.radio_button_2.setStyleSheet("color: black; font-size: 18px; font: bold;")
         self.radio_button_2.move(65, 120)
         self.radio_button_2.setStyleSheet("""
@@ -1905,8 +2011,9 @@ class MyWindow(QWidget): # Класс главного окна программ
                         border: 2px solid green;
                     }
                 """)
-        # третья радиокнока. по условию должна активировать работу с doc файлом комиссии по специальности
-        self.radio_button_3 = QRadioButton("Третий семестр", tabObjects_3) # активирует работу с файлом «Комиссии - Специальность.doc»
+        # активирует работу с doc файлом комиссии по специальности
+        self.radio_button_3 = QRadioButton("Третий семестр", tab_3)
+        # активирует работу с файлом «Комиссии - Специальность.doc»
         self.radio_button_3.setStyleSheet("color: black; font-size: 18px; font: bold;")
         self.radio_button_3.move(65, 150)
         self.radio_button_3.setStyleSheet("""
@@ -1933,18 +2040,19 @@ class MyWindow(QWidget): # Класс главного окна программ
                 """)
 
         # Группируем (чтобы работало как "только один выбор")
-        self.button_group = QButtonGroup(tabObjects_3)
+        self.button_group = QButtonGroup(tab_3)
         self.button_group.addButton(self.radio_button_1)
         self.button_group.addButton(self.radio_button_2)
         self.button_group.addButton(self.radio_button_3)
 
         # Добавить input с label: «Приказ о комиссиях»
-        widget_for_label = QWidget(tabObjects_3)
+        widget_for_label = QWidget(tab_3)
         widget_for_label.setFixedSize(730,80)
-        widget_for_label.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        widget_for_label.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         widget_for_label.move(320,10)
 
-        # лейбл для приказа о комиссиях. родителем для него будет виджет с input label
+        # label для приказа о комиссиях.
         label_commission = QLabel(widget_for_label)
         label_commission.setGeometry(10,5,700,30)
         label_commission.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1980,8 +2088,8 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
 
-        # Главная кнопка, запускающая и парсинг всех необходимых данных, и сбор этих данных в пдф. запускает выполнение функции parsing (функция, вызывающая все функции парсинга и сбора данных в пдф)
-        parsing_button = QPushButton("Начать парсинг и генерацию PDF", tabObjects_3)
+        # Главная кнопка, запускающая парсинг и сбор данных в пдф.
+        parsing_button = QPushButton("Начать парсинг и генерацию PDF", tab_3)
         parsing_button.setStyleSheet("""
         QPushButton {
                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
@@ -2012,26 +2120,30 @@ class MyWindow(QWidget): # Класс главного окна программ
         parsing_button.clicked.connect(lambda: parsing(self))
 
         # background блок для выбора файлов - doc файлов и универсальной таблицы
-        background_widget_for_choose_files = QWidget(tabObjects_3)
+        background_widget_for_choose_files = QWidget(tab_3)
         background_widget_for_choose_files.setFixedSize(730,310)
         background_widget_for_choose_files.move(320,100)
-        background_widget_for_choose_files.setStyleSheet("background-color: white; border-radius: 10px;")
+        background_widget_for_choose_files.setStyleSheet(
+            "background-color: white; border-radius: 10px;")
 
-        # предложение для пользователя о выборе фалов. Виджет является родителем для самого лейбла с предложением выбора файлов
-        widget_for_label_choosing_files = QWidget(tabObjects_3)
-        widget_for_label_choosing_files.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        # предложение для пользователя о выборе фалов.
+        widget_for_label_choosing_files = QWidget(tab_3)
+        widget_for_label_choosing_files.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         widget_for_label_choosing_files.setFixedSize(300, 50)
         widget_for_label_choosing_files.move(525, 110)
         self.label_for_choozing_files = QLabel(widget_for_label_choosing_files)
-        self.label_for_choozing_files.setStyleSheet("color: white; font: bold; font-size: 14px;")
+        self.label_for_choozing_files.setStyleSheet(
+            "color: white; font: bold; font-size: 14px;")
         self.label_for_choozing_files.setGeometry(0,0,300,50)
         self.label_for_choozing_files.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_for_choozing_files.setText("Пожалуйста, выберите файлы")
 
         # кнопка для выбора .xlsx файла - таблицы с данными "универсальной таблицы"
-        button_choose_universal_excel = QPushButton("Выберите таблицу для парсинга",tabObjects_3)
-        button_choose_universal_excel.setFixedSize(360,50)
-        button_choose_universal_excel.setStyleSheet("""
+        btn_choose_universal_xl = QPushButton(
+            "Выберите таблицу для парсинга",tab_3)
+        btn_choose_universal_xl.setFixedSize(360,50)
+        btn_choose_universal_xl.setStyleSheet("""
         QPushButton {
                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                     stop: 0 rgba(60, 85, 45, 230),
@@ -2056,24 +2168,27 @@ class MyWindow(QWidget): # Класс главного окна программ
                 padding-bottom: 4px;
             }
         """)
-        button_choose_universal_excel.move(680,290)
-        button_choose_universal_excel.clicked.connect(lambda: choose_universal_excel(self))
+        btn_choose_universal_xl.move(680,290)
+        btn_choose_universal_xl.clicked.connect(lambda: choose_universal_excel(self))
 
-        # виджет, который при выборе "универсальной таблицы", сменит свой стандартный текст на имя выбранной таблицы
-        universal_excel_label_widget = QWidget(tabObjects_3)
-        universal_excel_label_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        # виджет сменит свой стандартный текст на имя выбранной таблицы
+        universal_excel_label_widget = QWidget(tab_3)
+        universal_excel_label_widget.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         universal_excel_label_widget.setFixedSize(360,50)
         universal_excel_label_widget.move(680, 350)
         self.universal_excel_label = QLabel(universal_excel_label_widget)
-        self.universal_excel_label.setStyleSheet("color: rgb(211, 211, 211); font: bold; font-size: 12px;")
+        self.universal_excel_label.setStyleSheet(
+            "color: rgb(211, 211, 211); font: bold; font-size: 12px;")
         self.universal_excel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.universal_excel_label.setText("Здесь будет имя выбранного файла...")
         self.universal_excel_label.setGeometry(0,0,360,50)
 
         # кнопка для выбора doc файла с данными комиссии по истории
-        button_choose_history_commission = QPushButton("Выберите таблицу 'Комиссия - история.doc'",tabObjects_3)
-        button_choose_history_commission.setFixedSize(330,50)
-        button_choose_history_commission.setStyleSheet("""
+        btn_choose_history_commission = QPushButton(
+            "Выберите таблицу 'Комиссия - история.doc'",tab_3)
+        btn_choose_history_commission.setFixedSize(330,50)
+        btn_choose_history_commission.setStyleSheet("""
         QPushButton {
                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                     stop: 0 rgba(60, 85, 45, 230),
@@ -2098,24 +2213,28 @@ class MyWindow(QWidget): # Класс главного окна программ
                 padding-bottom: 4px;
             }
         """)
-        button_choose_history_commission.move(330, 170)
-        button_choose_history_commission.clicked.connect(lambda: choose_history_excel(self))
+        btn_choose_history_commission.move(330, 170)
+        btn_choose_history_commission.clicked.connect(lambda: choose_history_excel(self))
 
         # виджет, который сменит свой стандартный текст на имя выбранного doc файла
-        history_excel_choosed_widget = QWidget(tabObjects_3)
-        history_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        history_excel_choosed_widget = QWidget(tab_3)
+        history_excel_choosed_widget.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         history_excel_choosed_widget.setFixedSize(330, 50)
         history_excel_choosed_widget.move(330, 230)
-        self.history_excel_choosed_widget_label = QLabel(history_excel_choosed_widget)
-        self.history_excel_choosed_widget_label.setStyleSheet("color: rgb(211, 211, 211); font: bold; font-size: 12px;")
-        self.history_excel_choosed_widget_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.history_excel_choosed_widget_label.setText("Здесь будет имя выбранного файла...")
-        self.history_excel_choosed_widget_label.setGeometry(0, 0, 330, 50)
+        self.history_xl_choused_label = QLabel(history_excel_choosed_widget)
+        self.history_xl_choused_label.setStyleSheet(
+            "color: rgb(211, 211, 211); font: bold; font-size: 12px;")
+        self.history_xl_choused_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.history_xl_choused_label.setText(
+            "Здесь будет имя выбранного файла...")
+        self.history_xl_choused_label.setGeometry(0, 0, 330, 50)
 
         # кнопка для выбора doc файла с данными комиссии по иностранному
-        button_choose_foreign_commission = QPushButton("Выберите таблицу 'Комиссия - иностранный.doc'", tabObjects_3)
-        button_choose_foreign_commission.setFixedSize(360, 50)
-        button_choose_foreign_commission.setStyleSheet("""
+        btn_chouse_foreign_commission = QPushButton(
+            "Выберите таблицу 'Комиссия - иностранный.doc'", tab_3)
+        btn_chouse_foreign_commission.setFixedSize(360, 50)
+        btn_chouse_foreign_commission.setStyleSheet("""
                 QPushButton {
                         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                             stop: 0 rgba(60, 85, 45, 230),
@@ -2140,24 +2259,28 @@ class MyWindow(QWidget): # Класс главного окна программ
                         padding-bottom: 4px;
                     }
                 """)
-        button_choose_foreign_commission.move(680, 170)
-        button_choose_foreign_commission.clicked.connect(lambda: choose_foreign_excel(self))
+        btn_chouse_foreign_commission.move(680, 170)
+        btn_chouse_foreign_commission.clicked.connect(lambda: choose_foreign_excel(self))
 
         # виджет, который сменит свой стандартный текст на имя выбранного doc файла
-        foreign_excel_choosed_widget = QWidget(tabObjects_3)
-        foreign_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        foreign_excel_choosed_widget = QWidget(tab_3)
+        foreign_excel_choosed_widget.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         foreign_excel_choosed_widget.setFixedSize(360, 50)
         foreign_excel_choosed_widget.move(680, 230)
-        self.foreign_excel_choosed_widget_label = QLabel(foreign_excel_choosed_widget)
-        self.foreign_excel_choosed_widget_label.setStyleSheet("color: rgb(211, 211, 211); font: bold; font-size: 12px;")
-        self.foreign_excel_choosed_widget_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.foreign_excel_choosed_widget_label.setText("Здесь будет имя выбранного файла...")
-        self.foreign_excel_choosed_widget_label.setGeometry(0, 0, 360, 50)
+        self.foreign_xl_choosed_label = QLabel(foreign_excel_choosed_widget)
+        self.foreign_xl_choosed_label.setStyleSheet(
+            "color: rgb(211, 211, 211); font: bold; font-size: 12px;")
+        self.foreign_xl_choosed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.foreign_xl_choosed_label.setText(
+            "Здесь будет имя выбранного файла...")
+        self.foreign_xl_choosed_label.setGeometry(0, 0, 360, 50)
 
         # кнопка для выбора doc файла с данными комиссии по специальности
-        button_choose_specialization_commission = QPushButton("Выберите таблицу 'Комиссия - специальность.doc'", tabObjects_3)
-        button_choose_specialization_commission.setFixedSize(330, 50)
-        button_choose_specialization_commission.setStyleSheet("""
+        btn_choose_specialization_commission = QPushButton(
+            "Выберите таблицу 'Комиссия - специальность.doc'", tab_3)
+        btn_choose_specialization_commission.setFixedSize(330, 50)
+        btn_choose_specialization_commission.setStyleSheet("""
                         QPushButton {
                                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                     stop: 0 rgba(60, 85, 45, 230),
@@ -2182,39 +2305,47 @@ class MyWindow(QWidget): # Класс главного окна программ
                                 padding-bottom: 4px;
                             }
                         """)
-        button_choose_specialization_commission.move(330, 290)
-        button_choose_specialization_commission.clicked.connect(lambda: choose_specialization_excel(self))
+        btn_choose_specialization_commission.move(330, 290)
+        btn_choose_specialization_commission.clicked.connect(
+            lambda: choose_specialization_excel(self))
 
         # виджет, который сменит свой стандартный текст на имя выбранного doc файла
-        specialization_excel_choosed_widget = QWidget(tabObjects_3)
-        specialization_excel_choosed_widget.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        specialization_excel_choosed_widget = QWidget(tab_3)
+        specialization_excel_choosed_widget.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         specialization_excel_choosed_widget.setFixedSize(330, 50)
         specialization_excel_choosed_widget.move(330, 350)
-        self.specialization_excel_choosed_label = QLabel(specialization_excel_choosed_widget)
-        self.specialization_excel_choosed_label.setStyleSheet("color: rgb(211, 211, 211); font: bold; font-size: 12px;")
-        self.specialization_excel_choosed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.specialization_excel_choosed_label.setText("Здесь будет имя выбранного файла...")
-        self.specialization_excel_choosed_label.setGeometry(0, 0, 330, 50)
+        self.specialization_xl_choosed_lb = QLabel(specialization_excel_choosed_widget)
+        self.specialization_xl_choosed_lb.setStyleSheet(
+            "color: rgb(211, 211, 211); font: bold; font-size: 12px;")
+        self.specialization_xl_choosed_lb.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.specialization_xl_choosed_lb.setText(
+            "Здесь будет имя выбранного файла...")
+        self.specialization_xl_choosed_lb.setGeometry(0, 0, 330, 50)
 
-        # виджет, используемый как фон для кнопки выбора пути сохранения готовых пдф документов
-        widget_for_choose_save_way_for_parsed_pdf = QWidget(tabObjects_3)
+        # фон для кнопки выбора пути сохранения готовых пдф документов
+        widget_for_choose_save_way_for_parsed_pdf = QWidget(tab_3)
         widget_for_choose_save_way_for_parsed_pdf.setFixedSize(300, 190)
-        widget_for_choose_save_way_for_parsed_pdf.setStyleSheet("background-color: white; border-radius: 10px;")
+        widget_for_choose_save_way_for_parsed_pdf.setStyleSheet(
+            "background-color: white; border-radius: 10px;")
         widget_for_choose_save_way_for_parsed_pdf.move(10, 220)
 
-        # label с предложением пользователю выбрать папку, в которой сохранятся готовые пдф файлы.
-        widget_for_label_choosing_way = QWidget(tabObjects_3)
+        # label с предложением пользователю выбрать папку сохранения для пдф
+        widget_for_label_choosing_way = QWidget(tab_3)
         widget_for_label_choosing_way.setFixedSize(280,50)
-        widget_for_label_choosing_way.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        widget_for_label_choosing_way.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         widget_for_label_choosing_way.move(20, 230)
-        self.label_for_choosing_way_save_for_parsing_pdf = QLabel(widget_for_label_choosing_way)
-        self.label_for_choosing_way_save_for_parsing_pdf.setStyleSheet("color: white; font: bold; font-size: 14px;")
-        self.label_for_choosing_way_save_for_parsing_pdf.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_for_choosing_way_save_for_parsing_pdf.setText("Выберите путь сохранения для PDF")
-        self.label_for_choosing_way_save_for_parsing_pdf.setGeometry(0,0,280,50)
+        self.lb_choosing_way_save_parsing_pdf = QLabel(widget_for_label_choosing_way)
+        self.lb_choosing_way_save_parsing_pdf.setStyleSheet(
+            "color: white; font: bold; font-size: 14px;")
+        self.lb_choosing_way_save_parsing_pdf.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lb_choosing_way_save_parsing_pdf.setText(
+            "Выберите путь сохранения для PDF")
+        self.lb_choosing_way_save_parsing_pdf.setGeometry(0,0,280,50)
 
         # Кнопка выбора пути сохранения
-        button_choose_save_path = QPushButton("Выбрать папку", tabObjects_3)
+        button_choose_save_path = QPushButton("Выбрать папку", tab_3)
         button_choose_save_path.setFixedSize(250, 40)
         button_choose_save_path.move(35, 290)
         button_choose_save_path.setStyleSheet("""
@@ -2246,8 +2377,8 @@ class MyWindow(QWidget): # Класс главного окна программ
         # Путь для сохранения PDF после парсинга (по умолчанию как основной)
         self.parsing_save_folder_path = self.save_folder_path
 
-        # лейбл отображает текущий путь к папке сохранения пдф. Дефолтный путь сохранения - папка results_folder на рабочем столе
-        self.save_path_label = QLabel("Папка не выбрана", tabObjects_3)
+        # лейбл отображает текущий путь к папке сохранения пдф.
+        self.save_path_label = QLabel("Папка не выбрана", tab_3)
         self.save_path_label.setGeometry(35, 335, 250, 40)
         self.save_path_label.setStyleSheet("""
             color: white;
@@ -2263,19 +2394,21 @@ class MyWindow(QWidget): # Класс главного окна программ
         button_choose_save_path.clicked.connect(self.choose_parsing_save_folder)
 
 
-        # блок для пояснения к прогресс бару (показвает, что прогресс будет обновляться только при создании пдф, прогресс парсинга не влияет на обновление прогресса)
-        widget_for_progress_bar = QWidget(tabObjects_3)
+        # блок для пояснения к прогресс бару
+        widget_for_progress_bar = QWidget(tab_3)
         widget_for_progress_bar.setFixedSize(1040,75)
-        widget_for_progress_bar.setStyleSheet("background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
+        widget_for_progress_bar.setStyleSheet(
+            "background-color: rgba(83, 140, 65, 1); border-radius: 10px;")
         widget_for_progress_bar.move(10,420)
         self.label_for_progress = QLabel(widget_for_progress_bar)
         self.label_for_progress.setText("Прогресс сборки PDF")
-        self.label_for_progress.setStyleSheet("color: white; font-size: 18px; font: bold;")
+        self.label_for_progress.setStyleSheet(
+            "color: white; font-size: 18px; font: bold;")
         self.label_for_progress.setGeometry(0,0,1040,50)
         self.label_for_progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # прогресс бар для второй вкладки (с парсингом)
-        self.progress_bar_parsing = QProgressBar(tabObjects_3)
+        self.progress_bar_parsing = QProgressBar(tab_3)
         self.progress_bar_parsing.setFixedSize(1020, 25)
         self.progress_bar_parsing.move(20, 465)
         self.progress_bar_parsing.setRange(0, 100)
@@ -2300,7 +2433,7 @@ class MyWindow(QWidget): # Класс главного окна программ
         """)
 
         # кнопка, которая открывает выбранную папку с готовыми пдф
-        button_to_open_folder_with_done_pdf = QPushButton("Открыть папку с PDF", tabObjects_3)
+        button_to_open_folder_with_done_pdf = QPushButton("Открыть папку с PDF", tab_3)
         button_to_open_folder_with_done_pdf.setFixedSize(280,50)
         button_to_open_folder_with_done_pdf.setStyleSheet("""
             QPushButton {
@@ -2328,11 +2461,15 @@ class MyWindow(QWidget): # Класс главного окна программ
             }
         """)
         button_to_open_folder_with_done_pdf.move(370,680)
-        button_to_open_folder_with_done_pdf.clicked.connect(lambda: open_parsing_pdf_folder(self))
+        button_to_open_folder_with_done_pdf.clicked.connect(
+            lambda: open_parsing_pdf_folder(self))
 
 
-    def choose_parsing_save_folder(self):
-        """выбор папки сохранения для собранных пдф по таблице с собранным БД"""
+    def choose_parsing_save_folder(self) -> None:
+        """
+        выбор папки сохранения для собранных пдф по таблице с собранным БД
+        """
+
         folder_path = QFileDialog.getExistingDirectory(
             self,
             "Выберите папку для сохранения PDF (парсинг)",
@@ -2342,28 +2479,43 @@ class MyWindow(QWidget): # Класс главного окна программ
             self.parsing_save_folder_path = folder_path
             self.save_path_label.setText(folder_path)
 
-    def update_progress(self, current, total):
-        """функция обновления прогресса qprogressbar."""
+    def update_progress(self, current: int, total: int) -> None:
+        """
+        функция обновления прогресса qprogressbar.
+        """
+
         if total > 0:
             progress = int((current / total) * 100)
             self.progress_bar.setValue(progress)
             QApplication.processEvents()
 
-    def center_window(self):
-        """функция для центрирования главного окна, чтобы оно появлялось по центру экрана пользователя после исчезновения загрузочного окна"""
+
+    def center_window(self) -> None:
+        """
+        функция для центрирования главного окна, чтобы оно появлялось
+        по центру экрана пользователя после исчезновения загрузочного окна
+        """
+
         qr = self.frameGeometry()
         cp = self.screen().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-    def mousePressEvent(self, event):
-        """функция, отслеживающая точку, где пользователь зажал ЛКМ"""
+    def mousePressEvent(self, event) -> None:
+        """
+        функция, отслеживающая точку, где пользователь зажал ЛКМ
+        """
+
         if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = event.globalPosition().toPoint()
             event.accept()
 
-    def mouseMoveEvent(self, event):
-        """функция для вычисления смещения по изменения позиции зажатой ЛКМ. Перемещает окно при движении мыши с зажатой ЛКМ."""
+    def mouseMoveEvent(self, event) -> None:
+        """
+        функция для вычисления смещения по изменения позиции зажатой ЛКМ.
+         Перемещает окно при движении мыши с зажатой ЛКМ.
+        """
+
         if event.buttons() == Qt.MouseButton.LeftButton:
             delta = event.globalPosition().toPoint() - self.drag_position
             self.move(self.pos() + delta)
