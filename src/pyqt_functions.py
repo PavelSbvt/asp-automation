@@ -1,54 +1,90 @@
-from PyQt6.QtWidgets import QFileDialog, QMessageBox
-from PyQt6.QtWidgets import QApplication
-from PyQt6.QtCore import Qt
-import pandas as pd
 import os
-from openpyxl import load_workbook
-from openpyxl.styles import Font, Alignment, Border, Side
-import subprocess
-import aspose.words as aw
 import re
+import shutil # встроенная библиотека Python для работы с файлами и папками
+import subprocess
 import traceback
 from pathlib import Path
-
-import requests
-from bs4 import BeautifulSoup
 from typing import List, Tuple
 
-import shutil # встроенная библиотека Python для работы с файлами и папками на высоком уровне (от английского shell utilities — утилиты командной оболочки)
+import aspose.words as aw
+import pandas as pd
+import requests
+from bs4 import BeautifulSoup
+from openpyxl import load_workbook
+from openpyxl.styles import Alignment, Border, Font, Side
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-def print_out_string(text):
+
+def print_out_string(text: str) -> None:
+    """
+    Функция для красивого вывода строки логгирования в консоль
+    :param text: str
+    :return: None
+    """
     out_string_size = 150
     if len(text) % 2 != 0:
         text += " "
 
-    output_string = "|" + " " * int((out_string_size - len(text) - 2) / 2) + text + " " * int(
-        (out_string_size - len(text) - 2) / 2) + "|"
+    output_string = ("|" + " " * int((out_string_size - len(text) - 2) / 2) +
+                     text + " " * int((out_string_size - len(text) - 2) / 2) + "|")
     print(output_string)
 
-def print_separator():
+def print_separator() -> None:
+    """
+    Функция для вывода разделителя - для читаемости консоли.
+    Строка из нижних подчёркиваний.
+    :return: None
+    """
+
     print("|" + "_" * 148 + "|")
 
-def print_separator_points():
+def print_separator_points() -> None:
+    """
+    Функция для вывода разделителя - для читаемости консоли.
+    Строка из точек.
+    :return: None
+    """
+
     print("|" + "." * 148 + "|")
 
-def print_big_separator():
+def print_big_separator() -> None:
+    """
+    Функция для вывода разделителя - для читаемости консоли.
+    Строка из нижних знаков равно.
+    :return: None
+    """
+
     print("|" + "=" * 148 + "|")
 
-def open_pdf_folder(self):
+def open_pdf_folder(self) -> None:
+    """
+    Функция для открытия папки сохранения пдф.
+    :param self:
+    :return: None
+    """
+
     folder_path = self.save_folder_path
     if not Path(folder_path).exists():
         QMessageBox.warning(
             self,
             "Папка не найдена",
             f"Папка '{folder_path}' не существует.\n\n"
-            f"Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке."
+            f"Сначала создайте PDF файлы, нажав кнопку "
+            f"'Запустить' на первой вкладке."
         )
+        print(f"[E] Папка не найдена. Папка '{folder_path}' не существует."
+              f" Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке.")
         return
-    print(f"[E] Папка не найдена. Папка '{folder_path}' не существует. Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке.")
     os.startfile(folder_path)
 
-def choose_save_folder(self):
+def choose_save_folder(self) -> None:
+    """
+    Функция для выбора папки сохранения для пдф
+    :param self:
+    :return: None
+    """
+
     folder_path = QFileDialog.getExistingDirectory(
         self,
         "Выберите папку для сохранения PDF",
@@ -66,7 +102,13 @@ def choose_save_folder(self):
         self.output_text.append(string_save_way)
         QApplication.processEvents()
 
-def choose_file(self):
+def choose_file(self) -> None:
+    """
+    Функция для выбора файла обрабатываемой таблицы для генерации пдф.
+    :param self:
+    :return: None
+    """
+
     file_path, _ = QFileDialog.getOpenFileName( #
         self,
         "Выберите файл Excel с данными",
@@ -81,8 +123,12 @@ def choose_file(self):
         self.output_text.append(string)
         QApplication.processEvents()
 
-def get_pdf(self):
-    """Функция, собирающая PDF по таблицу, которую выбирает пользователь"""
+def get_pdf(self) -> None:
+    """
+    Функция, собирающая PDF по таблицу, которую выбирает пользователь
+    :return: None
+    """
+
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
     if not self.excel_file_path:
         print_big_separator()
@@ -404,8 +450,12 @@ def get_pdf(self):
     )
     print(f"[S] Готово! Создано PDF документов: {len(df)}. Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
 
-def choose_universal_excel(self):
-    """выбор универсальной таблицы"""
+def choose_universal_excel(self) -> None:
+    """
+    выбор универсальной таблицы
+    :return: None
+    """
+
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл Excel с данными",
@@ -436,7 +486,9 @@ def generate_pdf_from_db(self, excel_file_path: str):
     Генерация PDF-протоколов на основе сгенерированного Excel-файла,
     содержащего листы «БД» и «Протокол».
     Для конвертации используется Microsoft Excel (через VBScript ExportAsFixedFormat).
+    :return: None
     """
+
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
     if not excel_file_path:
@@ -724,8 +776,12 @@ def generate_pdf_from_db(self, excel_file_path: str):
     print(f"[S] Готово! Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
 
 
-def parsing_universal_excel(self):
-    """Парсит универсальную таблицу Excel"""
+def parsing_universal_excel(self) -> None:
+    """
+    Парсит универсальную таблицу Excel
+    :return: None
+    """
+
     try:
         print("[I] НАЧАЛО parsing_universal_excel")
 
@@ -857,8 +913,12 @@ def parsing_universal_excel(self):
             f"Не удалось прочитать файл:\n{str(e)}"
         )
 
-def parse_doc_with_tables(path: str):
-    """Извлекает все таблицы из документа word .doc и возвращает их как один DataFrame с текстом."""
+def parse_doc_with_tables(path: str) -> None:
+    """
+    Извлекает все таблицы из документа word .doc и возвращает их как один DataFrame с текстом.
+    :return: None
+    """
+
     doc = aw.Document(path)
     text = doc.get_text()
 
@@ -893,8 +953,12 @@ def parse_doc_with_tables(path: str):
     return tables_df, text
 
 
-def parsing_commissions(self):
-    """ Парсит файл комиссии и извлекает членов комиссии с ролями для каждой специальности """
+def parsing_commissions(self) -> None:
+    """
+    Парсит файл комиссии и извлекает членов комиссии с ролями для каждой специальности
+    :return: None
+    """
+
     print("[I] Парсинг комиссии...")
 
     # Определяем файл в зависимости от семестра
@@ -989,15 +1053,6 @@ def parsing_commissions(self):
                 for member in members:
                     print(f"[I]     - {member['fio']} ({member['role']})")
 
-            # лень каждый раз при запуске закрывать, поэтому закомментировал
-            # QMessageBox.information(
-            #     self,
-            #     "Готово!",
-            #     f"Комиссия успешно загружена!\n\n"
-            #     f"Найдено комиссий: {len(members_by_specialty)}\n"
-            #     f"Семестр: {semester_name}\n"
-            #     f"Файл: {os.path.basename(path)}"
-            # )
             print(f"[S] Готово. комиссия успешно загружена. Найдено комиссий: {len(members_by_specialty)}. Семестр: {semester_name}. Файл: {os.path.basename(path)}.")
         else:
             print("[E] Члены комиссии не найдены!")
@@ -1021,15 +1076,21 @@ def parsing_commissions(self):
 
 
 def extract_code_number(text: str) -> str:
-    """Извлекает код специальности вида 1.2.3 из строки."""
+    """
+    Извлекает код специальности вида 1.2.3 из строки.
+    :return: str
+    """
+
     if not isinstance(text, str):
         return ""
     match = re.search(r'\d{1,2}\.\d{1,2}\.\d{1,2}', text)
     return match.group(0) if match else text.strip()
 
-def _extract_commission_members(text, members_by_specialty, row=None, code_col=None):
-    """Извлечение членов комиссии из текста одной строки таблицы"""
-    # Извлекает членов комиссии из текста одной строки таблицы
+def _extract_commission_members(text, members_by_specialty: str, row=None, code_col=None) -> None:
+    """
+    Извлечение членов комиссии из текста одной строки таблицы
+    :return: None
+    """
 
     # Получаем шифр специальности
     code = ""
@@ -1079,9 +1140,12 @@ def _extract_commission_members(text, members_by_specialty, row=None, code_col=N
             'members': members
         })
 
+def choose_history_excel(self) -> None:
+    """
+    выбор doc файла с таблицей, содержащей информацию и комиссии по истории
+    :return: None
+    """
 
-def choose_history_excel(self):
-    """выбор doc файла с таблицей, содержащей информацию и комиссии по истории"""
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл комиссии по истории",
@@ -1100,8 +1164,12 @@ def choose_history_excel(self):
             self.history_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"[I] Выбран файл комиссии по истории: {file_path}")
 
-def choose_foreign_excel(self):
-    """выбор doc файла с таблицей, содержащей информацию и комиссии по иностранному"""
+def choose_foreign_excel(self) -> None:
+    """
+    выбор doc файла с таблицей, содержащей информацию и комиссии по иностранному
+    :return: None
+    """
+
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл комиссии по иностранному",
@@ -1119,8 +1187,12 @@ def choose_foreign_excel(self):
             self.foreign_excel_choosed_widget_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"[I] Выбран файл комиссии по иностранному: {file_path}")
 
-def choose_specialization_excel(self):
-    """выбор doc файла с таблицей, содержащей информацию и комиссии по специальности"""
+def choose_specialization_excel(self) -> None:
+    """
+    выбор doc файла с таблицей, содержащей информацию и комиссии по специальности
+    :return: None
+    """
+
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл комиссии по специальности",
@@ -1138,8 +1210,12 @@ def choose_specialization_excel(self):
             self.specialization_excel_choosed_label.setStyleSheet("font-size: 13px; color: white; background-color: rgb(105,208,73);")
         print(f"[I] Выбран файл комиссии по специальности: {file_path}")
 
-def choose_save_folder_path(self):
-    """выбор папки сохранения готовых пдф"""
+def choose_save_folder_path(self) -> None:
+    """
+    выбор папки сохранения готовых пдф
+    :return: None
+    """
+
     file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите папку сохранения для PDF",
@@ -1158,7 +1234,11 @@ def choose_save_folder_path(self):
         print(f"[I] Выбран файл комиссии по специальности: {file_path}")
 
 def site_parce_dn() -> List[Tuple[str, str]]:
-    """парсинг данных профилей и их кодов аспирантов с сайта магистратуры"""
+    """
+    парсинг данных профилей и их кодов аспирантов с сайта магистратуры
+    :return: :return: List[Tuple[str, str]]
+    """
+
     url = 'http://dn.tstu.ru/index.php/specialties'
     response = requests.get(url, timeout=10)
     response.raise_for_status()
@@ -1179,7 +1259,7 @@ def site_parce_dn() -> List[Tuple[str, str]]:
         if not cols:
             continue
 
-#Проверяем сколько яйчеек в строке
+        #Проверяем сколько яйчеек в строке
         if len(cols) == 3: #Если 3, то берём код и специальность из 2 и 3
             code = cols[1].get_text(strip=True)
             name = cols[2].get_text(strip=True)
@@ -1193,7 +1273,11 @@ def site_parce_dn() -> List[Tuple[str, str]]:
     return specialties
 
 def site_parce_main() -> List[Tuple[str, str]]:
-    """парсинг данных (аспирантов) профилей и их кодов с сайта ТГТУ"""
+    """
+    парсинг данных (аспирантов) профилей и их кодов с сайта ТГТУ
+    :return: List[Tuple[str, str]]
+    """
+
     url = 'https://www.tstu.ru/r.php?r=postup.abitur.na_sp'
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
@@ -1234,7 +1318,11 @@ def site_parce_main() -> List[Tuple[str, str]]:
 
 
 def get_specialty_code(profile: str) -> str:
-    """Возвращает код специальности по названию профиля из данных сайта."""
+    """
+    Возвращает код специальности по названию профиля из данных сайта.
+    :return: str
+    """
+
     try:
         # пробуем основной сайт
         specialties = site_parce_main()
@@ -1250,17 +1338,23 @@ def get_specialty_code(profile: str) -> str:
 
 
 def clean_excel_string(s: str) -> str:
-    """очистить строку от непечатаемых управляющих символов"""
+    """
+    очистить строку от непечатаемых управляющих символов
+    :return: string
+    """
+
     if not isinstance(s, str):
         return s
     # Удаляем все управляющие символы, кроме \t, \n, \r
     cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', s)
     return cleaned
 
+def fill_database_sheet(self) -> None:
+    """
+    функция заполнения листа БД таблицы-шаблона
+    :return: None
+    """
 
-
-def fill_database_sheet(self):
-    """функция заполнения листа БД таблицы-шаблона"""
     print("[I] fill_database_sheet через pandas")
 
     if not hasattr(self, 'students_data') or not self.students_data:
@@ -1292,7 +1386,7 @@ def fill_database_sheet(self):
 
     print("[I] Ключи словаря комиссий:", list(commission_dict.keys()))
 
-    def get_member_by_role(comm, role: str):
+    def get_member_by_role(comm: str, role: str) -> None:
         """поиск в комиссии члена по роли"""
         if not comm:
             return None
@@ -1364,15 +1458,10 @@ def fill_database_sheet(self):
     df = pd.DataFrame(data_rows, columns=columns)
 
     # Путь к выходному файлу
-    # output_path = os.path.abspath(
-    #     os.path.join(os.path.dirname(__file__), "..", "..temporary_protocol_db_sheet.xlsx")
-    # )
     output_path = Path(__file__).parent.parent / "resources" / "temporary_protocol_db_sheet.xlsx"
     output_path = str(output_path.absolute())
 
     # Определяем путь к файлу-шаблону (корень проекта)
-    # project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    # template_file = os.path.join(project_root, "Protocol_template.xlsx")  # имя шаблона
     template_file = Path(__file__).parent.parent / "resources" / "Protocol_template.xlsx"
     template_file = str(template_file.absolute())
 
@@ -1640,14 +1729,17 @@ def parsing(self):
     print("[I] КОНЕЦ ПАРСИНГА")
 
 def open_parsing_pdf_folder(self):
-    """Открывает папку с созданными по напарсенным данным PDF"""
+    """
+    Открывает папку с созданными по напарсенным данным PDF
+    """
+
     folder_path = self.parsing_save_folder_path
     if not os.path.exists(folder_path):
         QMessageBox.warning(
             self,
                 "Папка не найдена",
                 f"Папка '{folder_path}' не существует.\n\n"
-                f"Сначала создайте PDF файлы, нажав кнопку 'Начать парсинг и генерацию PDF' на третьей вкладке."
+                f"Сначала создайте PDF файлы, нажав кнопку 'Начать парсинг и генерацию PDF' на второй вкладке."
         )
         print("[E] ошибка с открытием папки с пдф")
         return
