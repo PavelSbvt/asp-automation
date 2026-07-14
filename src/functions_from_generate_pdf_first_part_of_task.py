@@ -409,7 +409,6 @@ def get_pdf(self) -> None:
 
     self.progress_bar.setValue(100)
 
-
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
     QMessageBox.information(
         self,

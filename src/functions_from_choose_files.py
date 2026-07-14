@@ -3,7 +3,6 @@ import os
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
 
-
 def open_parsing_pdf_folder(self) -> None:
     """
     Открывает папку с созданными по напарсенным данным PDF
