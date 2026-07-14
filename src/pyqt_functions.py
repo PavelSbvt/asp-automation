@@ -1524,12 +1524,12 @@ def fill_database_sheet(self) -> Optional[str]:
 
     # Путь к выходному файлу
     output_path = (Path(__file__).parent.parent / "resources" /
-                   "temporary_protocol_db_sheet.xlsx")
+                   "docs" / "temporary_protocol_db_sheet.xlsx")
     output_path = str(output_path.absolute())
 
     # Определяем путь к файлу-шаблону (корень проекта)
     template_file = (Path(__file__).parent.parent / "resources" /
-                     "Protocol_template.xlsx")
+                     "docs" / "Protocol_template.xlsx")
     template_file = str(template_file.absolute())
 
     if not os.path.exists(template_file):
