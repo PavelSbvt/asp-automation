@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
@@ -14,7 +15,8 @@ def main() -> None:
     """
 
     app = QApplication(sys.argv)
-    app.setWindowIcon(QIcon('resources/images/icons/icon_pdf_maker_255_size.ico'))
+    icon_path = Path('resources/images/icons/icon_pdf_maker_255_size.ico')
+    app.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
     loading_win = MyLoadingWindow()
     loading_win.show()
 
