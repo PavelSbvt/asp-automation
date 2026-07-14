@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 
 import pandas as pd
@@ -9,6 +10,39 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from general_functions import print_separator, print_big_separator, print_separator_points
 
+
+def extract_science_from_brackets(text: str) -> str:
+    """
+    Убирает скобки из строки и заменяет их на запятую.
+    Например: "название (технические науки)" -> "название, технические науки"
+    """
+
+    if text is None or pd.isna(text):
+        return ""
+
+    text = str(text).strip()
+    match = re.search(r'\(([^)]+)\)', text)
+    if match:
+        science_text = match.group(1)  # текст внутри скобок
+        # Убираем скобки из исходной строки и добавляем запятую
+        result = re.sub(r'\s*\([^)]*\)', '', text).strip()
+        result = result.rstrip(',') + f", {science_text}"
+        return result
+    else:
+        return text
+
+def remove_trailing_dot(text) -> str:
+    """
+    Убирает точку в конце строки, если она там есть.
+    Также обрабатывает None, nan и пустые строки.
+    """
+
+    if text is None or pd.isna(text):
+        return ""
+    text = str(text).strip()
+    if text.endswith('.'):
+        return text[:-1]
+    return text
 
 def generate_pdf_from_db(self, excel_file_path: str) -> None:
     """
@@ -68,14 +102,15 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         surname_genitive = str(df.iloc[string_number, 0]).strip()   # родительный
         discipline       = str(df.iloc[string_number, 1]).strip()
         commission_text  = str(df.iloc[string_number, 2]).strip()   # текст приказа
-        chair_full       = str(df.iloc[string_number, 3]).strip()
-        chair_initials   = str(df.iloc[string_number, 4]).strip()
-        deputy_full      = str(df.iloc[string_number, 5]).strip()
-        deputy_initials  = str(df.iloc[string_number, 6]).strip()
-        member_full      = str(df.iloc[string_number, 7]).strip()
-        member_initials  = str(df.iloc[string_number, 8]).strip()
+        chair_full       = remove_trailing_dot(str(df.iloc[string_number, 3]).strip())
+        chair_initials   = remove_trailing_dot(str(df.iloc[string_number, 4]).strip())
+        deputy_full      = remove_trailing_dot(str(df.iloc[string_number, 5]).strip())
+        deputy_initials  = remove_trailing_dot(str(df.iloc[string_number, 6]).strip())
+        member_full      = remove_trailing_dot(str(df.iloc[string_number, 7]).strip())
+        member_initials  = remove_trailing_dot(str(df.iloc[string_number, 8]).strip())
         surname_nominative = str(df.iloc[string_number, 9]).strip() # именительный
-        direction_raw    = str(df.iloc[string_number, 10]).strip()
+        direction_raw = extract_science_from_brackets(
+            str(df.iloc[string_number, 10]).strip())
 
         processed_count += 1
 
