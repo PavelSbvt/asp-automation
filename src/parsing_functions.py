@@ -193,12 +193,11 @@ def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
     return tables_df, text
 
 
-def parsing_commissions(self) -> Optional[List[Dict]]:
+def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
     """
-    Парсит файл комиссии и извлекает членов комиссии с ролями для каждой специальности
-    :return: None
+    Парсит файл комиссии и возвращает словарь:
+    { "шифр": {"members": [...], "code": "шифр"} }
     """
-
     print("[I] Парсинг комиссии...")
 
     # Определяем файл в зависимости от семестра
@@ -231,13 +230,11 @@ def parsing_commissions(self) -> Optional[List[Dict]]:
         # Парсим документ через Aspose.Words
         tables_df, full_text = parse_doc_with_tables(path)
 
-        members_by_specialty = []  # Список для хранения комиссий по специальностям
+        commissions_by_code = {}  # ← СЛОВАРЬ: шифр -> комиссия
 
         # Если есть таблицы
         if tables_df is not None and not tables_df.empty:
-            print(
-                f"[I] Найдено таблиц: {len(tables_df['table_index'].unique())
-                if 'table_index' in tables_df.columns else 1}")
+            print(f"[I] Найдено таблиц: {len(tables_df['table_index'].unique()) if 'table_index' in tables_df.columns else 1}")
 
             # Получаем колонки
             cols = list(tables_df.columns)
@@ -252,8 +249,8 @@ def parsing_commissions(self) -> Optional[List[Dict]]:
                     col_lower = col.lower()
                     if 'фамил' in col_lower or 'инициал' in col_lower:
                         fio_col = col
-                    elif ('шифр' in col_lower or 'наименование'
-                          in col_lower or 'специальност' in col_lower):
+                    elif ('шифр' in col_lower or 'наименование' in col_lower
+                          or 'специальност' in col_lower):
                         code_col = col
 
             print(f"[I] Колонка ФИО: {fio_col}")
@@ -267,41 +264,33 @@ def parsing_commissions(self) -> Optional[List[Dict]]:
                         if col not in ['source_file', 'table_index']:
                             value = str(row[col]).strip() if pd.notna(row[col]) else ""
                             if value and len(value) > 10:
-                                _extract_commission_members(value,
-                                                    members_by_specialty, row, code_col)
+                                _extract_commission_members(value, commissions_by_code, row, code_col)
                 else:
                     # Берём значение из колонки с ФИО
                     value = str(row[fio_col]).strip() if pd.notna(row[fio_col]) else ""
                     if value and len(value) > 10:
-                        _extract_commission_members(value, members_by_specialty,
-                                                    row, code_col)
+                        _extract_commission_members(value, commissions_by_code, row, code_col)
 
         # Если не нашли в таблицах - ищем в тексте документа
-        if not members_by_specialty and full_text:
+        if not commissions_by_code and full_text:
             print("[I] поиск комиссии в тексте документа...")
-            # Ищем блоки с комиссиями по паттерну
-            patterns = [
-                r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?.*?председатель.*?;)',
-                r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?.*?заместитель.*?;)',
-            ]
+            # Здесь можно добавить поиск по тексту, если нужно
 
         # Сохраняем в атрибут класса
-        self.commission_members = members_by_specialty
+        self.commissions_by_code = commissions_by_code
 
         # Выводим результат
-        if members_by_specialty:
-            print(f"[I] Найдено {len(members_by_specialty)} комиссий:")
-            for i, item in enumerate(members_by_specialty, 1):
-                code = item.get('code', 'Без шифра')
-                members = item.get('members', [])
-                print(f"[I]  {i}. Шифр: {code}")
+        if commissions_by_code:
+            print(f"[I] Найдено комиссий для {len(commissions_by_code)} шифров:")
+            for code, comm in commissions_by_code.items():
+                members = comm.get('members', [])
+                print(f"[I]   Шифр: {code} -> {len(members)} членов")
                 for member in members:
                     print(f"[I]     - {member['fio']} ({member['role']})")
 
-            print(
-                f"[S] Готово. комиссия успешно загружена. Найдено комиссий: "
-                f"{len(members_by_specialty)}. Семестр: {semester_name}."
-                f" Файл: {os.path.basename(path)}.")
+            print(f"[S] Готово. Комиссия успешно загружена. Найдено комиссий: "
+                  f"{len(commissions_by_code)}. Семестр: {semester_name}."
+                  f" Файл: {os.path.basename(path)}.")
         else:
             print("[E] Члены комиссии не найдены!")
             QMessageBox.warning(
@@ -310,7 +299,7 @@ def parsing_commissions(self) -> Optional[List[Dict]]:
                 f"Не удалось найти членов комиссии в файле:\n{os.path.basename(path)}"
             )
 
-        return members_by_specialty
+        return commissions_by_code
 
     except Exception as e:
         print(f"[E] Ошибка при парсинге комиссии: {e}")

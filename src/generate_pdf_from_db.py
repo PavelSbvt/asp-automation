@@ -8,7 +8,7 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from general_functions import print_separator, print_big_separator, print_separator_points
+from general_functions import print_separator, print_big_separator, print_separator_points, remove_trailing_dot
 
 
 def extract_science_from_brackets(text: str) -> str:
@@ -16,33 +16,18 @@ def extract_science_from_brackets(text: str) -> str:
     Убирает скобки из строки и заменяет их на запятую.
     Например: "название (технические науки)" -> "название, технические науки"
     """
-
     if text is None or pd.isna(text):
         return ""
 
     text = str(text).strip()
     match = re.search(r'\(([^)]+)\)', text)
     if match:
-        science_text = match.group(1)  # текст внутри скобок
-        # Убираем скобки из исходной строки и добавляем запятую
+        science_text = match.group(1)
         result = re.sub(r'\s*\([^)]*\)', '', text).strip()
         result = result.rstrip(',') + f", {science_text}"
         return result
-    else:
-        return text
-
-def remove_trailing_dot(text) -> str:
-    """
-    Убирает точку в конце строки, если она там есть.
-    Также обрабатывает None, nan и пустые строки.
-    """
-
-    if text is None or pd.isna(text):
-        return ""
-    text = str(text).strip()
-    if text.endswith('.'):
-        return text[:-1]
     return text
+
 
 def generate_pdf_from_db(self, excel_file_path: str) -> None:
     """
@@ -72,21 +57,18 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         return
 
     print_big_separator()
-
     print(f"[I] Найдено {len(df)} человек")
-
     print_big_separator()
 
     output_pdf_name = self.parsing_save_folder_path
     os.makedirs(output_pdf_name, exist_ok=True)
 
     EXCEL_FILE = excel_file_path
-
     processed_count = 0
 
     for string_number in range(len(df)):
         # ------------------------------------------------------------
-        # Данные из новой структуры «БД» (колонки 0..10)
+        # Данные из БД (колонки 0..10)
         # 0  = СЛУШАЛИ (фамилия в родительном падеже)
         # 1  = Прием кандидатского экзамена по дисциплине
         # 2  = Направление (текст приказа)
@@ -99,18 +81,20 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         # 9  = ПОСТАНОВИЛИ (ФИО в именительном падеже)
         # 10 = НАПРАВЛЕНИЕ (шифр + профиль)
         # ------------------------------------------------------------
-        surname_genitive = str(df.iloc[string_number, 0]).strip()   # родительный
-        discipline       = str(df.iloc[string_number, 1]).strip()
-        commission_text  = str(df.iloc[string_number, 2]).strip()   # текст приказа
-        chair_full       = remove_trailing_dot(str(df.iloc[string_number, 3]).strip())
-        chair_initials   = remove_trailing_dot(str(df.iloc[string_number, 4]).strip())
-        deputy_full      = remove_trailing_dot(str(df.iloc[string_number, 5]).strip())
-        deputy_initials  = remove_trailing_dot(str(df.iloc[string_number, 6]).strip())
-        member_full      = remove_trailing_dot(str(df.iloc[string_number, 7]).strip())
-        member_initials  = remove_trailing_dot(str(df.iloc[string_number, 8]).strip())
-        surname_nominative = str(df.iloc[string_number, 9]).strip() # именительный
-        direction_raw = extract_science_from_brackets(
-            str(df.iloc[string_number, 10]).strip())
+        surname_genitive = str(df.iloc[string_number, 0]).strip()  # родительный
+        discipline = str(df.iloc[string_number, 1]).strip()
+        commission_text = str(df.iloc[string_number, 2]).strip()  # текст приказа
+
+        # ===== ДАННЫЕ КОМИССИИ ИЗ EXCEL (уже заполнены fill_database_sheet) =====
+        chair_full = str(df.iloc[string_number, 3]).strip()
+        chair_initials = remove_trailing_dot(str(df.iloc[string_number, 4]).strip())
+        deputy_full = str(df.iloc[string_number, 5]).strip()
+        deputy_initials = remove_trailing_dot(str(df.iloc[string_number, 6]).strip())
+        member_full = str(df.iloc[string_number, 7]).strip()
+        member_initials = remove_trailing_dot(str(df.iloc[string_number, 8]).strip())
+
+        surname_nominative = str(df.iloc[string_number, 9]).strip()  # именительный
+        direction_raw = extract_science_from_brackets(str(df.iloc[string_number, 10]).strip())
 
         processed_count += 1
 
@@ -128,7 +112,6 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
             else "unknown"
 
         print(f"[I] Делаю PDF для: {surname_nominative}")
-
         print_separator_points()
 
         # Загружаем шаблон (лист «Протокол») из того же файла
@@ -140,7 +123,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         cell = ws['A1']
         text = (
             "МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ\n"
-"Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
+            "Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
             "«Тамбовский государственный технический университет»"
         )
         cell.value = text
@@ -335,7 +318,6 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         os.remove(file_name)
 
         print(f"[S] Готов: {code} {surname_nominative}.pdf")
-
         print_separator()
 
     print(f"[S] Программа завершила работу. Документы PDF сохранены в папке "

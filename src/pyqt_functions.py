@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import QMessageBox
 
 from parsing_functions import parsing_commissions, site_parce_main, site_parce_dn
 from generate_pdf_from_db import generate_pdf_from_db
-from general_functions import extract_code_number
+from general_functions import extract_code_number, remove_trailing_dot
 
 
 def get_specialty_code(profile: str) -> str:
@@ -32,7 +32,6 @@ def get_specialty_code(profile: str) -> str:
         # Любая ошибка (сеть, таймаут) - возвращаем пустую строку
         return ""
 
-
 def clean_excel_string(s: str) -> str:
     """
     очистить строку от непечатаемых управляющих символов
@@ -44,6 +43,7 @@ def clean_excel_string(s: str) -> str:
     # Удаляем все управляющие символы, кроме \t, \n, \r
     cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', s)
     return cleaned
+
 
 def fill_database_sheet(self) -> Optional[str]:
     """
@@ -59,35 +59,65 @@ def fill_database_sheet(self) -> Optional[str]:
 
     # Столбцы итоговой таблицы
     columns = [
-        'СЛУШАЛИ',                                    # 0
-        'Прием кандидатского экзамена по дисциплине', # 1
-        'Направление',                                # 2
-        'Председатель комиссии',                      # full_text
-        'ФИО',                                        # инициалы председателя
-        'Члены комиссии №1:',                         # full_text зама
-        'ФИО',                                        # инициалы зама
-        'Члены комиссии №2:',                         # full_text члена
-        'ФИО',                                        # инициалы члена
-        'ПОСТАНОВИЛИ',                                # 9
-        'НАПРАВЛЕНИЕ'                                 # 10
+        'СЛУШАЛИ',  # 0
+        'Прием кандидатского экзамена по дисциплине',  # 1
+        'Направление',  # 2
+        'Председатель комиссии',  # full_text
+        'ФИО',  # инициалы председателя
+        'Члены комиссии №1:',  # full_text зама
+        'ФИО',  # инициалы зама
+        'Члены комиссии №2:',  # full_text члена
+        'ФИО',  # инициалы члена
+        'ПОСТАНОВИЛИ',  # 9
+        'НАПРАВЛЕНИЕ'  # 10
     ]
 
     # ===== Строим словарь комиссий по коду специальности =====
     commission_dict = {}
-    for comm in getattr(self, 'commission_members', []):
-        raw_code = comm.get('code', '')
-        code = extract_code_number(raw_code)
-        if code:
-            commission_dict[code] = comm
+    commission_members = getattr(self, 'commission_members', {})
+
+    # Переменная для хранения комиссии "Все"
+    all_commission = None
+
+    if isinstance(commission_members, dict):
+        for code, comm in commission_members.items():
+            # Очищаем код от мусорных символов
+            clean_key = re.sub(r'[\x00-\x1f\x7f]', '', code).strip()
+
+            # Проверяем, есть ли в ключе слово "Все"
+            if 'Все' in clean_key:
+                all_commission = comm
+                commission_dict["ALL"] = comm
+                print(f"[I] Найдена комиссия 'Все'")
+            else:
+                raw_code = comm.get('code', '')
+                clean_code = extract_code_number(raw_code)
+                if clean_code:
+                    commission_dict[clean_code] = comm
+                elif clean_key:
+                    commission_dict[clean_key] = comm
+    else:
+        # Если это список (старый формат)
+        for comm in commission_members:
+            raw_code = comm.get('code', '')
+            clean_code = extract_code_number(raw_code)
+            if clean_code:
+                commission_dict[clean_code] = comm
+            else:
+                # Если нет кода - считаем это комиссией "Все"
+                all_commission = comm
+                commission_dict["ALL"] = comm
+
+    # Если явно не нашли "Все" - ищем в ключах
+    if not all_commission:
+        for key in commission_dict.keys():
+            if 'Все' in key or 'ALL' in key:
+                all_commission = commission_dict[key]
+                break
 
     print("[I] Ключи словаря комиссий:", list(commission_dict.keys()))
 
     def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
-        """
-        поиск в комиссии члена по роли
-        :return: Optional[Dict]
-        """
-
         if not comm:
             return None
         for m in comm.get('members', []):
@@ -105,26 +135,60 @@ def fill_database_sheet(self) -> Optional[str]:
         if not clean_code:
             clean_code = direction_code.strip()
 
-        student_comm = commission_dict.get(clean_code)
+        # ===== ИЩЕМ КОМИССИЮ =====
+        student_comm = None
+
+        # 1. Пробуем найти по точному коду
+        if clean_code in commission_dict:
+            student_comm = commission_dict[clean_code]
+            print(f"[I] Найдена комиссия по точному коду: {clean_code}")
+
+        # 2. Если не нашли - пробуем найти по части кода
         if not student_comm:
             for key, comm in commission_dict.items():
-                if key.startswith('.'.join(clean_code.split('.')[:2])):
-                    student_comm = comm
-                    break
+                # Пропускаем "ALL" пока
+                if key == "ALL":
+                    continue
+                # Очищаем ключ от мусора
+                clean_key = re.sub(r'[\x00-\x1f\x7f]', '', key).strip()
+                # Проверяем, начинается ли ключ с первых двух цифр
+                key_parts = clean_key.split('.')
+                code_parts = clean_code.split('.')
+                if len(key_parts) >= 2 and len(code_parts) >= 2:
+                    if key_parts[0] == code_parts[0] and key_parts[1] == code_parts[1]:
+                        student_comm = comm
+                        print(f"[I] Найдена комиссия по части кода: {clean_key}")
+                        break
 
-        if not student_comm and self.commission_members:
-            student_comm = self.commission_members[0]
+        # 3. Если всё ещё не нашли - берём комиссию "Все"
+        if not student_comm and all_commission:
+            student_comm = all_commission
+            print(f"[I] Использую комиссию 'Все' для {student['fio']}")
 
+        # 4. Если и "Все" нет - берём первую попавшуюся
+        if not student_comm and commission_dict:
+            student_comm = list(commission_dict.values())[0]
+            print(f"[I] Использую первую попавшуюся комиссию для {student['fio']}")
+
+        # Получаем членов комиссии
         pred = get_member_by_role(student_comm, 'председатель')
-        zam  = get_member_by_role(student_comm, 'заместитель')
+        zam = get_member_by_role(student_comm, 'заместитель')
         chlen = get_member_by_role(student_comm, 'член')
 
-        pred_text = clean_excel_string(pred['full_text']) if pred else ''
-        pred_fio  = clean_excel_string(pred['fio']) if pred else ''
-        zam_text  = clean_excel_string(zam['full_text']) if zam else ''
-        zam_fio   = clean_excel_string(zam['fio']) if zam else ''
-        chlen_text = clean_excel_string(chlen['full_text']) if chlen else ''
-        chlen_fio = clean_excel_string(chlen['fio']) if chlen else ''
+        # Используем full_text или fio, если full_text нет
+        pred_text = remove_trailing_dot(clean_excel_string(pred.get('full_text',
+                                                pred.get('fio', '')))) if pred else ''
+        pred_fio = remove_trailing_dot(clean_excel_string(pred.get(
+            'fio', ''))) if pred else ''
+        zam_text = remove_trailing_dot(clean_excel_string(zam.get('full_text',
+                                                zam.get('fio', '')))) if zam else ''
+        zam_fio = remove_trailing_dot(clean_excel_string(zam.get(''
+                                                    'fio', ''))) if zam else ''
+        chlen_text = remove_trailing_dot(
+            clean_excel_string(chlen.get('full_text', chlen.get('fio',
+                                                    '')))) if chlen else ''
+        chlen_fio = remove_trailing_dot(clean_excel_string(chlen.get('fio',
+                                                        ''))) if chlen else ''
 
         fio_clean = clean_excel_string(student['fio'])
         profile_clean = clean_excel_string(student['profile'])
@@ -171,7 +235,6 @@ def fill_database_sheet(self) -> Optional[str]:
         print(f"[E] Файл шаблона не найден: {template_file}")
         return None
 
-    # 2. Копируем шаблон в целевой файл (теперь в нём есть лист «Протокол»)
     try:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         shutil.copy(template_file, output_path)
@@ -180,14 +243,28 @@ def fill_database_sheet(self) -> Optional[str]:
         print(f"[E] Ошибка при копировании шаблона: {e}")
         return None
 
-    # 3. Добавляем лист «БД» в скопированный файл, заменяя старый, если был
     try:
         with pd.ExcelWriter(
-            output_path,
-            engine='openpyxl',
-            mode='a',                       # открыть существующий файл
-            if_sheet_exists='replace'       # заменить лист, если уже есть
+                output_path,
+                engine='openpyxl',
+                mode='a',
+                if_sheet_exists='replace'
         ) as writer:
+            print("[I] [debag] ПРОВЕРКА ДАННЫХ БД ")
+            for i, row in enumerate(data_rows[:3]):  # выводим первые 3 строки
+                print(f"  Строка {i + 1}:")
+                print(f"  СЛУШАЛИ: {row[0]}")
+                print(f"  Дисциплина: {row[1]}")
+                print(f"  Направление: {row[2]}")
+                print(f"  Председатель (full_text): {row[3]}")
+                print(f"  Председатель (ФИО): {row[4]}")
+                print(f"  Зам (full_text): {row[5]}")
+                print(f"  Зам (ФИО): {row[6]}")
+                print(f"  Член (full_text): {row[7]}")
+                print(f"  Член (ФИО): {row[8]}")
+                print(f"  ПОСТАНОВИЛИ: {row[9]}")
+                print(f"  НАПРАВЛЕНИЕ: {row[10]}")
+                print("-" * 40)
             df.to_excel(writer, sheet_name='БД', index=False)
         print(f"[S] Лист 'БД' успешно добавлен в {output_path}")
     except Exception as e:
@@ -262,7 +339,11 @@ def _get_fio_initials(fio: str) -> str:
     if not letters:
         return fio
     initials = '.'.join(letters) + '.'
-    return f"/ {initials} {surname} /"
+    result = f"/ {initials} {surname} /"
+    # ← Убираем точку в конце, если она есть
+    if result.endswith(' . /'):
+        result = result[:-3] + ' /'
+    return result
 
 def parsing(self) -> None:
     """

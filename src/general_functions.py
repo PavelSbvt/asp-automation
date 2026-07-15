@@ -1,8 +1,20 @@
 import re
-from typing import Dict, List
+from typing import Dict, Optional, List
 
 import pandas as pd
 
+
+def remove_trailing_dot(text) -> str:
+    """
+    Убирает точку в конце строки, если она там есть.
+    Также обрабатывает None, nan и пустые строки.
+    """
+    if text is None or pd.isna(text):
+        return ""
+    text = str(text).strip()
+    if text.endswith('.'):
+        return text[:-1]
+    return text
 
 def print_out_string(text: str) -> None:
     """
@@ -45,69 +57,136 @@ def print_big_separator() -> None:
 
     print("|" + "=" * 148 + "|")
 
-def extract_code_number(text: str) -> str:
-    """
-    Извлекает код специальности вида 1.2.3 из строки.
-    :return: string
-    """
 
-    if not isinstance(text, str):
+def extract_code_from_row(row, code_col) -> str:
+    """
+    Извлекает шифр из строки таблицы комиссий.
+    Если написано "Все" — возвращает "ALL".
+    Если есть шифр формата 2.2.12. — возвращает его.
+    """
+    if code_col is None:
+        return "UNKNOWN"
+
+    code = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
+
+    # Если написано "Все" — это значит, что комиссия для всех шифров
+    if code.lower() == "все" or "все" in code.lower():
+        return "ALL"
+
+    # Пробуем извлечь шифр формата 2.2.12.
+    match = re.search(r'(\d+\.\d+\.\d+\.?)', code)
+    if match:
+        return match.group(1)
+
+    return code
+
+
+def extract_fio_from_text(text: str) -> str:
+    """Извлекает ФИО из текста (фамилия + инициалы)"""
+    if not text:
         return ""
-    match = re.search(r'\d{1,2}\.\d{1,2}\.\d{1,2}', text)
-    return match.group(0) if match else text.strip()
+    # Ищем фамилию с инициалами в начале строки
+    match = re.search(r'^([А-ЯЁ][а-яё]+(?:\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?)?)', text)
+    if match:
+        return match.group(1).strip()
+    # Если не нашло, пробуем найти фамилию с именем и отчеством
+    match = re.search(r'^([А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+)', text)
+    if match:
+        return match.group(1).strip()
+    return text[:30].strip()
 
-def _extract_commission_members(text: str, members_by_specialty: List[Dict],
-                                row=None, code_col=None) -> None:
+
+def extract_initials_from_text(text: str) -> str:
+    """Извлекает инициалы из текста"""
+    return extract_fio_from_text(text)
+
+
+def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col: str) -> None:
     """
-    Извлечение членов комиссии из текста одной строки таблицы
-    :return: None
+    Извлекает членов комиссии из текста и сохраняет в словарь commissions_dict
+    по ключу-шифру.
     """
+    if not text or len(text) < 10:
+        return
 
-    # Получаем шифр специальности
-    code = ""
-    if row is not None and code_col is not None and code_col in row:
-        raw_code = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
-        code = extract_code_number(raw_code)
+    # Получаем шифр
+    code = extract_code_from_row(row, code_col)
 
-    # Разбиваем текст по точкам с запятой
-    parts = re.split(r'[;]', text)
-
-    members = []
-
-    for part in parts:
-        part = part.strip()
-        if not part or len(part) < 5:
-            continue
-
-        fio_match = re.search(
-            r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?|'
-            r'[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+\s+[А-ЯЁ][а-яё]+)',
-            part
-        )
-
-        if not fio_match:
-            continue
-
-        fio = fio_match.group(1)
-
-        role = "член"
-        part_lower = part.lower()
-        if "председатель" in part_lower:
-            role = "председатель"
-        elif "заместитель" in part_lower:
-            role = "заместитель"
-        elif "член" in part_lower:
-            role = "член"
-
-        if not any(m['fio'] == fio for m in members):
-            members.append({
-                'fio': fio,
-                'role': role,
-                'full_text': part
-            })
-
-    if members:
-        members_by_specialty.append({
+    if code not in commissions_dict:
+        commissions_dict[code] = {
             'code': code,
-            'members': members
-        })
+            'members': []
+        }
+
+    # Разбиваем текст по ";" на части
+    parts = [p.strip() for p in text.split(';') if p.strip()]
+
+    # Если не разбилось по ";", пробуем по ". " с заглавной буквы
+    if len(parts) <= 1:
+        parts = [p.strip() for p in re.split(r'\.\s*[А-ЯЁ]', text) if p.strip()]
+        # Восстанавливаем первую букву
+        parts = [p.strip() for p in parts if p.strip()]
+
+    # Проходим по каждой части и ищем роли
+    for part in parts:
+        part_lower = part.lower()
+
+        # Определяем роль
+        role = None
+        if 'председатель' in part_lower:
+            role = 'председатель'
+        elif 'заместитель' in part_lower:
+            role = 'заместитель'
+        elif 'член' in part_lower:
+            role = 'член'
+
+        # Если роль найдена, добавляем члена комиссии
+        if role:
+            fio = extract_fio_from_text(part)
+            if fio:
+                commissions_dict[code]['members'].append({
+                    'fio': fio,
+                    'role': role,
+                    'full_text': part,
+                    'initials': fio
+                })
+
+    # Если не нашли по ролям, но есть части — распределяем по порядку
+    if len(commissions_dict[code]['members']) == 0 and len(parts) >= 3:
+        roles = ['председатель', 'заместитель', 'член']
+        for i, part in enumerate(parts[:3]):
+            fio = extract_fio_from_text(part)
+            if fio:
+                commissions_dict[code]['members'].append({
+                    'fio': fio,
+                    'role': roles[i] if i < len(roles) else 'член',
+                    'full_text': part,
+                    'initials': fio
+                })
+
+    # Если всё ещё нет членов — пробуем найти все ФИО в тексте
+    if len(commissions_dict[code]['members']) == 0:
+        # Ищем все фамилии с инициалами
+        names = re.findall(r'([А-ЯЁ][а-яё]+\s+[А-ЯЁ]\.\s*[А-ЯЁ]\.?)', text)
+        if names:
+            roles = ['председатель', 'заместитель', 'член']
+            for i, name in enumerate(names[:3]):
+                commissions_dict[code]['members'].append({
+                    'fio': name,
+                    'role': roles[i] if i < len(roles) else 'член',
+                    'full_text': name,
+                    'initials': name
+                })
+
+
+def extract_code_number(raw_code: str) -> str:
+    """
+    Извлекает код специальности из строки.
+    Пример: "2.2.12." -> "2.2.12."
+    """
+    if not raw_code:
+        return ""
+    match = re.search(r'(\d+\.\d+\.\d+\.?)', raw_code)
+    if match:
+        return match.group(1)
+    return raw_code.strip()
