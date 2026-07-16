@@ -2513,15 +2513,14 @@ class MyWindow(QWidget):
         """
 
         self.sound_effect = QSoundEffect()
-        sound_path = str(Path(__file__).parent.parent / "resources"
-                         / "sounds" / "guitar_sound.wav")
+        sound_path = Path('resources/sounds/guitar_sound.wav')
 
         # Проверяем существование файла
-        if Path(sound_path).exists():
-            self.sound_effect.setSource(QUrl.fromLocalFile(sound_path))
+        if Path(sound_path.as_posix()).exists():
+            self.sound_effect.setSource(QUrl.fromLocalFile(sound_path.as_posix()))
             self.sound_effect.setVolume(0.13)  # Громкость от 0.0 до 1.0
         else:
-            print(f"[W] Звуковой файл не найден: {sound_path}")
+            print(f"[W] Звуковой файл не найден: {sound_path.as_posix()}")
 
     def play_open_sound(self) -> None:
         """

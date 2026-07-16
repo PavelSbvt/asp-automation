@@ -75,10 +75,9 @@ class MyLoadingWindow(QWidget):
 
         print("[I] показ гиф анимации процесса загрузки")
 
-        path_gif_loading = str(Path(__file__).parent.parent / "resources"
-                            / "images" / "gifs" / "loading_animation.gif")
+        path_gif_loading = Path('resources/images/gifs/loading_animation.gif')
 
-        gif_loading = QMovie(path_gif_loading)
+        gif_loading = QMovie(path_gif_loading.as_posix())
         # создаю объект класса qmovie. как аргумент передаётся путь к гиф анимации
         movie_widget = QLabel(self)
         # метод setMovie можно применить к qlabel, поэтому создал его
