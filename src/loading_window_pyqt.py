@@ -19,13 +19,10 @@ class MyLoadingWindow(QWidget):
         """
 
         super().__init__() # метод вызова конструктора родительского класса
-
         self.drag_position: QPoint = QPoint()
         # Это создан атрибут для хранения позиции мыши, объект класса qpoint.
-
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         #  удаление стандартной рамки окна
-
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         # включение прозрачного фона для окна, скрывается рамка окна
 

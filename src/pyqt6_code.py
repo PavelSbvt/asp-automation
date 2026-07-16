@@ -1,10 +1,11 @@
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
-from PyQt6.QtCore import QPoint, QTimer, Qt, QSize # QPoint — для перетаскивания окон
+from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, QUrl
 from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
 from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
 QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QFileDialog)
+from PyQt6.QtMultimedia import QSoundEffect
 
 from pyqt_functions import parsing
 from functions_from_generate_pdf_first_part_of_task import (open_pdf_folder,
@@ -45,6 +46,9 @@ class MyWindow(QWidget):
 
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        self.setup_sound()  # Инициализация звука
+        self.play_open_sound()  # Воспроизведение звука при открытии
 
         # блок для фона программы
         background_block = QWidget(self)
@@ -2502,6 +2506,32 @@ class MyWindow(QWidget):
         cp = self.screen().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+
+    def setup_sound(self) -> None:
+        """
+        Настройка звукового эффекта
+        """
+
+        self.sound_effect = QSoundEffect()
+        sound_path = str(Path(__file__).parent.parent / "resources"
+                         / "sounds" / "guitar_sound.wav")
+
+        # Проверяем существование файла
+        if Path(sound_path).exists():
+            self.sound_effect.setSource(QUrl.fromLocalFile(sound_path))
+            self.sound_effect.setVolume(0.13)  # Громкость от 0.0 до 1.0
+        else:
+            print(f"[W] Звуковой файл не найден: {sound_path}")
+
+    def play_open_sound(self) -> None:
+        """
+        Воспроизведение звука при открытии окна
+        """
+
+        if hasattr(self, 'sound_effect') and self.sound_effect.source().isValid():
+            self.sound_effect.play()
+        else:
+            print("[W] Звук не воспроизведён - файл не найден или не загружен")
 
     def mousePressEvent(self, event) -> None:
         """
