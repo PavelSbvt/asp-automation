@@ -2,7 +2,7 @@
 ## Формирование протоколов на основе парсинга документов
 ___
 ### Для работы программы необходимо:
-- **Python 3.10+**
+- **Python 3.11+**
 - **Windows 10(11)**
 - **предустановленный Microsoft Excel**
 - **Подключение к сети Интернет**
@@ -58,17 +58,17 @@ ___
 ___
 ### Для запуска проекта следуйте инструкции:
 1. В верхней правой части интерфейса PyCharm найдите зелёную кнопку пуска:
-![auto-py-to-exe](resources/docs/images/readme/run_button.png)
+![auto-py-to-exe](doc/images/readme/run_button.png)
 2.  Нажмите на кнопку, открывающую выпадающий список и выберите в нём "Edit Configurations"
-![auto-py-to-exe](resources/docs/images/readme/create_run.png)
+![auto-py-to-exe](doc/images/readme/create_run.png)
 - В поле Name введите название .run.xml файла запуска - теперь так будет называться файл, с которого будет запускаться проект (название появится рядом с кнопкой выпадающего списка по завершении инструкции).
 - В поле напротив script можно нажать на иконку папки и выбрать исполнительный файл, который находится в папке имя_проекта/scr/main.py
 - В поле working directory должна быть выбрана корневая папка проекта, но можете вписать формулу: $PROJECT_DIR$, как в примере на скриншоте
 - В завершение инструкции нажмите кнопку Apply и Ok. Теперь у Вас должна появиться иконка созданного файла типа:
-![auto-py-to-exe](resources/docs/images/readme/run_button.png)
+![auto-py-to-exe](doc/images/readme/run_button.png)
 3. Запускайте проект только по этому файлу
 ___
-![auto-py-to-exe](resources/docs/images/readme/icon_pdf_maker.png)
+![auto-py-to-exe](doc/images/readme/icon_pdf_maker.png)
 # PDF_Maker_exe
 Собрал проект в exe через auto-py-to-exe
 ___
@@ -186,10 +186,10 @@ pip install auto-py-to-exe
 }
 ```
 5. Теперь выберите этот файл для импорта в пункте "Settings -> Configuration":
-![auto-py-to-exe](resources/docs/images/readme/auto_py_to_exe_1.png)
+![auto-py-to-exe](doc/images/readme/auto_py_to_exe_1.png)
 6. После импорта нажмите на кнопку "CONVERT .PY TO .EXE" в нижней части окна. После завершения процесса нажмите на кнопку "OPEN OUTPUT FOLDER". Скопируйте из неё папку "main" себе на диск. 
-![auto-py-to-exe](resources/docs/images/readme/auto_py_to_exe_2.png)
+![auto-py-to-exe](doc/images/readme/auto_py_to_exe_2.png)
 ### Важно! Для правильного отображение изображений скопируйте папку "resources" из ветки "development" и вставьте в папку "main", которую Вы только что скопировали себе на диск.
 #### Готовая папка с exe файлом должна иметь вид:
-![auto-py-to-exe](resources/docs/images/readme/finish.png)
+![auto-py-to-exe](doc/images/readme/finish.png)
 7. Теперь по двойному клику на иконку exe файла у Вас должен запускаться проект.
