@@ -1,5 +1,6 @@
 import os
 import traceback
+import re
 from typing import Dict, Optional, List, Tuple
 
 import aspose.words as aw
@@ -151,36 +152,47 @@ def parsing_universal_excel(self) -> None:
             f"Не удалось прочитать файл:\n{str(e)}"
         )
 
+
 def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
     """
     Извлекает все таблицы из документа word .doc и возвращает
     их как один DataFrame с текстом.
-    :return: None
     """
-
     doc = aw.Document(path)
     text = doc.get_text()
 
     tables_data = []
+
     # Получаем все таблицы в документе
     for idx, node in enumerate(doc.get_child_nodes(aw.NodeType.TABLE, True)):
         table = node.as_table()
         rows = []
+
         for row_node in table.rows:
-            # Получаем объект Row через as_row()
             row = row_node.as_row()
             cells = []
             for cell_node in row.cells:
                 cell = cell_node.as_cell()
-                cells.append(cell.get_text().strip())
+                # Получаем текст ячейки и очищаем от лишних пробелов
+                cell_text = cell.get_text().strip()
+                # Убираем управляющие символы
+                cell_text = re.sub(r'[\x00-\x1f\x7f]', '', cell_text)
+                cells.append(cell_text)
             rows.append(cells)
 
         if not rows:
             continue
 
-        # Если есть заголовок — делаем его колонками, иначе просто нумеруем
+        # Если есть заголовок — делаем его колонками
         if len(rows) > 1 and all(len(r) == len(rows[0]) for r in rows):
-            df = pd.DataFrame(rows[1:], columns=rows[0])
+            # Проверяем, что первая строка — это заголовок
+            header = rows[0]
+            # Очищаем заголовки от мусора
+            clean_header = []
+            for h in header:
+                h_clean = re.sub(r'[\x00-\x1f\x7f]', '', h).strip()
+                clean_header.append(h_clean)
+            df = pd.DataFrame(rows[1:], columns=clean_header)
         else:
             df = pd.DataFrame(rows)
 
@@ -188,8 +200,7 @@ def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
         df['table_index'] = idx
         tables_data.append(df)
 
-    tables_df = pd.concat(tables_data, ignore_index=True)\
-        if tables_data else pd.DataFrame()
+    tables_df = pd.concat(tables_data, ignore_index=True) if tables_data else pd.DataFrame()
     return tables_df, text
 
 
@@ -214,7 +225,6 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
         commission_name = "Специальность"
         semester_name = "Третий семестр"
 
-    # Проверяем, что файл выбран
     if not path:
         QMessageBox.warning(self, "Ошибка",
                             f"Сначала выберите файл комиссии '{commission_name}'!")
@@ -227,20 +237,24 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
         return None
 
     try:
-        # Парсим документ через Aspose.Words
         tables_df, full_text = parse_doc_with_tables(path)
+        commissions_by_code = {}
 
-        commissions_by_code = {}  # ← СЛОВАРЬ: шифр -> комиссия
+        # ===== ОТЛАДКА =====
+        print("[I] ===== СОДЕРЖИМОЕ ТАБЛИЦЫ =====")
+        for idx, row in tables_df.iterrows():
+            print(f"[I] Строка {idx}:")
+            for col in tables_df.columns:
+                val = str(row[col])[:100] if pd.notna(row[col]) else ""
+                print(f"    {col}: {val}")
+            print("-" * 40)
+        # ===== КОНЕЦ ОТЛАДКИ =====
 
-        # Если есть таблицы
         if tables_df is not None and not tables_df.empty:
-            print(f"[I] Найдено таблиц: {len(tables_df['table_index'].unique()) if 'table_index' in tables_df.columns else 1}")
-
-            # Получаем колонки
             cols = list(tables_df.columns)
             print(f"[I] Колонки: {cols}")
 
-            # Находим колонку с ФИО и колонку с шифром
+            # Находим колонки
             fio_col = None
             code_col = None
 
@@ -249,55 +263,45 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
                     col_lower = col.lower()
                     if 'фамил' in col_lower or 'инициал' in col_lower:
                         fio_col = col
-                    elif ('шифр' in col_lower or 'наименование' in col_lower
-                          or 'специальност' in col_lower):
+                    if 'шифр' in col_lower or 'наименование' in col_lower or 'специальност' in col_lower:
                         code_col = col
+
+            # Если не нашли — берём по индексам
+            if code_col is None and len(cols) >= 3:
+                code_col = cols[1]
+            if fio_col is None and len(cols) >= 2:
+                fio_col = cols[0]
 
             print(f"[I] Колонка ФИО: {fio_col}")
             print(f"[I] Колонка шифра: {code_col}")
 
-            # Проходим по каждой строке таблицы
+            # Проходим по строкам
             for idx, row in tables_df.iterrows():
                 if fio_col is None:
-                    # Если не нашли специальную колонку - берём все колонки
                     for col in cols:
                         if col not in ['source_file', 'table_index']:
                             value = str(row[col]).strip() if pd.notna(row[col]) else ""
                             if value and len(value) > 10:
                                 _extract_commission_members(value, commissions_by_code, row, code_col)
                 else:
-                    # Берём значение из колонки с ФИО
                     value = str(row[fio_col]).strip() if pd.notna(row[fio_col]) else ""
                     if value and len(value) > 10:
                         _extract_commission_members(value, commissions_by_code, row, code_col)
 
-        # Если не нашли в таблицах - ищем в тексте документа
-        if not commissions_by_code and full_text:
-            print("[I] поиск комиссии в тексте документа...")
-            # Здесь можно добавить поиск по тексту, если нужно
-
-        # Сохраняем в атрибут класса
         self.commissions_by_code = commissions_by_code
 
-        # Выводим результат
         if commissions_by_code:
             print(f"[I] Найдено комиссий для {len(commissions_by_code)} шифров:")
             for code, comm in commissions_by_code.items():
                 members = comm.get('members', [])
                 print(f"[I]   Шифр: {code} -> {len(members)} членов")
                 for member in members:
-                    print(f"[I]     - {member['fio']} ({member['role']})")
+                    print(f"[I]     - {member.get('fio', '')} ({member.get('role', '')})")
 
             print(f"[S] Готово. Комиссия успешно загружена. Найдено комиссий: "
-                  f"{len(commissions_by_code)}. Семестр: {semester_name}."
-                  f" Файл: {os.path.basename(path)}.")
+                  f"{len(commissions_by_code)}. Семестр: {semester_name}.")
         else:
             print("[E] Члены комиссии не найдены!")
-            QMessageBox.warning(
-                self,
-                "Предупреждение",
-                f"Не удалось найти членов комиссии в файле:\n{os.path.basename(path)}"
-            )
 
         return commissions_by_code
 

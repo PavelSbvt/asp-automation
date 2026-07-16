@@ -127,13 +127,18 @@ def fill_database_sheet(self) -> Optional[str]:
 
     data_rows = []
     for student in self.students_data:
+        # Получаем код направления
         direction_code = get_specialty_code(student['profile'])
         if not direction_code:
             direction_code = student['profile']
 
+        # Очищаем код
         clean_code = extract_code_number(direction_code)
         if not clean_code:
             clean_code = direction_code.strip()
+
+        # Сохраняем очищенный код для использования
+        direction_clean = clean_excel_string(clean_code)
 
         # ===== ИЩЕМ КОМИССИЮ =====
         student_comm = None
@@ -146,7 +151,7 @@ def fill_database_sheet(self) -> Optional[str]:
         # 2. Если не нашли - пробуем найти по части кода
         if not student_comm:
             for key, comm in commission_dict.items():
-                # Пропускаем "ALL" пока
+                # Пропускаем "ALL"
                 if key == "ALL":
                     continue
                 # Очищаем ключ от мусора
@@ -175,25 +180,30 @@ def fill_database_sheet(self) -> Optional[str]:
         zam = get_member_by_role(student_comm, 'заместитель')
         chlen = get_member_by_role(student_comm, 'член')
 
+        # Извлекаем науку из комиссии
+        science_branch = student_comm.get('science_branch', '') if student_comm else ''
+
         # Используем full_text или fio, если full_text нет
-        pred_text = remove_trailing_dot(clean_excel_string(pred.get('full_text',
-                                                pred.get('fio', '')))) if pred else ''
-        pred_fio = remove_trailing_dot(clean_excel_string(pred.get(
-            'fio', ''))) if pred else ''
-        zam_text = remove_trailing_dot(clean_excel_string(zam.get('full_text',
-                                                zam.get('fio', '')))) if zam else ''
-        zam_fio = remove_trailing_dot(clean_excel_string(zam.get(''
-                                                    'fio', ''))) if zam else ''
+        pred_text = remove_trailing_dot(clean_excel_string(pred.get('full_text', pred.get('fio', '')))) if pred else ''
+        pred_fio = remove_trailing_dot(clean_excel_string(pred.get('fio', ''))) if pred else ''
+        zam_text = remove_trailing_dot(clean_excel_string(zam.get('full_text', zam.get('fio', '')))) if zam else ''
+        zam_fio = remove_trailing_dot(clean_excel_string(zam.get('fio', ''))) if zam else ''
         chlen_text = remove_trailing_dot(
-            clean_excel_string(chlen.get('full_text', chlen.get('fio',
-                                                    '')))) if chlen else ''
-        chlen_fio = remove_trailing_dot(clean_excel_string(chlen.get('fio',
-                                                        ''))) if chlen else ''
+            clean_excel_string(chlen.get('full_text', chlen.get('fio', '')))) if chlen else ''
+        chlen_fio = remove_trailing_dot(clean_excel_string(chlen.get('fio', ''))) if chlen else ''
 
         fio_clean = clean_excel_string(student['fio'])
         profile_clean = clean_excel_string(student['profile'])
-        direction_clean = clean_excel_string(clean_code)
 
+        # Формируем полное направление (код + название)
+        full_direction = direction_clean + " " + profile_clean
+
+        # Добавляем науку в конец, если она есть
+        if science_branch:
+            full_direction += f", {science_branch}"
+            print(f"[I] Добавлена наука '{science_branch}' для {student['fio']}")
+
+        # Определяем дисциплину в зависимости от семестра
         if hasattr(self, 'selected_semester'):
             if self.selected_semester == 1:
                 discipline_text = "История и философия науки"
@@ -204,6 +214,7 @@ def fill_database_sheet(self) -> Optional[str]:
         else:
             discipline_text = profile_clean
 
+        # Формируем строку для БД
         row = [
             _get_fio_genitive(student['fio'], student.get('citizenship', 'РФ')).upper(),
             discipline_text,
@@ -215,24 +226,28 @@ def fill_database_sheet(self) -> Optional[str]:
             chlen_text,
             _get_fio_initials(chlen_fio) if chlen else '',
             fio_clean,
-            direction_clean + " " + profile_clean
+            full_direction
         ]
         data_rows.append(row)
 
+    # Создаем DataFrame
     df = pd.DataFrame(data_rows, columns=columns)
 
     # Путь к выходному файлу
-    output_path = Path('resources/docs/temporary_protocol_db_sheet.xlsx')
+    output_path = (Path(__file__).parent.parent / "resources" /
+                   "docs" / "temporary_protocol_db_sheet.xlsx")
     output_path = str(output_path.absolute())
 
     # Определяем путь к файлу-шаблону (корень проекта)
-    template_file = Path('resources/docs/Protocol_template.xlsx')
+    template_file = (Path(__file__).parent.parent / "resources" /
+                     "docs" / "Protocol_template.xlsx")
     template_file = str(template_file.absolute())
 
     if not os.path.exists(template_file):
         print(f"[E] Файл шаблона не найден: {template_file}")
         return None
 
+    # Копируем шаблон в целевой файл
     try:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         shutil.copy(template_file, output_path)
@@ -241,6 +256,7 @@ def fill_database_sheet(self) -> Optional[str]:
         print(f"[E] Ошибка при копировании шаблона: {e}")
         return None
 
+    # Добавляем лист «БД» в скопированный файл
     try:
         with pd.ExcelWriter(
                 output_path,
