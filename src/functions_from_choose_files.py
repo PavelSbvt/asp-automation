@@ -3,6 +3,20 @@ import os
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
 
+def choose_parsing_save_folder(self) -> None:
+    """
+    выбор папки сохранения для собранных пдф по таблице с собранным БД
+    """
+
+    folder_path = QFileDialog.getExistingDirectory(
+        self,
+        "Выберите папку для сохранения PDF (парсинг)",
+        self.parsing_save_folder_path
+    )
+    if folder_path:
+        self.parsing_save_folder_path = folder_path
+        self.save_path_label.setText(folder_path)
+
 def open_parsing_pdf_folder(self) -> None:
     """
     Открывает папку с созданными по напарсенным данным PDF

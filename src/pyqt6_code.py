@@ -11,7 +11,8 @@ from pyqt_functions import parsing
 from functions_from_generate_pdf_first_part_of_task import (open_pdf_folder,
 choose_save_folder, choose_file, get_pdf)
 from functions_from_choose_files import (choose_foreign_excel, choose_history_excel,
-    choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder)
+choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
+choose_parsing_save_folder)
 
 
 class MyWindow(QWidget):
@@ -2397,7 +2398,7 @@ class MyWindow(QWidget):
         self.save_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.save_path_label.setText(f"{self.parsing_save_folder_path}")
 
-        button_choose_save_path.clicked.connect(self.choose_parsing_save_folder)
+        button_choose_save_path.clicked.connect(lambda: choose_parsing_save_folder(self))
 
 
         # блок для пояснения к прогресс бару
@@ -2470,20 +2471,52 @@ class MyWindow(QWidget):
         button_to_open_folder_with_done_pdf.clicked.connect(
             lambda: open_parsing_pdf_folder(self))
 
+        widget_for_update_data_site_parsing = QWidget(tab_3)
+        widget_for_update_data_site_parsing.setStyleSheet(
+            "border-radius:10px; background-color: rgba(45, 75, 30, 1)")
+        widget_for_update_data_site_parsing.setFixedSize(400, 50)
+        widget_for_update_data_site_parsing.move(10,500)
+        self.label_for_info_update_site_paring = QLabel(
+            widget_for_update_data_site_parsing)
+        self.label_for_info_update_site_paring.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_for_info_update_site_paring.setStyleSheet("color: white; font: bold;"
+                                                             " font-size: 14px;")
+        self.label_for_info_update_site_paring.setText(
+            "Последнее обновление данных (парсинг сайтов):")
+        self.label_for_info_update_site_paring.setGeometry(0,0,400,50)
 
-    def choose_parsing_save_folder(self) -> None:
-        """
-        выбор папки сохранения для собранных пдф по таблице с собранным БД
-        """
+        widget_time_of_update = QWidget(tab_3)
+        widget_time_of_update.setStyleSheet(
+            "border-radius:10px; background-color: rgba(255, 255, 255, 0.9)")
+        widget_time_of_update.setFixedSize(300, 50)
+        widget_time_of_update.move(420, 500)
+        self.time_update_label = QLabel(widget_time_of_update)
+        self.time_update_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.time_update_label.setStyleSheet("color: black;"
+                                                        " font-size: 14px;")
+        self.time_update_label.setText("время последнего обновления")
+        self.time_update_label.setGeometry(0, 0, 300, 50)
 
-        folder_path = QFileDialog.getExistingDirectory(
-            self,
-            "Выберите папку для сохранения PDF (парсинг)",
-            self.parsing_save_folder_path
-        )
-        if folder_path:
-            self.parsing_save_folder_path = folder_path
-            self.save_path_label.setText(folder_path)
+        # button_to_update_date = QPushButton(tab_3, "Обновить")
+        # button_to_update_date.setStyleSheet("""
+        #                 QPushButton {
+        #                     background: rgb(50, 35, 65);
+        #                     color: rgb(255, 255, 255);
+        #                     border: 1px solid rgb(70, 50, 90);
+        #                     border-radius: 10px;
+        #                     font-size: 14px;
+        #                     font-weight: bold;
+        #                 }
+        #                 QPushButton:hover {
+        #                     background: rgb(70, 50, 90);
+        #                     border: 1px solid rgb(100, 75, 120);
+        #                 }
+        #                 QPushButton:pressed {
+        #                     background: rgb(30, 20, 40);
+        #                 }
+        #             """)
+        # button_to_update_date.setFixedSize(150,50)
+        # button_to_update_date.move(730, 500)
 
     def update_progress(self, current: int, total: int) -> None:
         """
