@@ -13,6 +13,7 @@ choose_save_folder, choose_file, get_pdf)
 from functions_from_choose_files import (choose_foreign_excel, choose_history_excel,
 choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
 choose_parsing_save_folder)
+from sait_parsing import update_data, PARSING_DIR
 
 
 class MyWindow(QWidget):
@@ -1913,6 +1914,7 @@ class MyWindow(QWidget):
             self.radio_button_1.setStyleSheet(radio_style)
             self.radio_button_2.setStyleSheet(radio_style)
             self.radio_button_3.setStyleSheet(radio_style)
+
             print("[I] [style] применена стандартная тема")
 
 
@@ -2475,7 +2477,7 @@ class MyWindow(QWidget):
         widget_for_update_data_site_parsing.setStyleSheet(
             "border-radius:10px; background-color: rgba(45, 75, 30, 1)")
         widget_for_update_data_site_parsing.setFixedSize(400, 50)
-        widget_for_update_data_site_parsing.move(10,500)
+        widget_for_update_data_site_parsing.move(10, 500)
         self.label_for_info_update_site_paring = QLabel(
             widget_for_update_data_site_parsing)
         self.label_for_info_update_site_paring.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -2483,40 +2485,82 @@ class MyWindow(QWidget):
                                                              " font-size: 14px;")
         self.label_for_info_update_site_paring.setText(
             "Последнее обновление данных (парсинг сайтов):")
-        self.label_for_info_update_site_paring.setGeometry(0,0,400,50)
+        self.label_for_info_update_site_paring.setGeometry(0, 0, 400, 50)
 
         widget_time_of_update = QWidget(tab_3)
         widget_time_of_update.setStyleSheet(
             "border-radius:10px; background-color: rgba(255, 255, 255, 0.9)")
-        widget_time_of_update.setFixedSize(300, 50)
+        widget_time_of_update.setFixedSize(320, 50)
         widget_time_of_update.move(420, 500)
         self.time_update_label = QLabel(widget_time_of_update)
         self.time_update_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.time_update_label.setStyleSheet("color: black;"
-                                                        " font-size: 14px;")
+                                             " font-size: 14px;")
         self.time_update_label.setText("время последнего обновления")
-        self.time_update_label.setGeometry(0, 0, 300, 50)
+        self.time_update_label.setGeometry(0, 0, 320, 50)
 
-        # button_to_update_date = QPushButton(tab_3, "Обновить")
-        # button_to_update_date.setStyleSheet("""
-        #                 QPushButton {
-        #                     background: rgb(50, 35, 65);
-        #                     color: rgb(255, 255, 255);
-        #                     border: 1px solid rgb(70, 50, 90);
-        #                     border-radius: 10px;
-        #                     font-size: 14px;
-        #                     font-weight: bold;
-        #                 }
-        #                 QPushButton:hover {
-        #                     background: rgb(70, 50, 90);
-        #                     border: 1px solid rgb(100, 75, 120);
-        #                 }
-        #                 QPushButton:pressed {
-        #                     background: rgb(30, 20, 40);
-        #                 }
-        #             """)
-        # button_to_update_date.setFixedSize(150,50)
-        # button_to_update_date.move(730, 500)
+        button_to_update_date = QPushButton(tab_3)
+        button_to_update_date.setText("Обновить данные")
+        button_to_update_date.setFixedSize(300,50)
+        button_to_update_date.move(750, 500)
+        button_to_update_date.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(60, 85, 45, 230),
+                    stop: 1 rgba(40, 65, 30, 230));
+                color: white;
+                border: 2px solid rgba(100, 140, 65, 200);
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(100, 140, 70, 250),
+                    stop: 1 rgba(70, 110, 45, 250));
+                border: 1px solid rgba(140, 190, 100, 230);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(40, 65, 30, 230),
+                    stop: 1 rgba(30, 50, 20, 230));
+                padding-top: 6px;
+                padding-bottom: 4px;
+            }
+        """)
+        button_to_update_date.clicked.connect(lambda: update_data(self))
+
+        self.load_cached_data()
+
+    def load_cached_data(self) -> None:
+        """
+        Загружает данные из кэша и обновляет лейбл с временем.
+        """
+
+        files = list(PARSING_DIR.glob("*.txt")) if PARSING_DIR.exists() else []
+
+        if files:
+            filename = files[0].stem
+
+            if hasattr(self, 'time_update_label'):
+                self.time_update_label.setText(filename)
+
+            if hasattr(self, 'label_for_info_update_site_paring'):
+                self.label_for_info_update_site_paring.setText(
+                    "Последнее обновление данных (парсинг сайтов):"
+                )
+
+            print(f"[I] Загружен файл: {filename}")
+        else:
+            if hasattr(self, 'time_update_label'):
+                self.time_update_label.setText("Данные не загружены")
+
+            if hasattr(self, 'label_for_info_update_site_paring'):
+                self.label_for_info_update_site_paring.setText(
+                    "Данные не загружены (нажмите 'Обновить данные'):"
+                )
+
+            print("[I] Файл кэша не найден")
 
     def update_progress(self, current: int, total: int) -> None:
         """

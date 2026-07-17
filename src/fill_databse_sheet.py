@@ -8,26 +8,35 @@ import pandas as pd
 
 from general_functions import extract_code_number, remove_trailing_dot
 from declension_full_name import _get_fio_accusative, _get_fio_initials
-from parsing_functions import site_parce_main, site_parce_dn
+from sait_parsing import load_specialties_from_cache
 
 
 def get_specialty_code(profile: str) -> str:
     """
-    Возвращает код специальности по названию профиля из данных сайта.
+    Возвращает код специальности по названию профиля.
+    Данные берутся ТОЛЬКО из локального файла кэша.
+    Интернет НЕ используется.
     :return: str
     """
-
     try:
-        # пробуем основной сайт
-        specialties = site_parce_main()
-        if not specialties:
-            specialties = site_parce_dn()
+        # Загружаем данные из кэша
+        specialties = load_specialties_from_cache()
+
+        # Если файла нет - возвращаем пустую строку
+        if specialties is None:
+            print("[E] Файл кэша не найден! Данные не загружены.")
+            return ""
+
+        # Ищем совпадение с профилем
         for code, name in specialties:
             if profile.lower() in name.lower():
                 return code
-        return ""   # не найдено соответствие
-    except Exception:
-        # Любая ошибка (сеть, таймаут) - возвращаем пустую строку
+
+        # Если не нашли - возвращаем пустую строку
+        return ""
+
+    except Exception as e:
+        print(f"[E] Ошибка в get_specialty_code: {e}")
         return ""
 
 def clean_excel_string(s: str) -> str:

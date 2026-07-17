@@ -1,12 +1,10 @@
 import os
 import traceback
 import re
-from typing import Dict, Optional, List, Tuple
+from typing import Dict, Optional, Tuple
 
 import aspose.words as aw
 import pandas as pd
-import requests
-from bs4 import BeautifulSoup
 from openpyxl import load_workbook
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
@@ -62,7 +60,7 @@ def parsing_universal_excel(self) -> None:
                     break
 
             wb.close()
-            print(f"[I] Прочитано {len(data)} строк")
+            print(f"[I] Прочитано строк: {len(data)} ")
 
             if len(data) > 1:
                 df = pd.DataFrame(data[1:], columns=data[0])
@@ -84,7 +82,6 @@ def parsing_universal_excel(self) -> None:
             except Exception as e2:
                 print(f"[E] pandas не сработал: {e2}")
                 raise
-                # ключевое слово для генерации (выброса) исключений.
 
         if df is None or len(df) == 0:
             print("[E] Нет данных в файле!")
@@ -155,9 +152,10 @@ def parsing_universal_excel(self) -> None:
 
 def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
     """
-    Извлекает все таблицы из документа word .doc и возвращает
+    Извлекает все таблицы из документа .doc и возвращает
     их как один DataFrame с текстом.
     """
+
     doc = aw.Document(path)
     text = doc.get_text()
 
@@ -200,7 +198,8 @@ def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
         df['table_index'] = idx
         tables_data.append(df)
 
-    tables_df = pd.concat(tables_data, ignore_index=True) if tables_data else pd.DataFrame()
+    tables_df = pd.concat(tables_data, ignore_index=True)\
+        if tables_data else pd.DataFrame()
     return tables_df, text
 
 
@@ -209,6 +208,7 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
     Парсит файл комиссии и возвращает словарь:
     { "шифр": {"members": [...], "code": "шифр"} }
     """
+
     print("[I] Парсинг комиссии...")
 
     # Определяем файл в зависимости от семестра
@@ -240,15 +240,13 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
         tables_df, full_text = parse_doc_with_tables(path)
         commissions_by_code = {}
 
-        # ===== ОТЛАДКА =====
-        print("[I] ===== СОДЕРЖИМОЕ ТАБЛИЦЫ =====")
+        print("[I] данные таблицы")
         for idx, row in tables_df.iterrows():
             print(f"[I] Строка {idx}:")
             for col in tables_df.columns:
                 val = str(row[col])[:100] if pd.notna(row[col]) else ""
                 print(f"    {col}: {val}")
             print("-" * 40)
-        # ===== КОНЕЦ ОТЛАДКИ =====
 
         if tables_df is not None and not tables_df.empty:
             cols = list(tables_df.columns)
@@ -263,7 +261,8 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
                     col_lower = col.lower()
                     if 'фамил' in col_lower or 'инициал' in col_lower:
                         fio_col = col
-                    if 'шифр' in col_lower or 'наименование' in col_lower or 'специальност' in col_lower:
+                    if ('шифр' in col_lower or 'наименование'
+                            in col_lower or 'специальност' in col_lower):
                         code_col = col
 
             # Если не нашли — берём по индексам
@@ -280,23 +279,27 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
                 if fio_col is None:
                     for col in cols:
                         if col not in ['source_file', 'table_index']:
-                            value = str(row[col]).strip() if pd.notna(row[col]) else ""
+                            value = str(row[col]).strip() \
+                                if pd.notna(row[col]) else ""
                             if value and len(value) > 10:
-                                _extract_commission_members(value, commissions_by_code, row, code_col)
+                                _extract_commission_members(value,
+                                            commissions_by_code, row, code_col)
                 else:
-                    value = str(row[fio_col]).strip() if pd.notna(row[fio_col]) else ""
+                    value = str(row[fio_col]).strip() \
+                        if pd.notna(row[fio_col]) else ""
                     if value and len(value) > 10:
-                        _extract_commission_members(value, commissions_by_code, row, code_col)
+                        _extract_commission_members(value,
+                                            commissions_by_code, row, code_col)
 
         self.commissions_by_code = commissions_by_code
 
         if commissions_by_code:
-            print(f"[I] Найдено комиссий для {len(commissions_by_code)} шифров:")
+            print(f"[I] Найдено комиссий для шифров: {len(commissions_by_code)}")
             for code, comm in commissions_by_code.items():
                 members = comm.get('members', [])
                 print(f"[I]   Шифр: {code} -> {len(members)} членов")
                 for member in members:
-                    print(f"[I]     - {member.get('fio', '')} ({member.get('role', '')})")
+                    print(f"[I]  - {member.get('fio', '')} ({member.get('role', '')})")
 
             print(f"[S] Готово. Комиссия успешно загружена. Найдено комиссий: "
                   f"{len(commissions_by_code)}. Семестр: {semester_name}.")
@@ -314,91 +317,3 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
             f"Не удалось прочитать файл комиссии:\n{str(e)}"
         )
         return None
-
-def site_parce_dn() -> List[Tuple[str, str]]:
-    """
-    парсинг данных профилей и их кодов аспирантов с сайта магистратуры
-    :return: :return: List[Tuple[str, str]]
-    """
-
-    url = 'http://dn.tstu.ru/index.php/specialties'
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-    target_table = None
-    for table in soup.find_all('table'): #Цикл по всем таблицам на сайте
-        headers = [th.get_text(strip=True) for th in table.find_all('th')]
-        if 'Шифр и наименование научной специальности' in headers: #Поиск нужной таблицы
-            target_table = table
-            break
-    if target_table is None:
-        return []
-
-    specialties = []
-    for row in target_table.find_all('tr'): #Добавление кода, профиль в список как кортеж
-        cols = row.find_all('td')
-        if not cols:
-            continue
-
-        #Проверяем сколько яйчеек в строке
-        if len(cols) == 3: #Если 3, то берём код и специальность из 2 и 3
-            code = cols[1].get_text(strip=True)
-            name = cols[2].get_text(strip=True)
-            if code and code.endswith('.') and ' ' not in code:
-                specialties.append((code, name))
-        elif len(cols) == 2: #Если 2, то код и специальность из 1 и 2
-            code = cols[0].get_text(strip=True)
-            name = cols[1].get_text(strip=True)
-            if code and code.endswith('.') and ' ' not in code:
-                specialties.append((code, name))
-    return specialties
-
-def site_parce_main() -> List[Tuple[str, str]]:
-    """
-    парсинг данных (аспирантов) профилей и их кодов с сайта ТГТУ
-    :return: List[Tuple[str, str]]
-    """
-
-    url = 'https://www.tstu.ru/r.php?r=postup.abitur.na_sp'
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
-                'AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,'
-                'application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-    } #Имитируем браузер
-    response = requests.get(url, headers=headers, timeout=10)
-    #Пытаемся получить ответ от сайта
-    response.raise_for_status()
-
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    target_table = None
-    for header in soup.find_all(['h4', 'font'], class_='head4'):
-        # цикл по всем элементам, чтобы найти таблицу с заголовком "Аспирантура"
-        if header.get_text(strip=True) == 'Аспирантура':
-            target_table = header.find_next('table')
-            break
-
-    if target_table is None: #Поиск по якорю, если не нашлось по тегам
-        anchor = soup.find('a', attrs={'name': '4'})
-        if anchor:
-            next_tag = anchor.find_next()
-            while next_tag and next_tag.name != 'table':
-                next_tag = next_tag.find_next()
-            target_table = next_tag
-
-    specialties = []
-    for row in target_table.find_all('tr'):
-        # Добавляем каждый код и каждый профиль в список как кортеж
-        cols = row.find_all('td')
-        if not cols:
-            continue
-        if len(cols) >= 2: #Проверяем сколько яйчеек в строке
-            code = cols[-2].get_text(strip=True) #Код профиля из предпоследней ячейки
-            name = cols[-1].get_text(strip=True) #Название профиля из последней ячейки
-            if code and '.' in code and ' ' not in code:
-                specialties.append((code, name))
-
-    return specialties
