@@ -144,11 +144,11 @@ pip install auto-py-to-exe
   },
   {
    "optionDest": "datas",
-   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/src;src/"
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/resources;resources/"
   },
   {
    "optionDest": "datas",
-   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/resources;resources/"
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/src;src/"
   },
   {
    "optionDest": "hiddenimports",
@@ -177,6 +177,14 @@ pip install auto-py-to-exe
   {
    "optionDest": "hiddenimports",
    "value": "openpyxl"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "pytrovich"
+  },
+  {
+   "optionDest": "datas",
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/.venv/Lib/site-packages/pytrovich;pytrovich/"
   }
  ],
  "nonPyinstallerOptions": {
