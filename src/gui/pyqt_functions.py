@@ -143,7 +143,15 @@ def parsing(self) -> None:
             print(f"[I] Найдено комиссий: {len(commission_members)}")
         else:
             print("[E] Члены комиссии не найдены!")
-            self.commission_members = []  # чтобы не упало в fill_database_sheet
+
+            QMessageBox.critical(
+                self,
+                "Ошибка",
+                f"Не удалось найти членов комиссии"
+            )
+
+            return
+
         print("[I] Завершение парсинга doc-ов комиссии")
 
         for i, student in enumerate(students_data, 1):

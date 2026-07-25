@@ -306,6 +306,15 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
         else:
             print("[E] Члены комиссии не найдены!")
 
+            # Вывод ошибки на пустоту данных о комиссии
+            QMessageBox.critical(
+                self,
+                "Ошибка",
+                f"Не удалось найти членов комиссии в файле:\n{path}\n\n"
+            )
+
+            return
+
         return commissions_by_code
 
     except Exception as e:
