@@ -3,9 +3,9 @@ import traceback
 import pandas as pd
 from PyQt6.QtWidgets import QMessageBox
 
-from parsing_functions import parsing_commissions
-from generate_pdf_from_db import generate_pdf_from_db
-from fill_databse_sheet import fill_database_sheet
+from src.core.parsing.parsing_functions import parsing_commissions
+from src.core.generate_pdf_from_db import generate_pdf_from_db
+from src.core.fill_db_sheet import fill_database_sheet
 
 
 def parsing(self) -> None:

@@ -8,7 +8,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from general_functions import _extract_commission_members
+from src.utils.general_functions import _extract_commission_members
 
 
 def parsing_universal_excel(self) -> None:

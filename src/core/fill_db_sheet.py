@@ -6,9 +6,9 @@ from typing import Dict, Optional
 
 import pandas as pd
 
-from general_functions import extract_code_number, remove_trailing_dot
-from declension_full_name import _get_fio_accusative, _get_fio_initials
-from sait_parsing import load_specialties_from_cache
+from src.utils.general_functions import extract_code_number, remove_trailing_dot
+from src.utils.declension_full_name import _get_fio_accusative, _get_fio_initials
+from src.core.parsing.sait_parsing import load_specialties_from_cache
 
 
 def get_specialty_code(profile: str) -> str:
@@ -240,13 +240,11 @@ def fill_database_sheet(self) -> Optional[str]:
     df = pd.DataFrame(data_rows, columns=columns)
 
     # Путь к выходному файлу
-    output_path = (Path(__file__).parent.parent / "resources" /
-                   "docs" / "temporary_protocol_db_sheet.xlsx")
+    output_path = Path("resources/docs/temporary_protocol_db_sheet.xlsx")
     output_path = str(output_path.absolute())
 
     # Определяем путь к файлу-шаблону (корень проекта)
-    template_file = (Path(__file__).parent.parent / "resources" /
-                     "docs" / "Protocol_template.xlsx")
+    template_file = Path("resources/docs/Protocol_template.xlsx")
     template_file = str(template_file.absolute())
 
     if not os.path.exists(template_file):
