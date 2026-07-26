@@ -68,6 +68,28 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
     processed_count = 0
 
     for string_number in range(len(df)):
+        # проверка остановки процесса пользователем
+        if hasattr(self, 'stop_generation') and self.stop_generation:
+            print(f"[I] ОСТАНОВКА генерации. Обработано {processed_count} из {len(df)}")
+            # Удаляем временные файлы, если есть
+            if os.path.exists("temp_convert.vbs"):
+                try:
+                    os.remove("temp_convert.vbs")
+                except:
+                    pass
+            # Показываем сообщение
+            QMessageBox.information(
+                self,
+                "Остановка",
+                f"Генерация остановлена.\nОбработано: {processed_count} из {len(df)}"
+            )
+            self.stop_generation = False
+            self.stop_parsing_button.setVisible(False)
+            self.parsing_button.setVisible(True)
+            self.progress_bar_parsing.setValue(processed_count)
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            return
+
         # ------------------------------------------------------------
         # Данные из БД (колонки 0..10)
         # 0  = СЛУШАЛИ (фамилия в родительном падеже)

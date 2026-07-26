@@ -1,4 +1,5 @@
 import traceback
+import os
 
 import pandas as pd
 from PyQt6.QtWidgets import QMessageBox
@@ -16,6 +17,10 @@ def parsing(self) -> None:
     """
 
     print("[I] НАЧАЛО ПАРСИНГА")
+
+    self.stop_generation = False
+    self.stop_parsing_button.setVisible(True)
+    self.parsing_button.setVisible(False)
 
     # Проверки
     print("[I] Проверяю наличие файлов...")
@@ -41,6 +46,14 @@ def parsing(self) -> None:
 
     print("[I] Семестр выбран")
 
+    # проверка остановки процесса пользователем
+    if self.stop_generation:
+        print("[I] Генерация отменена пользователем")
+        self.stop_generation = False
+        self.stop_parsing_button.setVisible(False)
+        self.parsing_button.setVisible(True)
+        return
+
     # Сохраняем текст приказа
     print("[I] Сохраняю текст приказа") # лог для отладки
     self.commission_text = self.input_commission.text().strip()
@@ -62,6 +75,14 @@ def parsing(self) -> None:
     print(f"[I] Семестр: {self.semester_name}")
     # соответственно после предыдущего блока кода переменная имя
     # семестра будет вмещать имя текущего выбранного семестра и выведет в лог
+
+    # ещё одна проверка
+    if self.stop_generation:
+        print("[I] Генерация отменена пользователем")
+        self.stop_generation = False
+        self.stop_parsing_button.setVisible(False)
+        self.parsing_button.setVisible(True)
+        return
 
     # Читаем Excel файл
     print("[I] Чтение универсальной таблицы.")
@@ -111,6 +132,13 @@ def parsing(self) -> None:
         # Извлекаем данные
         students_data = []
         for index, row in df.iterrows():
+            # проверка - в цикле студентов
+            if self.stop_generation:
+                print(f"[I] Остановка на строке {index}")
+                self.stop_generation = False
+                self.stop_parsing_button.setVisible(False)
+                self.parsing_button.setVisible(True)
+                return
             try:
                 fio = str(row.iloc[fio_idx]).strip() if len(row) > fio_idx else ""
                 profile = str(row.iloc[profile_idx]).strip() \
@@ -136,8 +164,25 @@ def parsing(self) -> None:
         self.students_data = students_data
         print(f"[I] Всего студентов: {len(students_data)}")
 
+        # проверка++
+        if self.stop_generation:
+            print("[I] Генерация отменена пользователем")
+            self.stop_generation = False
+            self.stop_parsing_button.setVisible(False)
+            self.parsing_button.setVisible(True)
+            return
+
         print("[I]Начало парсинга doc-ов комиссии")
         commission_members = parsing_commissions(self)
+
+        # проверка++
+        if self.stop_generation:
+            print("[I] Генерация отменена пользователем")
+            self.stop_generation = False
+            self.stop_parsing_button.setVisible(False)
+            self.parsing_button.setVisible(True)
+            return
+
         if commission_members:
             self.commission_members = commission_members
             print(f"[I] Найдено комиссий: {len(commission_members)}")
@@ -173,13 +218,48 @@ def parsing(self) -> None:
         return
     print(f"[I] Загружено {len(self.students_data)} студентов")
 
+    if self.stop_generation:
+        print("[I] Генерация отменена пользователем")
+        self.stop_generation = False
+        self.stop_parsing_button.setVisible(False)
+        self.parsing_button.setVisible(True)
+        return
+
     # Заполняем БД
     print("[I] Заполняю БД...")
     try:
         db_file = fill_database_sheet(self)
+
+        if self.stop_generation:
+            print("[I] Генерация отменена пользователем")
+            if db_file and os.path.exists(db_file):
+                try:
+                    os.remove(db_file)
+                    print(f"[I] Удален временный файл БД: {db_file}")
+                except:
+                    pass
+            self.stop_generation = False
+            self.stop_parsing_button.setVisible(False)
+            self.parsing_button.setVisible(True)
+            return
+
         if db_file:
             self.generated_db_path = db_file
             print(f"[I] БД сохранена: {db_file}")
+
+            if self.stop_generation:
+                print("[I] Генерация отменена пользователем")
+                if os.path.exists(db_file):
+                    try:
+                        os.remove(db_file)
+                        print(f"[I] Удален временный файл БД: {db_file}")
+                    except:
+                        pass
+                self.stop_generation = False
+                self.stop_parsing_button.setVisible(False)
+                self.parsing_button.setVisible(True)
+                return
+
             # Теперь генерация PDF
             generate_pdf_from_db(self, self.generated_db_path)
         else:
@@ -191,4 +271,9 @@ def parsing(self) -> None:
         QMessageBox.critical(self,"Ошибка", f"Ошибка при создании БД или PDF:\n{str(e)}")
         print(f"[E] Ошибка. Ошибка при создании БД или PDF:{str(e)}")
         return
+
+    self.stop_parsing_button.setVisible(False)
+    self.parsing_button.setVisible(True)
+    self.stop_generation = False
+
     print("[I] КОНЕЦ ПАРСИНГА")

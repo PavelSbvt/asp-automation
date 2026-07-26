@@ -4,7 +4,7 @@ from typing import Optional, List, Dict, Any
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, QUrl
 from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
 from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
-QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QFileDialog)
+QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QMessageBox)
 from PyQt6.QtMultimedia import QSoundEffect
 
 from src.gui.pyqt_functions import parsing
@@ -28,6 +28,8 @@ class MyWindow(QWidget):
 
     def __init__(self) -> None:
         super().__init__()
+
+        self.stop_generation: bool = False  # булевый флаг остановки сборки пдф и парсинга
 
         # устанавливаю дефолтные пути к файлам пустыми
         self.excel_file_path: Optional[str] = None # путь к файлу - шаблон для ЛР
@@ -528,7 +530,7 @@ class MyWindow(QWidget):
                             }
                         """)
 
-            parsing_button.setStyleSheet("""
+            self.parsing_button.setStyleSheet("""
                             QPushButton {
                                 background: rgb(60, 60, 60);
                                 color: rgb(255, 255, 255);
@@ -980,7 +982,7 @@ class MyWindow(QWidget):
                 }
             """)
 
-            parsing_button.setStyleSheet("""
+            self.parsing_button.setStyleSheet("""
                 QPushButton {
                     background: rgb(60, 40, 80);
                     color: rgb(255, 255, 255);
@@ -1485,7 +1487,7 @@ class MyWindow(QWidget):
                             font-style: italic;
                         }
                     """)
-            parsing_button.setStyleSheet("""
+            self.parsing_button.setStyleSheet("""
                     QPushButton {
                             background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                                 stop: 0 rgba(60, 85, 45, 230),
@@ -1681,7 +1683,7 @@ class MyWindow(QWidget):
                     padding-bottom: 7px;
                 }
             """)
-            parsing_button.setStyleSheet("""
+            self.parsing_button.setStyleSheet("""
                 QPushButton {
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                         stop: 0 rgba(60, 85, 45, 230),
@@ -2098,8 +2100,8 @@ class MyWindow(QWidget):
         """)
 
         # Главная кнопка, запускающая парсинг и сбор данных в пдф.
-        parsing_button = QPushButton("Начать парсинг и генерацию PDF", tab_3)
-        parsing_button.setStyleSheet("""
+        self.parsing_button = QPushButton("Начать парсинг и генерацию PDF", tab_3)
+        self.parsing_button.setStyleSheet("""
         QPushButton {
                 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                     stop: 0 rgba(60, 85, 45, 230),
@@ -2124,9 +2126,65 @@ class MyWindow(QWidget):
                 padding-bottom: 4px;
             }
         """)
-        parsing_button.setFixedSize(280,40)
-        parsing_button.move(370,740)
-        parsing_button.clicked.connect(lambda: parsing(self))
+        self.parsing_button.setFixedSize(280,40)
+        self.parsing_button.move(370,740)
+        self.parsing_button.clicked.connect(lambda: parsing(self))
+
+        # Кнопка, останавливающая парсинг и сбор данных в пдф.
+        self.stop_parsing_button = QPushButton("Остановить парсинг и генерацию PDF", tab_3)
+        self.stop_parsing_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(255, 80, 80, 180),
+                    stop: 0.3 rgba(220, 50, 50, 200),
+                    stop: 0.7 rgba(180, 30, 30, 220),
+                    stop: 1 rgba(140, 15, 15, 240));
+                color: white;
+                border: 1px solid rgba(255, 150, 150, 100);
+                border-radius: 10px;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(255, 100, 100, 200),
+                    stop: 0.3 rgba(240, 70, 70, 220),
+                    stop: 0.7 rgba(200, 40, 40, 240),
+                    stop: 1 rgba(160, 20, 20, 255));
+                border: 1px solid rgba(255, 200, 200, 150);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(120, 10, 10, 255),
+                    stop: 1 rgba(80, 5, 5, 255));
+                padding-top: 6px;
+                padding-bottom: 4px;
+            }
+            QPushButton:disabled {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgba(100, 50, 50, 120),
+                    stop: 1 rgba(70, 35, 35, 160));
+                color: rgba(200, 200, 200, 120);
+                border: 1px solid rgba(100, 50, 50, 80);
+            }
+        """)
+        self.stop_parsing_button.setFixedSize(280, 40)
+        self.stop_parsing_button.move(370, 740)
+        self.stop_parsing_button.clicked.connect(self.stop_generation_process)
+        self.stop_parsing_button.setVisible(False)
+
+        self.blc_for_stop = QWidget(tab_3)
+        self.blc_for_stop.setStyleSheet("background-color: white; border-radius: 10px; padding: 10px;")
+        self.blc_for_stop.setFixedSize(200,100)
+        self.blc_for_stop.move(670,680)
+
+        self.label_stop = QLabel(self.blc_for_stop)
+        self.label_stop.setText("Для остановки процесса нажмите клавишу 'ESC' или 'Пробел'")
+        self.label_stop.setStyleSheet("color: red; font-size: 14px; font: bold;")
+        self.label_stop.setGeometry(0,0,200,100)
+        self.label_stop.setWordWrap(True)
+
+        # self.blc_for_stop.setVisible(False)
 
         # background блок для выбора файлов - doc файлов и универсальной таблицы
         background_widget_for_choose_files = QWidget(tab_3)
@@ -2531,6 +2589,67 @@ class MyWindow(QWidget):
         button_to_update_date.clicked.connect(lambda: update_data(self))
 
         self.load_cached_data()
+
+    def close(self) -> None:
+        """
+        Закрытие приложения с выводом лога
+        """
+
+        print("[I] Нажата кнопка выхода из приложения.")
+        print("[I] Выход из приложения")
+
+        super().close()
+
+    def keyPressEvent(self, event) -> None:
+        """
+        Обработка нажатий клавиш для остановки процесса
+        """
+
+        # Пробел - обычная остановка
+        if (event.key() == Qt.Key.Key_Space and
+                self.stop_parsing_button.isVisible() and
+                self.stop_parsing_button.isEnabled()):
+            self.stop_generation_process()
+            event.accept()
+            return
+
+        # ESC - аварийная остановка (работает даже если кнопка скрыта)
+        if event.key() == Qt.Key.Key_Escape:
+            if hasattr(self, 'stop_generation') and not self.stop_generation:
+                # Если процесс идет
+                if self.stop_parsing_button.isVisible():
+                    print("[W] Аварийная остановка по ESC")
+                    self.stop_generation = True
+                    QMessageBox.warning(
+                        self,
+                        "Аварийная остановка",
+                        "Процесс остановлен по клавише ESC"
+                    )
+                    event.accept()
+                    return
+
+        # Передаем событие дальше
+        super().keyPressEvent(event)
+
+    def stop_generation_process(self) -> None:
+        """
+        Останавливает процесс генерации
+        """
+
+        print("[I] ОСТАНОВКА процесса по запросу пользователя")
+        self.stop_generation = True
+        # self.blc_for_stop.setVisible(True)
+
+
+        # Делаем кнопку неактивной, чтобы нельзя было нажать дважды
+        self.stop_parsing_button.setEnabled(False)
+
+        QMessageBox.information(
+            self,
+            "Остановка",
+            "Процесс остановки запущен...\n\n"
+            "Программа завершит текущую операцию и остановится."
+        )
 
     def load_cached_data(self) -> None:
         """
