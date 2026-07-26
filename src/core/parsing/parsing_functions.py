@@ -11,6 +11,36 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from src.utils.general_functions import _extract_commission_members
 
 
+def normalize_initials(name: str) -> str:
+    """
+    Нормализует инициалы: приводит к формату с пробелом между инициалами.
+
+    :param name: строка с ФИО
+    :return: нормализованная строка с пробелом между инициалами
+    """
+    if not name or name == "nan":
+        return name
+
+    # Паттерн: буква, точка, буква, точка (без пробела)
+    pattern = r'([А-ЯЁ]\.)([А-ЯЁ]\.)'
+    result = re.sub(pattern, r'\1 \2', name)
+
+    return result
+
+
+def normalize_name_for_comparison(name: str) -> str:
+    """
+    Нормализует имя для сравнения (удаляет лишние пробелы)
+    """
+    if not name or name == "nan":
+        return ""
+
+    name = ' '.join(name.split())
+
+    name = normalize_initials(name)
+
+    return name
+
 def parsing_universal_excel(self) -> None:
     """
     Парсит универсальную таблицу Excel
@@ -110,6 +140,7 @@ def parsing_universal_excel(self) -> None:
                     citizenship = ""
 
                 if fio and fio != "nan" and fio != "":
+                    fio = normalize_initials(fio)
                     if profile == "nan":
                         profile = ""
                     if citizenship == "nan" or citizenship == "":
@@ -282,12 +313,14 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
                             value = str(row[col]).strip() \
                                 if pd.notna(row[col]) else ""
                             if value and len(value) > 10:
+                                value = normalize_initials(value)
                                 _extract_commission_members(value,
                                             commissions_by_code, row, code_col)
                 else:
                     value = str(row[fio_col]).strip() \
                         if pd.notna(row[fio_col]) else ""
                     if value and len(value) > 10:
+                        value = normalize_initials(value)
                         _extract_commission_members(value,
                                             commissions_by_code, row, code_col)
 
