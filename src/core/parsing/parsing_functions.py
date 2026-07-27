@@ -8,7 +8,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from src.utils.general_functions import _extract_commission_members, normalize_initials
+from utils.general_functions import _extract_commission_members, normalize_initials
 
 
 def normalize_name_for_comparison(name: str) -> str:

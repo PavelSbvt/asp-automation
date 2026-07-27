@@ -7,13 +7,13 @@ from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton, QTextEdit
 QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QMessageBox)
 from PyQt6.QtMultimedia import QSoundEffect
 
-from src.gui.pyqt_functions import parsing
-from src.core.generate_pdf import (open_pdf_folder,
+from gui.pyqt_functions import parsing
+from core.generate_pdf import (open_pdf_folder,
 choose_save_folder, choose_file, get_pdf)
-from src.gui.choose_files import (choose_foreign_excel, choose_history_excel,
+from gui.choose_files import (choose_foreign_excel, choose_history_excel,
                           choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
                           choose_parsing_save_folder)
-from src.core.parsing.sait_parsing import update_data, PARSING_DIR
+from core.parsing.sait_parsing import update_data, PARSING_DIR
 
 
 class MyWindow(QWidget):

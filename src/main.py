@@ -4,8 +4,8 @@ from pathlib import Path
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 
-from src.gui.loading_window import MyLoadingWindow
-from src.gui.pyqt6_code import MyWindow
+from gui.loading_window import MyLoadingWindow
+from gui.pyqt6_code import MyWindow
 
 
 def main() -> None:

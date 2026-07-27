@@ -8,7 +8,7 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-from src.utils.general_functions import (print_separator, print_big_separator,
+from utils.general_functions import (print_separator, print_big_separator,
 print_separator_points, print_out_string)
 
 
