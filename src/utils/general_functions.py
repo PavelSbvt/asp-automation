@@ -57,6 +57,23 @@ def print_big_separator() -> None:
 
     print("|" + "=" * 148 + "|")
 
+def normalize_initials(name: str) -> str:
+    """
+    Нормализует инициалы: приводит к формату с пробелом между инициалами.
+
+    :param name: строка с ФИО
+    :return: нормализованная строка с пробелом между инициалами
+    """
+    if not name or name == "nan":
+        return name
+
+    # Паттерн: буква, точка, буква, точка (без пробела)
+    pattern = r'([А-ЯЁ]\.)([А-ЯЁ]\.)'
+    result = re.sub(pattern, r'\1 \2', name)
+
+    return result
+
+
 def extract_code_from_row(row, code_col) -> str:
     """
     Извлекает шифр из строки таблицы комиссий.
@@ -97,6 +114,7 @@ def extract_initials_from_text(text: str) -> str:
     """Извлекает инициалы из текста"""
     return extract_fio_from_text(text)
 
+
 def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col: str) -> None:
     """
     Извлекает членов комиссии из текста и сохраняет в словарь commissions_dict
@@ -105,14 +123,12 @@ def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col
     if not text or len(text) < 10:
         return
 
-    # ===== ИЗВЛЕКАЕМ ШИФР И НАУКУ ИЗ ВТОРОЙ КОЛОНКИ =====
     code = None
     science_branch = ""
 
     if code_col is not None:
         code_value = str(row[code_col]).strip() if pd.notna(row[code_col]) else ""
 
-        # Ищем код формата 2.2.8, 2.2.11, 4.3.1
         code_match = re.search(r'(\d+\.\d+\.\d+)', code_value)
         if code_match:
             code = code_match.group(1)
@@ -137,47 +153,91 @@ def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col
         commissions_dict[code] = {
             'code': code,
             'members': [],
-            'science_branch': science_branch  # ← СОХРАНЯЕМ НАУКУ
+            'science_branch': science_branch
         }
 
-    # Разбиваем текст по ";" на части
-    parts = [p.strip() for p in text.split(';') if p.strip()]
+    # Убираем ", член комиссии" и " член комиссии" (с запятой и без)
+    cleaned_text = re.sub(r',?\s*член\s+комиссии\s*', '', text, flags=re.IGNORECASE)
+    cleaned_text = cleaned_text.rstrip(',').strip()
 
-    # Если не разбилось по ";", пробуем по ". "
+    # Также убираем "член комиссии" в конце строки
+    cleaned_text = re.sub(r'\s*член\s+комиссии\s*$', '', cleaned_text, flags=re.IGNORECASE)
+    cleaned_text = cleaned_text.rstrip(',').strip()
+
+    if not cleaned_text:
+        return
+
+    parts = []
+
+    if not parts:
+        parts = [p.strip() for p in cleaned_text.split(';') if p.strip()]
+
     if len(parts) <= 1:
-        parts = [p.strip() for p in re.split(r'\.\s*[А-ЯЁ]', text) if p.strip()]
+        parts = [p.strip() for p in cleaned_text.split(',') if p.strip()]
 
-    # Проходим по частям и ищем роли
+    if len(parts) <= 1:
+        parts = [p.strip() for p in re.split(r'\.\s+', cleaned_text) if p.strip()]
+
+    if len(parts) <= 1:
+        parts = [p.strip() for p in cleaned_text.split('.') if p.strip()]
+
+    if not parts:
+        parts = [cleaned_text]
+
     for part in parts:
+        if not part:
+            continue
+
         part_lower = part.lower()
-        role = None
+
+        role = 'член'  # По умолчанию
+
         if 'председатель' in part_lower:
             role = 'председатель'
-        elif 'заместитель' in part_lower:
+        elif 'заместитель' in part_lower or 'зам.' in part_lower:
             role = 'заместитель'
+        elif 'секретарь' in part_lower:
+            role = 'секретарь'
         elif 'член' in part_lower:
             role = 'член'
 
-        if role:
-            fio = extract_fio_from_text(part)
-            if fio:
+        clean_part = re.sub(r',?\s*член\s+комиссии\s*', '', part, flags=re.IGNORECASE)
+        clean_part = clean_part.rstrip(',').strip()
+
+        if not clean_part:
+            continue
+
+        fio = extract_fio_from_text(clean_part)
+
+        if not fio and clean_part:
+            fio = clean_part
+
+        if fio:
+            fio = normalize_initials(fio)
+
+            if re.search(r'[А-ЯЁ][а-яё]+', fio) and re.search(r'[А-ЯЁ]\.', fio):
                 commissions_dict[code]['members'].append({
                     'fio': fio,
                     'role': role,
-                    'full_text': part,
+                    'full_text': clean_part,
                     'initials': fio
                 })
 
-    # Если не нашли по ролям — распределяем по порядку
+    # Если членов комиссии не найдено, но есть 3 части - распределение по порядку
     if len(commissions_dict[code]['members']) == 0 and len(parts) >= 3:
         roles = ['председатель', 'заместитель', 'член']
         for i, part in enumerate(parts[:3]):
+            if not part:
+                continue
             fio = extract_fio_from_text(part)
+            if not fio:
+                fio = part
             if fio:
+                fio = normalize_initials(fio)
                 commissions_dict[code]['members'].append({
                     'fio': fio,
                     'role': roles[i] if i < len(roles) else 'член',
-                    'full_text': part,
+                    'full_text': clean_part,
                     'initials': fio
                 })
 

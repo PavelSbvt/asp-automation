@@ -8,24 +8,7 @@ import pandas as pd
 from openpyxl import load_workbook
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from src.utils.general_functions import _extract_commission_members
-
-
-def normalize_initials(name: str) -> str:
-    """
-    Нормализует инициалы: приводит к формату с пробелом между инициалами.
-
-    :param name: строка с ФИО
-    :return: нормализованная строка с пробелом между инициалами
-    """
-    if not name or name == "nan":
-        return name
-
-    # Паттерн: буква, точка, буква, точка (без пробела)
-    pattern = r'([А-ЯЁ]\.)([А-ЯЁ]\.)'
-    result = re.sub(pattern, r'\1 \2', name)
-
-    return result
+from src.utils.general_functions import _extract_commission_members, normalize_initials
 
 
 def normalize_name_for_comparison(name: str) -> str:
