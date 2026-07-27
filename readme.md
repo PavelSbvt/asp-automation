@@ -183,6 +183,18 @@ pip install auto-py-to-exe
    "value": "pytrovich"
   },
   {
+   "optionDest": "hiddenimports",
+   "value": "PyQt6.QtMultimedia"
+  },
+  {
+   "optionDest": "hiddenimports",
+   "value": "PyQt6.QtMultimediaWidgets"
+  },
+  {
+   "optionDest": "datas",
+   "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/.venv/Lib/site-packages/PyQt6/Qt6/plugins/multimedia;PyQt6/Qt6/plugins/multimedia/"
+  },
+  {
    "optionDest": "datas",
    "value": "!допишите свой путь от диска до папки с проектами!/PycharmProjects/PythonProject_PDF_maker_rebuild/.venv/Lib/site-packages/pytrovich;pytrovich/"
   }
