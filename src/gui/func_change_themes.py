@@ -227,8 +227,8 @@ def change_theme(self, theme_name: str, button: QPushButton) -> None:
                         background: rgb({basic_btn_bg_color});
                         color: rgb(255, 255, 255);
                         border: 1px solid rgb({basic_btn_border_color});
-                        border-radius: 12px;
-                        font-size: 14px;
+                        border-radius: 10px;
+                        font-size: 12px;
                         font-weight: bold;
                         padding: 5px;
                     }}
