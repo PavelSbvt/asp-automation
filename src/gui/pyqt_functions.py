@@ -20,91 +20,66 @@ def parsing(self) -> None:
 
     self.stop_generation = False
     self.stop_parsing_button.setVisible(True)
+    self.stop_parsing_button.setEnabled(True)
     self.parsing_button.setVisible(False)
+    self.parsing_button.setEnabled(False)
 
-    # Проверки
-    print("[I] Проверяю наличие файлов...")
-    if (not hasattr(self, 'universal_file_path')
-            or not self.universal_file_path):
-        # Если у объекта self нет атрибута с именем
-        # 'universal_file_path' или атрибут существует, но он пустой
-        QMessageBox.warning(self, "Ошибка",
-                    "Сначала выберите универсальную таблицу!")
-        # Выскочит короткий QMessageBox с предупреждением
-        print("[E] Не выбрана универсальная таблица")
-        return
-
-    print("[I] Универсальный файл есть")
-
-    if (not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked()
-            and not self.radio_button_3.isChecked()):
-        # Если ни одна кнопка QRadioButton не выбрана
-        QMessageBox.warning(self, "Ошибка", "Выберите семестр!")
-        # Тоже появится предупреждение, о том что не выбран семестр
-        print("[E] Не выбран семестр")
-        return
-
-    print("[I] Семестр выбран")
-
-    # проверка остановки процесса пользователем
-    if self.stop_generation:
-        print("[I] Генерация отменена пользователем")
-        self.stop_generation = False
-        self.stop_parsing_button.setVisible(False)
-        self.parsing_button.setVisible(True)
-        return
-
-    # Сохраняем текст приказа
-    print("[I] Сохраняю текст приказа") # лог для отладки
-    self.commission_text = self.input_commission.text().strip()
-    print(f"[I] Текст приказа: {self.commission_text[:30]}...")
-    # для отладки - вывод кусочка вписанного в поле приказа
-
-    # Определяем семестр
-    print("[I] Определение семестра.")
-    if self.radio_button_1.isChecked(): # если радиокнопка нажата, то вернёт True
-        self.selected_semester = 1
-        self.semester_name = "Первый семестр"
-    elif self.radio_button_2.isChecked(): ## ели вторая нажата, то вернёт True
-        self.selected_semester = 2
-        self.semester_name = "Второй семестр"
-    else: # иначе приравняет вспомогательные переменные к 3 семестру.
-        self.selected_semester = 3
-        self.semester_name = "Третий семестр"
-
-    print(f"[I] Семестр: {self.semester_name}")
-    # соответственно после предыдущего блока кода переменная имя
-    # семестра будет вмещать имя текущего выбранного семестра и выведет в лог
-
-    # ещё одна проверка
-    if self.stop_generation:
-        print("[I] Генерация отменена пользователем")
-        self.stop_generation = False
-        self.stop_parsing_button.setVisible(False)
-        self.parsing_button.setVisible(True)
-        return
-
-    # Читаем Excel файл
-    print("[I] Чтение универсальной таблицы.")
     try:
+        print("[I] Проверяю наличие файлов...")
+        if (not hasattr(self, 'universal_file_path')
+                or not self.universal_file_path):
+            QMessageBox.warning(self, "Ошибка", "Сначала выберите универсальную таблицу!")
+            print("[E] Не выбрана универсальная таблица")
+            return
+
+        print("[I] Универсальный файл есть")
+
+        if (not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked()
+                and not self.radio_button_3.isChecked()):
+            QMessageBox.warning(self, "Ошибка", "Выберите семестр!")
+            print("[E] Не выбран семестр")
+            return
+
+        print("[I] Семестр выбран")
+
+        if self.stop_generation:
+            print("[I] Генерация отменена пользователем")
+            return
+
+        # Сохраняем текст приказа
+        print("[I] Сохраняю текст приказа")
+        self.commission_text = self.input_commission.text().strip()
+        print(f"[I] Текст приказа: {self.commission_text[:30]}...")
+
+        # Определяем семестр
+        print("[I] Определение семестра.")
+        if self.radio_button_1.isChecked():
+            self.selected_semester = 1
+            self.semester_name = "Первый семестр"
+        elif self.radio_button_2.isChecked():
+            self.selected_semester = 2
+            self.semester_name = "Второй семестр"
+        else:
+            self.selected_semester = 3
+            self.semester_name = "Третий семестр"
+
+        print(f"[I] Семестр: {self.semester_name}")
+
+        if self.stop_generation:
+            print("[I] Генерация отменена пользователем")
+            return
+
+        print("[I] Чтение универсальной таблицы.")
         df = pd.read_excel(
-            # df - сокращение от dataframe - таблицы в пандас,
-            # обращаемся к библиотеке пандас, методу чтения таблиц, присваивая таблицу,
-            # которую возвращает метод чтения переменной
             self.universal_file_path,
-            # путь к таблице. он принадлежит классу и прописан ранее в коде
             dtype=str,
-            # читать данные как текст
             engine='openpyxl'
-            # использовать библиотеку openpyxl для чтения файла. движок
         )
         print(f"[I] Загружено {len(df)} строк")
 
-        # Ищем нужные колонки по названиям
         columns = list(df.columns)
         print(f"[I] Колонки: {columns[:5]}...")
 
-        # Находим индексы нужных колонок
         fio_idx = None
         profile_idx = None
         citizenship_idx = None
@@ -118,26 +93,20 @@ def parsing(self) -> None:
             if 'гражданство' in col_lower:
                 citizenship_idx = i
 
-        # Если не нашли по названиям - используем индексы из теста
         if fio_idx is None:
-            fio_idx = 2  # ФИО
+            fio_idx = 2
         if profile_idx is None:
-            profile_idx = 22  # ПРОФИЛЬ
+            profile_idx = 22
         if citizenship_idx is None:
-            citizenship_idx = 40  # ГРАЖДАНСТВО
+            citizenship_idx = 40
 
         print(f"[I] Индексы: ФИО={fio_idx}, Профиль={profile_idx}, "
               f"Гражданство={citizenship_idx}")
 
-        # Извлекаем данные
         students_data = []
         for index, row in df.iterrows():
-            # проверка - в цикле студентов
             if self.stop_generation:
                 print(f"[I] Остановка на строке {index}")
-                self.stop_generation = False
-                self.stop_parsing_button.setVisible(False)
-                self.parsing_button.setVisible(True)
                 return
             try:
                 fio = str(row.iloc[fio_idx]).strip() if len(row) > fio_idx else ""
@@ -164,23 +133,15 @@ def parsing(self) -> None:
         self.students_data = students_data
         print(f"[I] Всего студентов: {len(students_data)}")
 
-        # проверка++
         if self.stop_generation:
             print("[I] Генерация отменена пользователем")
-            self.stop_generation = False
-            self.stop_parsing_button.setVisible(False)
-            self.parsing_button.setVisible(True)
             return
 
-        print("[I]Начало парсинга doc-ов комиссии")
+        print("[I] Начало парсинга doc-ов комиссии")
         commission_members = parsing_commissions(self)
 
-        # проверка++
         if self.stop_generation:
             print("[I] Генерация отменена пользователем")
-            self.stop_generation = False
-            self.stop_parsing_button.setVisible(False)
-            self.parsing_button.setVisible(True)
             return
 
         if commission_members:
@@ -188,13 +149,11 @@ def parsing(self) -> None:
             print(f"[I] Найдено комиссий: {len(commission_members)}")
         else:
             print("[E] Члены комиссии не найдены!")
-
             QMessageBox.critical(
                 self,
                 "Ошибка",
-                f"Не удалось найти членов комиссии"
+                "Не удалось найти членов комиссии"
             )
-
             return
 
         print("[I] Завершение парсинга doc-ов комиссии")
@@ -202,32 +161,19 @@ def parsing(self) -> None:
         for i, student in enumerate(students_data, 1):
             print(f"[I]      {i}. {student['fio']}")
 
-    except Exception as e:
-        print(f"[E] Ошибка: {e}")
-        # traceback.print_exc()
-        QMessageBox.critical(self, "Ошибка", f"Не удалось прочитать файл:\n{str(e)}")
-        return
+        print("[S] Парсинг таблицы завершён")
 
-    print("[S] Парсинг таблицы завершён")
+        print("[I] Проверяю данные студентов...")
+        if not hasattr(self, 'students_data') or not self.students_data:
+            QMessageBox.warning(self, "Ошибка", "Не удалось загрузить данные из универсальной таблицы!")
+            return
+        print(f"[I] Загружено {len(self.students_data)} студентов")
 
-    # Проверяем данные
-    print("[I] Проверяю данные студентов...")
-    if not hasattr(self, 'students_data') or not self.students_data:
-        QMessageBox.warning(self, "Ошибка",
-                            "Не удалось загрузить данные из универсальной таблицы!")
-        return
-    print(f"[I] Загружено {len(self.students_data)} студентов")
+        if self.stop_generation:
+            print("[I] Генерация отменена пользователем")
+            return
 
-    if self.stop_generation:
-        print("[I] Генерация отменена пользователем")
-        self.stop_generation = False
-        self.stop_parsing_button.setVisible(False)
-        self.parsing_button.setVisible(True)
-        return
-
-    # Заполняем БД
-    print("[I] Заполняю БД...")
-    try:
+        print("[I] Заполняю БД...")
         db_file = fill_database_sheet(self)
 
         if self.stop_generation:
@@ -238,9 +184,6 @@ def parsing(self) -> None:
                     print(f"[I] Удален временный файл БД: {db_file}")
                 except:
                     pass
-            self.stop_generation = False
-            self.stop_parsing_button.setVisible(False)
-            self.parsing_button.setVisible(True)
             return
 
         if db_file:
@@ -255,25 +198,26 @@ def parsing(self) -> None:
                         print(f"[I] Удален временный файл БД: {db_file}")
                     except:
                         pass
-                self.stop_generation = False
-                self.stop_parsing_button.setVisible(False)
-                self.parsing_button.setVisible(True)
                 return
 
-            # Теперь генерация PDF
             generate_pdf_from_db(self, self.generated_db_path)
         else:
             QMessageBox.critical(self, "Ошибка", "Не удалось сохранить файл БД!")
             print("[E] Ошибка. Не удалось сохранить файл БД!")
             return
+
+        print("[I] КОНЕЦ ПАРСИНГА")
+
     except Exception as e:
+        print(f"[E] Критическая ошибка: {e}")
         traceback.print_exc()
-        QMessageBox.critical(self,"Ошибка", f"Ошибка при создании БД или PDF:\n{str(e)}")
-        print(f"[E] Ошибка. Ошибка при создании БД или PDF:{str(e)}")
-        return
+        QMessageBox.critical(self, "Ошибка", f"Произошла ошибка:\n{str(e)}")
 
-    self.stop_parsing_button.setVisible(False)
-    self.parsing_button.setVisible(True)
-    self.stop_generation = False
-
-    print("[I] КОНЕЦ ПАРСИНГА")
+    finally:
+        print("[I] Восстановление состояния кнопок...")
+        self.stop_generation = False
+        self.stop_parsing_button.setVisible(False)
+        self.stop_parsing_button.setEnabled(False)
+        self.parsing_button.setVisible(True)
+        self.parsing_button.setEnabled(True)
+        print("[I] Состояние кнопок восстановлено")
