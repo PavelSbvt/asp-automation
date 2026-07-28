@@ -114,12 +114,12 @@ def extract_initials_from_text(text: str) -> str:
     """Извлекает инициалы из текста"""
     return extract_fio_from_text(text)
 
-
 def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col: str) -> None:
     """
     Извлекает членов комиссии из текста и сохраняет в словарь commissions_dict
     по ключу-шифру.
     """
+
     if not text or len(text) < 10:
         return
 
@@ -133,13 +133,11 @@ def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col
         if code_match:
             code = code_match.group(1)
 
-        # Ищем текст в скобках (науку)
         science_match = re.search(r'\(([^)]+)\)', code_value)
         if science_match:
             science_branch = science_match.group(1).strip()
             print(f"[I] Найдена наука: '{science_branch}' для шифра {code}")
 
-    # Если код не нашёлся — пробуем извлечь из текста
     if not code:
         code_match = re.search(r'(\d+\.\d+\.\d+)', text)
         if code_match:
@@ -156,33 +154,29 @@ def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col
             'science_branch': science_branch
         }
 
-    # Убираем ", член комиссии" и " член комиссии" (с запятой и без)
-    cleaned_text = re.sub(r',?\s*член\s+комиссии\s*', '', text, flags=re.IGNORECASE)
-    cleaned_text = cleaned_text.rstrip(',').strip()
 
-    # Также убираем "член комиссии" в конце строки
-    cleaned_text = re.sub(r'\s*член\s+комиссии\s*$', '', cleaned_text, flags=re.IGNORECASE)
-    cleaned_text = cleaned_text.rstrip(',').strip()
+    split_text = re.sub(r',?\s*член\s+комиссии\s*', '', text, flags=re.IGNORECASE)
+    split_text = split_text.rstrip(',').strip()
 
-    if not cleaned_text:
+    if not split_text:
         return
 
     parts = []
 
     if not parts:
-        parts = [p.strip() for p in cleaned_text.split(';') if p.strip()]
+        parts = [p.strip() for p in split_text.split(';') if p.strip()]
 
     if len(parts) <= 1:
-        parts = [p.strip() for p in cleaned_text.split(',') if p.strip()]
+        parts = [p.strip() for p in split_text.split(',') if p.strip()]
 
     if len(parts) <= 1:
-        parts = [p.strip() for p in re.split(r'\.\s+', cleaned_text) if p.strip()]
+        parts = [p.strip() for p in re.split(r'\.\s+', split_text) if p.strip()]
 
     if len(parts) <= 1:
-        parts = [p.strip() for p in cleaned_text.split('.') if p.strip()]
+        parts = [p.strip() for p in split_text.split('.') if p.strip()]
 
     if not parts:
-        parts = [cleaned_text]
+        parts = [split_text]
 
     for part in parts:
         if not part:
@@ -202,6 +196,7 @@ def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col
             role = 'член'
 
         clean_part = re.sub(r',?\s*член\s+комиссии\s*', '', part, flags=re.IGNORECASE)
+        clean_part = re.sub(r',?\s*председатель\s+комиссии\s*', '', clean_part, flags=re.IGNORECASE)
         clean_part = clean_part.rstrip(',').strip()
 
         if not clean_part:
@@ -223,7 +218,6 @@ def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col
                     'initials': fio
                 })
 
-    # Если членов комиссии не найдено, но есть 3 части - распределение по порядку
     if len(commissions_dict[code]['members']) == 0 and len(parts) >= 3:
         roles = ['председатель', 'заместитель', 'член']
         for i, part in enumerate(parts[:3]):
@@ -234,6 +228,11 @@ def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col
                 fio = part
             if fio:
                 fio = normalize_initials(fio)
+
+                clean_part = re.sub(r',?\s*член\s+комиссии\s*', '', part, flags=re.IGNORECASE)
+                clean_part = re.sub(r',?\s*председатель\s+комиссии\s*', '', clean_part, flags=re.IGNORECASE)
+                clean_part = clean_part.rstrip(',').strip()
+
                 commissions_dict[code]['members'].append({
                     'fio': fio,
                     'role': roles[i] if i < len(roles) else 'член',
