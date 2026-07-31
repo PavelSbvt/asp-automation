@@ -158,8 +158,8 @@ class MyWindow(QWidget):
         # чтобы передать аргумент self к функции использую лямбда функцию
 
         # добавление вкладок
-        self.tab_widget.addTab(tab_1, "") # кладка 1
-        self.tab_widget.addTab(tab_3, "") # кладка 2
+        self.tab_widget.addTab(tab_3, "")  # кладка 1
+        self.tab_widget.addTab(tab_1, "") # кладка 2
         self.tab_widget.addTab(tab_2, "") # кладка 3
         # порядок добавления определяет их положение среди вкладок
 

@@ -45,13 +45,23 @@ class MyLoadingWindow(QWidget):
 
         self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
-        simple_log("[I] вывод сообщения о сообщения о загрузке.")
+        simple_log("[I] вывод сообщения о сообщения о загрузке ('Приложение загружается...')")
+
+        self.colored_widget = QWidget(self)
+        self.colored_widget.setStyleSheet("background-color: rgba(0,0,0,0.5); border-radius: 10px;")
+        self.colored_widget.setFixedSize(430, 28)
+        self.colored_widget.move(10,362)
 
         self.lb_blс_m_load = QLabel(self)
         self.lb_blс_m_load.setText("Приложение загружается, подождите, пожалуйста...")
-        self.lb_blс_m_load.setStyleSheet("color: black; font-size: 14px; font-weight: bold;")
+        self.lb_blс_m_load.setStyleSheet("color: white; font-size: 16px; "
+                                         "font-weight: bold;")
         self.lb_blс_m_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lb_blс_m_load.setGeometry(100, 175, 400, 50)
+        self.lb_blс_m_load.setGeometry(10, 350, 430, 50)
+
+        self.block_shadow = QWidget(self)
+        self.block_shadow.setFixedSize(250, 60)
+        self.block_shadow.move(40, 15)
 
         self.lb_hi_prog = QLabel(self)
         self.lb_hi_prog.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -66,7 +76,7 @@ class MyLoadingWindow(QWidget):
         movie_widget.setFixedSize(64,66)
         movie_widget.setMovie(gif_loading) # устанавливаю гиф изображение на qlabel
         gif_loading.start() # старт анимации.
-        movie_widget.move(268,250)
+        movie_widget.move(520, 320)
 
         self.background_window_by_time_of_day()
 
@@ -93,23 +103,29 @@ class MyLoadingWindow(QWidget):
 
         simple_log("[I] вывод приветствия в соответствии с текущим времени")
 
-        if 6 <= current_hour < 12:
+        if 6 <= current_hour < 11:
+            self.lb_hi_prog.setGeometry(290, 15, 300, 50)
             self.lb_hi_prog.setText("Доброе утро!")
+            self.lb_hi_prog.setStyleSheet("color: rgb(195, 206, 53); font-size: 28px; font-weight: bold;")
             path_bg_loading = Path('resources/images/loading_window/birds_in_the_park.jpg')
 
-        elif 12 <= current_hour < 18:
-            self.lb_hi_prog.setText("Добрый день!")
-            self.lb_blс_m_load.setStyleSheet("color: white; font: bold; font-size: 14px;")
+        elif 11 <= current_hour < 17:
+            self.lb_hi_prog.setGeometry(150, 15, 300, 50)
+            self.lb_hi_prog.setText("Добрый день")
+            self.lb_hi_prog.setStyleSheet("color: rgb(54, 201, 255); font-size: 28px; font-weight: bold;")
             path_bg_loading = Path('resources/images/loading_window/plane_in_the_sky.jpg')
 
-        elif 18 <= current_hour < 21:
-            self.lb_hi_prog.setText("Добрый вечер!")
+        elif 17 <= current_hour < 21:
+            self.block_shadow.setStyleSheet("background-color: rgba(0,0,0,0.5); border-radius: 10px;")
+            self.lb_hi_prog.setGeometry(15, 15, 300, 50)
+            self.lb_hi_prog.setText("Добрый вечер")
+            self.lb_hi_prog.setStyleSheet("color: white; font-size: 32px; font-weight: bold;")
             path_bg_loading = Path('resources/images/loading_window/bird_feeder_in_the_park.jpg')
 
         else:
-            self.lb_hi_prog.setText("Доброй ночи!")
-            self.lb_hi_prog.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
-            self.lb_blс_m_load.setStyleSheet("color: white; font: bold; font-size: 16px;")
+            self.lb_hi_prog.setGeometry(150, 25, 300, 50)
+            self.lb_hi_prog.setText("Доброй ночи")
+            self.lb_hi_prog.setStyleSheet("color: white; font-size: 26px; font-weight: bold;")
             path_bg_loading = Path('resources/images/loading_window/porshe_at_night.jpg')
 
         self.loading_window.setStyleSheet(
@@ -121,7 +137,7 @@ class MyLoadingWindow(QWidget):
         """
 
         self.close_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.close_animation.setDuration(700)
+        self.close_animation.setDuration(450)
         self.close_animation.setStartValue(1.0)
         self.close_animation.setEndValue(0.0)
         self.close_animation.setEasingCurve(QEasingCurve.Type.InCubic)
