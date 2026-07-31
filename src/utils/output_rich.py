@@ -1,8 +1,8 @@
 from rich.console import Console
 from rich.panel import Panel
 
-console = Console()
 
+console = Console()
 
 def log_error(message: str, details: str = "") -> None:
     """

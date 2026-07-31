@@ -1,9 +1,10 @@
 from datetime import datetime
 from pathlib import Path
 
-from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt, QEvent
+from PyQt6.QtCore import (QPoint, QTimer, pyqtSignal, Qt, QPropertyAnimation,
+                          QEasingCurve)
 from PyQt6.QtGui import QMovie
-from PyQt6.QtWidgets import QLabel, QWidget
+from PyQt6.QtWidgets import QLabel, QWidget, QGraphicsOpacityEffect
 
 from utils.output_rich import simple_log
 
@@ -30,17 +31,21 @@ class MyLoadingWindow(QWidget):
 
         simple_log("[I] показ загрузочного окна.")
 
-        loading_window = QWidget(self)
-        loading_window.setFixedSize(600,400) # задание фиксированного рамера виджету
-        loading_window.setStyleSheet("background-color: white; border-radius: 10px;")
-        loading_window.move(0,0) # абсолютное позиционирование
+        self.loading_window = QWidget(self)
+        self.loading_window.setFixedSize(600,400)
+        self.loading_window.move(0,0)
+
+        self.opacity_effect = QGraphicsOpacityEffect(self)
+        self.setGraphicsEffect(self.opacity_effect)
+
+        self.animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+        self.animation.setDuration(700)
+        self.animation.setStartValue(0.0)
+        self.animation.setEndValue(1.0)
+
+        self.animation.setEasingCurve(QEasingCurve.Type.OutCubic)
 
         simple_log("[I] вывод сообщения о сообщения о загрузке.")
-
-        # blс_mes_load = QWidget(self)
-        # blс_mes_load.setFixedSize(400,50) # задание размера
-        # blс_mes_load.setStyleSheet("background-color:white; border-radius: 10px;")
-        # blс_mes_load.move(100, 175)
 
         self.lb_blс_m_load = QLabel(self)
         self.lb_blс_m_load.setText("Приложение загружается, подождите, пожалуйста...")
@@ -48,26 +53,9 @@ class MyLoadingWindow(QWidget):
         self.lb_blс_m_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lb_blс_m_load.setGeometry(100, 175, 400, 50)
 
-        simple_log("[I] вывод приветствия в соответствии с текущим времени")
-
         self.lb_hi_prog = QLabel(self)
-        self.lb_hi_prog.setStyleSheet("color: black; font-size: 18px; font-weight: bold;")
         self.lb_hi_prog.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lb_hi_prog.setGeometry(150, 100, 300, 50)
-
-        current_hour = datetime.now().hour
-        # так как datatime.now возвращает точное время, оставляю только часы
-
-        simple_log(f"[I] текущее время {current_hour}")
-
-        if 6 <= current_hour < 12:
-            self.lb_hi_prog.setText("Доброе утро!")
-        elif 12 <= current_hour < 18:
-            self.lb_hi_prog.setText("Добрый день!")
-        elif 18 <= current_hour < 21:
-            self.lb_hi_prog.setText("Добрый вечер!")
-        else:  # Это покроет часы 21-23 и 0-5
-            self.lb_hi_prog.setText("Доброй ночи!")
 
         simple_log("[I] показ гиф анимации процесса загрузки")
 
@@ -80,14 +68,78 @@ class MyLoadingWindow(QWidget):
         gif_loading.start() # старт анимации.
         movie_widget.move(268,250)
 
+        self.background_window_by_time_of_day()
+
         simple_log("[I] запуск таймера на 3 секунды, после чего окна закроется")
 
         self.timer = QTimer(self) # создаю объект класса qtimer как атрибут класса
         # загрузочного окна, родитель - self, то есть само загрузочное окно
-        self.timer.timeout.connect(self.close)
+        self.timer.timeout.connect(self.start_fade_out)
         # подключение сигнала таймера к функции закрытия окна.
         self.timer.start(3000)
         # таймер сработает через 3 секунды. окно закроется через 3 секунды
+
+        self.animation.start()
+
+    def background_window_by_time_of_day(self) -> None:
+        """
+        Функция для смены фона загрузочного окна на то, что соответствует времени суток.
+        :return:
+        """
+
+        current_hour = datetime.now().hour
+
+        simple_log(f"[I] текущее время {current_hour}")
+
+        simple_log("[I] вывод приветствия в соответствии с текущим времени")
+
+        if 6 <= current_hour < 12:
+            self.lb_hi_prog.setText("Доброе утро!")
+            path_bg_loading = Path('resources/images/loading_window/birds_in_the_park.jpg')
+
+        elif 12 <= current_hour < 18:
+            self.lb_hi_prog.setText("Добрый день!")
+            self.lb_blс_m_load.setStyleSheet("color: white; font: bold; font-size: 14px;")
+            path_bg_loading = Path('resources/images/loading_window/plane_in_the_sky.jpg')
+
+        elif 18 <= current_hour < 21:
+            self.lb_hi_prog.setText("Добрый вечер!")
+            path_bg_loading = Path('resources/images/loading_window/bird_feeder_in_the_park.jpg')
+
+        else:
+            self.lb_hi_prog.setText("Доброй ночи!")
+            self.lb_hi_prog.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
+            self.lb_blс_m_load.setStyleSheet("color: white; font: bold; font-size: 16px;")
+            path_bg_loading = Path('resources/images/loading_window/porshe_at_night.jpg')
+
+        self.loading_window.setStyleSheet(
+            f"background-image: url({path_bg_loading.as_posix()}); border-radius: 10px;")
+
+    def start_fade_out(self) -> None:
+        """
+        Запускает анимацию исчезания окна
+        """
+
+        self.close_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+        self.close_animation.setDuration(700)
+        self.close_animation.setStartValue(1.0)
+        self.close_animation.setEndValue(0.0)
+        self.close_animation.setEasingCurve(QEasingCurve.Type.InCubic)
+        self.close_animation.finished.connect(self.closeWindow)
+        self.close_animation.start()
+
+    def closeWindow(self) -> None:
+        """
+        закрытие окна
+        """
+
+        self.close_animation.deleteLater()
+        self.close_animation = None
+
+        self.close()
+        simple_log("[I] закрытие загрузочного окна")
+        self.closed.emit()
+        self.deleteLater()
 
     def mousePressEvent(self, event) -> None:
         """
@@ -122,16 +174,3 @@ class MyLoadingWindow(QWidget):
             self.drag_position = event.globalPosition().toPoint()
             # обновление сохранённой позиции курсора.
             event.accept() # Подтверждает, что событие обработано (не передаёт дальше)
-
-    def closeEvent(self, event: QEvent) -> None:
-        """
-        Обработчик события закрытия окна, для текущего окна,
-         event - объект события закрытия.
-         """
-
-        super().closeEvent(event)
-        # вызов обработчика закрытия окна (от qwidget) из родительского класса.
-        simple_log("[I] закрытие загрузочного окна")
-        self.closed.emit() # отправка сигнала о том, что окно закрылось.
-        # отправляет сигнал closed.
-        # emit — это «испустить» или «отправить» сигнал.
