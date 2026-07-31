@@ -8,8 +8,8 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from utils.general_functions import (print_separator,
-print_big_separator, print_separator_points, remove_trailing_dot)
+from utils.basic_functions import (print_separator,
+                                   print_big_separator, print_separator_points, remove_trailing_dot)
 
 
 def extract_science_from_brackets(text: str) -> str:

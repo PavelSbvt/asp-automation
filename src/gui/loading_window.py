@@ -5,6 +5,8 @@ from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt, QEvent
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QLabel, QWidget
 
+from utils.output_rich import simple_log
+
 
 class MyLoadingWindow(QWidget):
     """
@@ -26,67 +28,59 @@ class MyLoadingWindow(QWidget):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         # включение прозрачного фона для окна, скрывается рамка окна
 
-        print("[I] показ загрузочного окна.")
+        simple_log("[I] показ загрузочного окна.")
 
         loading_window = QWidget(self)
         loading_window.setFixedSize(600,400) # задание фиксированного рамера виджету
         loading_window.setStyleSheet("background-color: white; border-radius: 10px;")
         loading_window.move(0,0) # абсолютное позиционирование
 
-        print("[I] вывод сообщения о сообщения о загрузке")
+        simple_log("[I] вывод сообщения о сообщения о загрузке.")
 
-        blс_mes_load = QWidget(self)
-        blс_mes_load.setFixedSize(400,50) # задание размера
-        blс_mes_load.setStyleSheet("background-color:white; border-radius: 10px;")
-        blс_mes_load.move(100, 175)
-        self.lb_blс_m_load = QLabel(blс_mes_load)
-        self.lb_blс_m_load.setText(""
-            "Приложение загружается, подождите, пожалуйста..."
-        )
-        self.lb_blс_m_load.setStyleSheet("color: black; font-size: 14px; font: bold;")
+        # blс_mes_load = QWidget(self)
+        # blс_mes_load.setFixedSize(400,50) # задание размера
+        # blс_mes_load.setStyleSheet("background-color:white; border-radius: 10px;")
+        # blс_mes_load.move(100, 175)
+
+        self.lb_blс_m_load = QLabel(self)
+        self.lb_blс_m_load.setText("Приложение загружается, подождите, пожалуйста...")
+        self.lb_blс_m_load.setStyleSheet("color: black; font-size: 14px; font-weight: bold;")
         self.lb_blс_m_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lb_blс_m_load.setGeometry(0,0,400,50)
+        self.lb_blс_m_load.setGeometry(100, 175, 400, 50)
 
-        print("[I] вывод приветствия в соответствии с текущим времени")
+        simple_log("[I] вывод приветствия в соответствии с текущим времени")
 
-        block_from_label_to_welcome = QWidget(self)
-        block_from_label_to_welcome.setFixedSize(300,50)
-        block_from_label_to_welcome.move(150,100)
-        self.LbHiProg = QLabel(block_from_label_to_welcome)
-        self.LbHiProg.setStyleSheet("color: black; font-size:18px; font:bold;")
-        self.LbHiProg.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.LbHiProg.setGeometry(0,0,300,50)
-        now = datetime.now() # присваиваю переменной текущее время системы
-        current_hour = now.hour
+        self.lb_hi_prog = QLabel(self)
+        self.lb_hi_prog.setStyleSheet("color: black; font-size: 18px; font-weight: bold;")
+        self.lb_hi_prog.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lb_hi_prog.setGeometry(150, 100, 300, 50)
+
+        current_hour = datetime.now().hour
         # так как datatime.now возвращает точное время, оставляю только часы
 
-        print(f"[I] текущее время {current_hour}")
+        simple_log(f"[I] текущее время {current_hour}")
 
-        if current_hour < 6 and current_hour >= 0:
-            self.LbHiProg.setText("Доброй ночи!")
-        if current_hour >= 6 and current_hour < 11:
-            self.LbHiProg.setText("Доброе утро!")
-        if current_hour >= 11  and current_hour < 17:
-            self.LbHiProg.setText("Добрый день!")
-        if current_hour >= 17  and current_hour < 21:
-            self.LbHiProg.setText("Добрый вечер!")
-        if current_hour >= 21 and current_hour < 25:
-            self.LbHiProg.setText("Доброй ночи!")
+        if 6 <= current_hour < 12:
+            self.lb_hi_prog.setText("Доброе утро!")
+        elif 12 <= current_hour < 18:
+            self.lb_hi_prog.setText("Добрый день!")
+        elif 18 <= current_hour < 21:
+            self.lb_hi_prog.setText("Добрый вечер!")
+        else:  # Это покроет часы 21-23 и 0-5
+            self.lb_hi_prog.setText("Доброй ночи!")
 
-        print("[I] показ гиф анимации процесса загрузки")
+        simple_log("[I] показ гиф анимации процесса загрузки")
 
         path_gif_loading = Path('resources/images/gifs/loading_animation.gif')
 
         gif_loading = QMovie(path_gif_loading.as_posix())
-        # создаю объект класса qmovie. как аргумент передаётся путь к гиф анимации
         movie_widget = QLabel(self)
-        # метод setMovie можно применить к qlabel, поэтому создал его
         movie_widget.setFixedSize(64,66)
         movie_widget.setMovie(gif_loading) # устанавливаю гиф изображение на qlabel
         gif_loading.start() # старт анимации.
         movie_widget.move(268,250)
 
-        print("[I] запуск таймера на 3 секунды, после чего окна закроется")
+        simple_log("[I] запуск таймера на 3 секунды, после чего окна закроется")
 
         self.timer = QTimer(self) # создаю объект класса qtimer как атрибут класса
         # загрузочного окна, родитель - self, то есть само загрузочное окно
@@ -137,7 +131,7 @@ class MyLoadingWindow(QWidget):
 
         super().closeEvent(event)
         # вызов обработчика закрытия окна (от qwidget) из родительского класса.
-        print("[I] закрытие загрузочного окна")
+        simple_log("[I] закрытие загрузочного окна")
         self.closed.emit() # отправка сигнала о том, что окно закрылось.
         # отправляет сигнал closed.
         # emit — это «испустить» или «отправить» сигнал.

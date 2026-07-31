@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 from typing import Dict
 
@@ -251,3 +252,9 @@ def extract_code_number(raw_code: str) -> str:
     if match:
         return match.group(1)
     return raw_code.strip()
+
+def get_time() -> str:
+    now = datetime.now().time()
+    result_time = now.strftime("%H:%M")
+
+    return result_time

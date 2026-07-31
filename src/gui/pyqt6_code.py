@@ -2,18 +2,18 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 
 from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, QUrl
-from PyQt6.QtGui import QIcon, QTransform # QIcon — иконки, QTransform — поворот иконок
+from PyQt6.QtGui import QIcon, QTransform
 from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
 QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QMessageBox)
 from PyQt6.QtMultimedia import QSoundEffect
 
-from gui.func_change_themes import change_theme
-from gui.pyqt_functions import parsing
+from gui.functions.func_change_themes import change_theme
+from gui.functions.pyqt_functions import parsing
 from core.generate_pdf import (open_pdf_folder,
 choose_save_folder, choose_file, get_pdf)
-from gui.choose_files import (choose_foreign_excel, choose_history_excel,
-                          choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
-                          choose_parsing_save_folder)
+from gui.functions.choose_files import (choose_foreign_excel, choose_history_excel,
+choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
+choose_parsing_save_folder)
 from core.parsing.sait_parsing import update_data, PARSING_DIR
 
 

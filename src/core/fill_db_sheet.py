@@ -6,7 +6,7 @@ from typing import Dict, Optional
 
 import pandas as pd
 
-from utils.general_functions import extract_code_number, remove_trailing_dot
+from utils.basic_functions import extract_code_number, remove_trailing_dot
 from utils.declension_full_name import _get_fio_accusative, _get_fio_initials
 from core.parsing.sait_parsing import load_specialties_from_cache
 

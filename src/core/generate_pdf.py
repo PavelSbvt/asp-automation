@@ -8,9 +8,15 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-from utils.general_functions import (print_separator, print_big_separator,
-print_separator_points, print_out_string)
+from rich.console import Console
+from rich.panel import Panel
+from rich.text import Text
 
+from utils.basic_functions import (print_separator, print_big_separator,
+print_separator_points, print_out_string, get_time)
+from utils.output_rich import log_error
+
+console = Console()
 
 def open_pdf_folder(self) -> None:
     """
@@ -21,15 +27,82 @@ def open_pdf_folder(self) -> None:
 
     folder_path = self.save_folder_path
     if not Path(folder_path).exists():
-        QMessageBox.warning(
-            self,
-            "Папка не найдена",
+        message_box = QMessageBox(self)
+        message_box.setIcon(QMessageBox.Icon.Warning)
+        message_box.setWindowTitle("Папка не найдена")
+        message_box.setText(
             f"Папка '{folder_path}' не существует.\n\n"
             f"Сначала создайте PDF файлы, нажав кнопку "
             f"'Запустить' на первой вкладке."
         )
-        print(f"[E] Папка не найдена. Папка '{folder_path}' не существует."
-        f" Сначала создайте PDF файлы, нажав кнопку 'Запустить' на первой вкладке.")
+        message_box.setStyleSheet("""
+            QMessageBox {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgb(26, 0, 0),
+                    stop: 0.5 rgb(45, 0, 0),
+                    stop: 1 rgb(26, 0, 0));
+                border: 2px solid rgb(255, 23, 68);
+                border-radius: 12px;
+                padding: 5px;
+            }
+
+            QMessageBox QLabel {
+                color: rgb(255, 255, 255);
+                font-size: 13px;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                padding: 15px 20px;
+                background: transparent;
+            }
+
+            QMessageBox QPushButton {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgb(255, 23, 68),
+                    stop: 1 rgb(213, 0, 0));
+                color: rgb(255, 255, 255);
+                border: none;
+                border-radius: 8px;
+                padding: 10px 30px;
+                font-weight: bold;
+                font-size: 12px;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                min-width: 80px;
+                margin: 10px 20px 15px 0px;
+            }
+
+            QMessageBox QPushButton:hover {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgb(200, 40, 50),
+                    stop: 1 rgb(160, 20, 30));
+            }
+
+            QMessageBox QPushButton:pressed {
+                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                    stop: 0 rgb(90, 5, 15),
+                    stop: 1 rgb(60, 0, 10));
+            }
+
+            QMessageBox QLabel#qt_msgbox_label {
+                color: rgb(255, 255, 255);
+                font-size: 13px;
+            }
+        """)
+        message_box.exec()
+
+        error_message = Panel(
+            Text.from_markup(
+                "[bold white on red]⚠️ ПАПКА НЕ НАЙДЕНА ⚠️[/bold white on red]\n\n"
+                f"[bold]Путь:[/bold] [yellow]{folder_path}[/yellow]\n\n"
+                f"[dim]Решение:[/dim] Сначала создайте PDF файлы, нажав кнопку "
+                f"[bold green]'Запустить'[/bold green] на первой вкладке.\n\n"
+                f"[dim]Время: {get_time()}[/dim]"
+            ),
+            title="[red]Ошибка[/red]",
+            border_style="red",
+            padding=(1, 2),
+            width=80
+        )
+        console.print(error_message)
+
         return
     os.startfile(folder_path)
 
@@ -52,7 +125,7 @@ def choose_save_folder(self) -> None:
             short_path = "..." + short_path[-12:]
         self.path_value_label.setText(short_path)
         self.path_value_label.setToolTip(self.save_folder_path)
-        print_out_string(f"[I] Папка для сохранения изменена: {folder_path}")
+        console.log(f"[green]✓ Папка для сохранения изменена:[/green] [yellow]{folder_path}[/yellow]")
         string_save_way = f"[I] Папка для сохранения изменена: {folder_path}"
         self.output_text.append(string_save_way)
         QApplication.processEvents()
@@ -73,8 +146,8 @@ def choose_file(self) -> None:
 
     if file_path:
         self.excel_file_path = file_path
-        string = f"[I] Выбран файл: {file_path}"
-        print_out_string(string)
+        console.log(f"[green]✓ Выбран файл (таблица с данными):[/green] [yellow]{file_path}[/yellow]")
+        string = f"[I] Выбран файл (таблица с данными): {file_path}"
         self.output_text.append(string)
         QApplication.processEvents()
 
@@ -86,12 +159,13 @@ def get_pdf(self) -> None:
 
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
     if not self.excel_file_path:
-        print_big_separator()
         string_1 = "[E] ОШИБКА: Сначала выберите файл с данными!"
-        print_out_string(string_1)
+        log_error(
+            "ОШИБКА: Сначала выберите файл с данными!",
+            f""
+        )
         self.output_text.append(string_1)
         QApplication.processEvents()
-        print_big_separator()
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
