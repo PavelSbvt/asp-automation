@@ -3,7 +3,7 @@ from pathlib import Path
 from PyQt6.QtCore import QTimer
 from PyQt6.QtWidgets import QPushButton
 
-from gui.functions.themes import get_theme
+from utils.themes import get_theme
 
 
 def change_theme(self, theme_name: str, button: QPushButton) -> None:
