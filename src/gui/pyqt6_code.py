@@ -14,10 +14,10 @@ choose_save_folder, choose_file, get_pdf)
 from gui.functions.choose_files import (choose_foreign_excel, choose_history_excel,
 choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
 choose_parsing_save_folder)
-from core.parsing.sait_parsing import update_data, PARSING_DIR
+from parser.sait_parsing import update_data, PARSING_DIR
 
 
-class MyWindow(QWidget):
+class MainWindow(QWidget):
     """
     Главное окно приложения для генерации PDF и парсинга данных.
 

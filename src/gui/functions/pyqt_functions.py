@@ -4,7 +4,7 @@ import os
 import pandas as pd
 from PyQt6.QtWidgets import QMessageBox
 
-from core.parsing.parsing_functions import parsing_commissions
+from parser.parsing_functions import parsing_commissions
 from core.generate_pdf_from_db import generate_pdf_from_db
 from core.fill_db_sheet import fill_database_sheet
 

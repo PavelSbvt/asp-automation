@@ -8,7 +8,7 @@ import pandas as pd
 
 from utils.basic_functions import extract_code_number, remove_trailing_dot
 from utils.declension_full_name import _get_fio_accusative, _get_fio_initials
-from core.parsing.sait_parsing import load_specialties_from_cache
+from parser.sait_parsing import load_specialties_from_cache
 
 
 def get_specialty_code(profile: str) -> str:
