@@ -53,7 +53,7 @@ def simple_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[cyan]ℹ {message}[/cyan]")
+    console.log(f"[cyan]i {message}[/cyan]")
 
 def debug_log(message: str) -> None:
     """
