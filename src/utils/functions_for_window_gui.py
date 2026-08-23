@@ -11,7 +11,7 @@ from parser.sait_parsing import PARSING_DIR
 
 def center_window(self) -> None:
     """
-    функция для центрирования главного окна, чтобы оно появлялось
+    Функция для центрирования главного окна, чтобы оно появлялось
     по центру экрана пользователя после исчезновения загрузочного окна
 
     :return: None
@@ -22,13 +22,13 @@ def center_window(self) -> None:
     qr.moveCenter(cp)
     self.move(qr.topLeft())
 
-def get_main_color_image(image_path: str):
+def get_main_color_image(image_path: str) -> tuple[int, int, int]:
     """
     Функция нужна для определения главного цвета изображения на фоне виджета. Пока для загрузочного окна
 
-    :param image_path:
+    :param image_path: Принимает путь к изображению, средний цвет которого нужно найти
 
-    :return:
+    :return: tuple[int, int, int] - Возвращает кортеж цветов rgb
     """
     try:
         img = Image.open(image_path)
@@ -99,7 +99,7 @@ def get_random_image_from_folder(folder_path: str) -> str:
 
 def background_window_by_time_of_day(target_label, target_widget) -> tuple[int, int, int]:
     """
-    Функция для установления текста лейблу приветствия пользователя (в соответствии с временем) + передача
+    Функция для установления текста лейбл приветствия пользователя (в соответствии с временем) + передача
     главного цвета атрибуту класса загрузочного окна (именно для атрибутов созданы параметры return_r, return_g и return_b)
 
     :param target_label: Принимает имя объекта QLabel, текст которого будет изменять.
@@ -216,7 +216,10 @@ def update_animation_gradient(self) -> None:
 
 def load_cached_data(self) -> None:
     """
-    Загружает данные из кэша и обновляет лейбл с временем.
+    Загружает данные из кэша (файла txt) и обновляет лейбл с временем в
+    главном окне приложения.
+
+    :return: None
     """
 
     files = list(PARSING_DIR.glob("*.txt")) if PARSING_DIR.exists() else []

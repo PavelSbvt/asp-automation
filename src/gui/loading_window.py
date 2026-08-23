@@ -17,12 +17,16 @@ from utils.update_gui import update_progress_bar_animation
 
 class MyLoadingWindow(QWidget):
     """
-    Класс загрузочного окна на PyQt6 с гиф-анимацией загрузки
+    Класс загрузочного окна
     """
 
     closed = pyqtSignal()
 
     def __init__(self) -> None:
+        """
+        Конструктор класса
+        """
+
         super().__init__()
 
         # Добавляю новые семейства шрифтов из ресурсов проекта.

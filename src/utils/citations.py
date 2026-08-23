@@ -30,6 +30,8 @@ QUOTES = {
 def get_citation_with_author() -> tuple[str, str]:
     """
     Возвращает случайную цитату и её автора вместе
+
+    :return: tuple[str, str] - возвращает кортеж из текста цитаты и её автора
     """
 
     citation = random.choice(list(QUOTES.keys()))
