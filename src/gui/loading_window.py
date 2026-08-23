@@ -84,13 +84,22 @@ class MyLoadingWindow(QWidget):
         self.lb_blс_m_load.setGeometry(0, 490, 370, 30)
         self.lb_blс_m_load.setWordWrap(True)
 
+        # Иконка приложения
+        self.icon = QWidget(self)
+        self.icon.setFixedSize(35, 35)
+
+        self.icon_path = Path("resources/images/icons/icon_pdf_maker.png")
+
+        self.icon.setStyleSheet(f"background-image: url({self.icon_path.as_posix()})")
+        self.icon.move(10, 12)
+
         # Название приложения
         self.block_app_name = QLabel(self)
         self.block_app_name.setStyleSheet("color: white; font: bold;")
         self.block_app_name.setFont(QFont(self.font_family_Playfair_Display, 30))
         self.block_app_name.setText(f"{settings.get_app_name()}")
         self.block_app_name.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.block_app_name.setGeometry(10,0,370,50)
+        self.block_app_name.setGeometry(50,0,370,50)
 
         # фон текста
         self.background_widget_text = QWidget(self)
@@ -100,10 +109,10 @@ class MyLoadingWindow(QWidget):
         self.background_widget_text.move(10,60)
         self.label_text = QLabel(self.background_widget_text)
         self.label_text.setText("PDF_maker - приложение для "
-            "автоматизации работы УПиАКВК.")
+            "автоматизации работы УПиАКВК, сборки и генерации pdf протоколов заседания экзаменационной комиссии по приему кандидатского экзамена")
         self.label_text.setWordWrap(True)
         self.label_text.setFont(QFont(self.font_family_Inter, 12))
-        self.label_text.setGeometry(10,50, 340, 130)
+        self.label_text.setGeometry(10,40, 340, 130)
         self.label_text.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Текст приветствия (меняется по времени суток)
