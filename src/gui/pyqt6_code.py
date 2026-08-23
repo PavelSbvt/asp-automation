@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
@@ -14,8 +15,12 @@ choose_save_folder, choose_file, get_pdf)
 from gui.functions.choose_files import (choose_foreign_excel, choose_history_excel,
 choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
 choose_parsing_save_folder)
-from parser.sait_parsing import update_data, PARSING_DIR
+from parser.sait_parsing import update_data
 
+
+# Убирает из консоли лог Qt вида: "qt.multimedia.ffmpeg: Using Qt multimedia with FFmpeg
+# version 7.1.3 LGPL version 2.1 or later"
+os.environ["QT_LOGGING_RULES"] = "qt.multimedia.*=false"
 
 class MainWindow(QWidget):
     """
@@ -1086,7 +1091,7 @@ class MainWindow(QWidget):
         """)
         self.button_to_update_date.clicked.connect(lambda: update_data(self))
 
-        self.load_cached_data()
+        # self.load_cached_data()
 
     def close(self) -> None:
         """
@@ -1148,36 +1153,6 @@ class MainWindow(QWidget):
             "Процесс остановки запущен...\n\n"
             "Программа завершит текущую операцию и остановится."
         )
-
-    def load_cached_data(self) -> None:
-        """
-        Загружает данные из кэша и обновляет лейбл с временем.
-        """
-
-        files = list(PARSING_DIR.glob("*.txt")) if PARSING_DIR.exists() else []
-
-        if files:
-            filename = files[0].stem
-
-            if hasattr(self, 'time_update_label'):
-                self.time_update_label.setText(filename)
-
-            if hasattr(self, 'label_for_info_update_site_paring'):
-                self.label_for_info_update_site_paring.setText(
-                    "Последнее обновление данных (парсинг сайтов):"
-                )
-
-            print(f"[I] Загружен файл: {filename}")
-        else:
-            if hasattr(self, 'time_update_label'):
-                self.time_update_label.setText("Данные не загружены")
-
-            if hasattr(self, 'label_for_info_update_site_paring'):
-                self.label_for_info_update_site_paring.setText(
-                    "Данные не загружены (нажмите 'Обновить данные'):"
-                )
-
-            print("[I] Файл кэша не найден")
 
     def update_progress(self, current: int, total: int) -> None:
         """

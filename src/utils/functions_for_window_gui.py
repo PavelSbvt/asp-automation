@@ -5,7 +5,8 @@ import random
 
 from PIL import Image
 
-from utils.output_rich import debug_log, log_error, warning_log
+from utils.output_rich import debug_log, log_error, warning_log, simple_log, success_log
+from parser.sait_parsing import PARSING_DIR
 
 
 def center_window(self) -> None:
@@ -69,8 +70,10 @@ def getMainColorImage(image_path: str):
 def get_random_image_from_folder(folder_path: str) -> str:
     """
     Возвращает путь к случайному изображению из указанной папки
+
     :param folder_path: путь к папке с изображениями
-    :return: путь к случайному изображению
+
+    :return: Str - путь к случайному изображению
     """
     folder = Path(folder_path)
 
@@ -94,8 +97,11 @@ def background_window_by_time_of_day(target_label, target_widget) -> tuple[int, 
     """
     Функция для установления текста лейблу приветствия пользователя (в соответствии с временем) + передача
     главного цвета атрибуту класса загрузочного окна (именно для атрибутов созданы параметры return_r, return_g и return_b)
+
     :param target_label:
+
     :param target_widget:
+
     :return: None
     """
 
@@ -200,3 +206,33 @@ def update_animation_gradient(self):
             self.gradient_2_pos -= 0.005
         else:
             return
+
+def load_cached_data(self) -> None:
+    """
+    Загружает данные из кэша и обновляет лейбл с временем.
+    """
+
+    files = list(PARSING_DIR.glob("*.txt")) if PARSING_DIR.exists() else []
+
+    if files:
+        filename = files[0].stem
+
+        if hasattr(self, 'time_update_label'):
+            self.time_update_label.setText(filename)
+
+        if hasattr(self, 'label_for_info_update_site_paring'):
+            self.label_for_info_update_site_paring.setText(
+                "Последнее обновление данных (парсинг сайтов):"
+            )
+
+        success_log(f" Загружен файл: {filename}")
+    else:
+        if hasattr(self, 'time_update_label'):
+            self.time_update_label.setText("Данные не загружены")
+
+        if hasattr(self, 'label_for_info_update_site_paring'):
+            self.label_for_info_update_site_paring.setText(
+                "Данные не загружены (нажмите 'Обновить данные'):"
+            )
+
+        warning_log("[I] Файл кэша не найден")
