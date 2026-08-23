@@ -17,7 +17,7 @@ def log_error(message: str, details: str = "") -> None:
     :return: None
     """
 
-    content = f"[bold white on red] ⚠️ ОШИБКА ⚠️ [/bold white on red]\n\n{message}"
+    content = f"[bold white on red]ERROR[/bold white on red]\n\n{message}"
     if details:
         content += f"\n\n[dim]{details}[/dim]"
 
@@ -41,7 +41,7 @@ def success_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[green]{message}[/green]")
+    console.log(f"[green][SUCCESS] {message}[/green]")
 
 def simple_log(message: str) -> None:
     """
@@ -53,7 +53,7 @@ def simple_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[cyan]i {message}[/cyan]")
+    console.log(f"[cyan][INFO] {message}[/cyan]")
 
 def debug_log(message: str) -> None:
     """
@@ -76,7 +76,7 @@ def warning_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[bold yellow] ⚠ ВНИМАНИЕ: {message}[/bold yellow]")
+    console.log(f"[bold yellow][WARN] ВНИМАНИЕ: {message}[/bold yellow]")
 
 def enter_log(message: str) -> None:
     """
@@ -88,7 +88,7 @@ def enter_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[magenta]▶ ВХОД: {message}[/magenta]")
+    console.log(f"[magenta][ENTER] ▶ ВХОД: {message}[/magenta]")
 
 def exit_log(message: str) -> None:
     """
@@ -100,4 +100,4 @@ def exit_log(message: str) -> None:
 
     :return: None
     """
-    console.log(f"[magenta]◀ ВЫХОД: {message}[/magenta]")
+    console.log(f"[magenta][EXIT] ◀ ВЫХОД: {message}[/magenta]")

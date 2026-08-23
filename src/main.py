@@ -38,11 +38,10 @@ def main() -> None:
         :return: None
         """
 
-
         loading_win.hide()
-        exit_log("[Exit] загрузочное окно скрыто")
+        exit_log("Загрузочное окно скрыто")
         main_win.show()
-        enter_log("[Enter] Показ главного окна")
+        enter_log("Показ главного окна")
 
     loading_win.closed.connect(on_loading_closed)
     sys.exit(app.exec())

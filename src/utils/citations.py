@@ -34,6 +34,7 @@ def get_citation_with_author() -> tuple[str, str]:
 
     citation = random.choice(list(QUOTES.keys()))
     author = QUOTES[citation]
-    debug_log(f" Цитата: {citation}")
-    debug_log(f" Автор цитаты: {author}")
+    debug_log(f"Цитата: {citation}")
+    debug_log(f"Автор цитаты: {author}")
+
     return citation, author

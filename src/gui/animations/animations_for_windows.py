@@ -69,7 +69,7 @@ def animationDindisappearanceAndClosing(widget, duration: int = 450) -> None:
 
     def closeWindow():
         widget.close()
-        debug_log("[I] закрытие загрузочного окна")
+        debug_log("Закрытие загрузочного окна")
         if hasattr(widget, 'closed'):
             widget.closed.emit()
         widget.deleteLater()
