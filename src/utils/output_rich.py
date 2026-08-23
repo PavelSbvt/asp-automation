@@ -1,8 +1,31 @@
+import os
+import inspect
 from rich.console import Console
 from rich.panel import Panel
 
 
 console = Console()
+
+def get_caller_info() -> str:
+    """
+    Возвращает имя файла и номер строки, откуда была вызвана функция.
+
+    :return: Str - строка с номером строки и именем файла, из которого была
+    вызвана функция
+    """
+
+    try:
+        # Поднимает на два уровня по стеку вызова. Должен быть файл,
+        # из которого вызвал функцию
+
+        frame = inspect.currentframe().f_back.f_back
+        filename = os.path.basename(frame.f_code.co_filename)
+        line= frame.f_lineno
+
+        return f"{filename}:{line}"
+
+    except (AttributeError, KeyError, ValueError, TypeError):
+        return "Неизвестно:?"
 
 def log_error(message: str, details: str = "") -> None:
     """
@@ -11,22 +34,28 @@ def log_error(message: str, details: str = "") -> None:
 
     :param message: Принимает текст сообщения ошибки, который будет
     выведен в терминал (консоль)
+
     :param details: Дефолтно равно пустой строке. Принимает текст детали ошибки,
     который будет выведен в терминал (консоль)
 
     :return: None
     """
 
+    caller = get_caller_info()
+
     content = f"[bold white on red]ERROR[/bold white on red]\n\n{message}"
+
     if details:
         content += f"\n\n[dim]{details}[/dim]"
+
+    content += f"\n\n[dim]Вызов из: {caller}[/dim]"
 
     console.print(
         Panel(
             content,
             title="[red]Ошибка[/red]",
             border_style="red",
-            padding=(1, 2)
+            padding=(1, 2),
         )
     )
 
@@ -41,7 +70,7 @@ def success_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[green][SUCCESS] {message}[/green]")
+    console.log(f"[green][SUCCESS] {message}[/green]",  _stack_offset=2)
 
 def simple_log(message: str) -> None:
     """
@@ -53,7 +82,7 @@ def simple_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[cyan][INFO] {message}[/cyan]")
+    console.log(f"[cyan][INFO] {message}[/cyan]",  _stack_offset=2)
 
 def debug_log(message: str) -> None:
     """
@@ -64,7 +93,7 @@ def debug_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[grey46][Debug] {message}[/grey46]")
+    console.log(f"[grey46][Debug] {message}[/grey46]",  _stack_offset=2)
 
 def warning_log(message: str) -> None:
     """
@@ -76,7 +105,7 @@ def warning_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[bold yellow][WARN] ВНИМАНИЕ: {message}[/bold yellow]")
+    console.log(f"[bold yellow][WARN] ВНИМАНИЕ: {message}[/bold yellow]",  _stack_offset=2)
 
 def enter_log(message: str) -> None:
     """
@@ -88,7 +117,7 @@ def enter_log(message: str) -> None:
     :return: None
     """
 
-    console.log(f"[magenta][ENTER] ▶ ВХОД: {message}[/magenta]")
+    console.log(f"[magenta][ENTER] ▶ ВХОД: {message}[/magenta]",  _stack_offset=2)
 
 def exit_log(message: str) -> None:
     """
@@ -100,4 +129,4 @@ def exit_log(message: str) -> None:
 
     :return: None
     """
-    console.log(f"[magenta][EXIT] ◀ ВЫХОД: {message}[/magenta]")
+    console.log(f"[magenta][EXIT] ◀ ВЫХОД: {message}[/magenta]",  _stack_offset=2)
