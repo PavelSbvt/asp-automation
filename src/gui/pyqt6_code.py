@@ -16,7 +16,7 @@ from gui.functions.choose_files import (choose_foreign_excel, choose_history_exc
 choose_specialization_excel, choose_universal_excel, open_parsing_pdf_folder,
 choose_parsing_save_folder)
 from parser.sait_parsing import update_data
-
+from utils.output_rich import exit_log, debug_log, simple_log, warning_log
 
 # Убирает из консоли лог Qt вида: "qt.multimedia.ffmpeg: Using Qt multimedia with FFmpeg
 # version 7.1.3 LGPL version 2.1 or later"
@@ -1098,8 +1098,8 @@ class MainWindow(QWidget):
         Закрытие приложения с выводом лога
         """
 
-        print("[I] Нажата кнопка выхода из приложения.")
-        print("[I] Выход из приложения")
+        debug_log("Нажата кнопка выхода из приложения.")
+        exit_log("Выход из приложения")
 
         super().close()
 
@@ -1139,7 +1139,7 @@ class MainWindow(QWidget):
         Останавливает процесс генерации
         """
 
-        print("[I] ОСТАНОВКА процесса по запросу пользователя")
+        simple_log("Остановка процесса по запросу пользователя")
         self.stop_generation = True
         # self.blc_for_stop.setVisible(True)
 
@@ -1156,7 +1156,7 @@ class MainWindow(QWidget):
 
     def update_progress(self, current: int, total: int) -> None:
         """
-        функция обновления прогресса qprogressbar.
+        функция обновления прогресса progressbar.
         """
 
         if total > 0:
@@ -1189,7 +1189,7 @@ class MainWindow(QWidget):
             self.sound_effect.setSource(QUrl.fromLocalFile(sound_path.as_posix()))
             self.sound_effect.setVolume(0.13)  # Громкость от 0.0 до 1.0
         else:
-            print(f"[W] Звуковой файл не найден: {sound_path.as_posix()}")
+            warning_log(f"Звуковой файл не найден: {sound_path.as_posix()}")
 
     def play_open_sound(self) -> None:
         """
@@ -1199,7 +1199,7 @@ class MainWindow(QWidget):
         if hasattr(self, 'sound_effect') and self.sound_effect.source().isValid():
             self.sound_effect.play()
         else:
-            print("[W] Звук не воспроизведён - файл не найден или не загружен")
+            warning_log("Звук не воспроизведён - файл не найден или не загружен")
 
     def mousePressEvent(self, event) -> None:
         """

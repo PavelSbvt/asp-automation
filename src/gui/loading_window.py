@@ -11,6 +11,7 @@ from utils.functions_for_window_gui import (center_window,
     background_window_by_time_of_day, update_animation_gradient)
 from utils.citations import get_citation_with_author
 from core.settings_manager import settings
+from utils.update_gui import update_progress_bar_animation
 
 
 
@@ -49,7 +50,7 @@ class MyLoadingWindow(QWidget):
 
         self.close_window_animation = None
 
-        enter_log("[Enter] Показ загрузочного окна.")
+        enter_log("Показ загрузочного окна.")
 
         # Виджет для фона (большой тёмный)
         self.widget_background_fill = QWidget(self)
@@ -209,9 +210,10 @@ class MyLoadingWindow(QWidget):
         self.progress_bar.setFixedSize(360,17)
         self.progress_bar.move(10,475)
 
+        # Таймер для progressbar
         self.timer_animation = QTimer()
-        self.timer_animation.timeout.connect(self.update_animation)
-        self.timer_animation.start(35)
+        self.timer_animation.timeout.connect(lambda: update_progress_bar_animation(self))
+        self.timer_animation.start(32)
 
         animationAppearanceWindow(self, duration = 700)
 
@@ -260,19 +262,6 @@ class MyLoadingWindow(QWidget):
 
         self.gradient_timer.timeout.connect(lambda: update_animation_gradient(self))
 
-    def update_animation(self):
-        """
-        Функция для обновления прогресса прогресс-бара для имитации индикации
-        вымышленного процесса
-
-        :return: None
-        """
-
-        if self.progress_bar.value() < 100:
-            self.progress_bar.setValue(self.progress_bar.value() + 1)
-        else:
-            self.progress_bar.setValue(100)
-
     def start_closing(self) -> None:
         """
         Запускает анимацию исчезновения и закрытия загрузочного окна.
@@ -280,16 +269,19 @@ class MyLoadingWindow(QWidget):
         :return: None
         """
 
-        debug_log("[I] запуск анимации исчезания окна")
+        debug_log("Запуск анимации исчезания окна")
 
         if hasattr(self, 'gradient_timer'):
             self.gradient_timer.stop()
+
+        if hasattr(self, 'timer_animation'):
+            self.timer_animation.stop()
 
         animationDindisappearanceAndClosing(self, duration=1000)
 
     def mousePressEvent(self, event) -> None:
         """
-        обработчик события нажатия кнопки мыши. self - ссылка на текущий объект,
+        Обработчик события нажатия кнопки мыши.
 
         :param event: Принимает event - объект события, содержащий информацию о нажатии
         (какая кнопка, координаты и т.д.).
@@ -304,7 +296,7 @@ class MyLoadingWindow(QWidget):
 
     def mouseMoveEvent(self, event) -> None:
         """
-        обработчик события движения мыши. self - ссылка на текущий объект,
+        Обработчик события движения мыши.
 
         :param event: Принимает event - объект события, содержащий информацию о нажатии
         (какая кнопка, координаты и т.д.).
