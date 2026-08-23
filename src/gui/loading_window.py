@@ -10,6 +10,8 @@ from gui.animations.animations_for_windows import (animationAppearanceWindow,
 from utils.functions_for_window_gui import (center_window,
     background_window_by_time_of_day, update_animation_gradient)
 from utils.citations import get_citation_with_author
+from core.settings_manager import settings
+
 
 
 class MyLoadingWindow(QWidget):
@@ -81,7 +83,7 @@ class MyLoadingWindow(QWidget):
         self.block_app_name = QLabel(self)
         self.block_app_name.setStyleSheet("color: white; font: bold;")
         self.block_app_name.setFont(QFont(self.font_family_Playfair_Display, 30))
-        self.block_app_name.setText(f"PDF_maker")
+        self.block_app_name.setText(f"{settings.get_app_name()}")
         self.block_app_name.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.block_app_name.setGeometry(10,0,370,50)
 
@@ -217,7 +219,7 @@ class MyLoadingWindow(QWidget):
 
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.start_closing)
-        self.timer.start(5000)
+        self.timer.start(settings.get_loading_window_timer_duration())
 
         center_window(self)
 

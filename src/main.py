@@ -6,6 +6,9 @@ from PyQt6.QtGui import QIcon
 
 from gui.loading_window import MyLoadingWindow
 from gui.pyqt6_code import MainWindow
+from utils.output_rich import enter_log, exit_log
+from utils.functions_for_window_gui import load_cached_data
+from core.settings_manager import settings
 
 
 def main() -> None:
@@ -23,6 +26,10 @@ def main() -> None:
     loading_win = MyLoadingWindow()
     loading_win.show()
 
+    main_win = MainWindow()
+
+    load_cached_data(main_win)
+
     def on_loading_closed() -> None:
         """
         Функция для показа основного окна приложения.
@@ -31,12 +38,15 @@ def main() -> None:
         :return: None
         """
 
-        main_win = MainWindow()
-        main_win.show()
+
         loading_win.hide()
+        exit_log("[Exit] загрузочное окно скрыто")
+        main_win.show()
+        enter_log("[Enter] Показ главного окна")
 
     loading_win.closed.connect(on_loading_closed)
     sys.exit(app.exec())
 
 if __name__ == "__main__":
+    settings.print_settings()
     main()
