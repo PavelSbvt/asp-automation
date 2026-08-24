@@ -70,6 +70,7 @@ class SettingsManager:
 
         with open(self.config_path, 'r', encoding='utf-8') as file:
             settings_data = json.load(file)
+            self.settings = settings_data
             # print(settings_data)
 
             success_log("Настройки получены")
@@ -113,17 +114,7 @@ class SettingsManager:
 
             broken_settings_parameters = []
 
-            app_name = settings_data.get("app_name", "Неизвестно")
-            if app_name == "Неизвестно" or not isinstance(app_name, str):
-                broken_settings_parameters.append("app_name")
-            else:
-                self.app_name = app_name
-
-            app_version = settings_data.get('version', 'неизвестно')
-            if app_version == "Неизвестно" or not isinstance(app_version, str):
-                broken_settings_parameters.append("app_version")
-            else:
-                self.app_version = app_version
+            self.check_appname_and_appversion()
 
             loading_window_timer_duration = settings_data.get("loading_window_timer",
                 "Неизвестно")
@@ -132,7 +123,6 @@ class SettingsManager:
                 broken_settings_parameters.append("loading_window_timer_duration")
             else:
                 self.loading_window_timer_duration = loading_window_timer_duration
-
 
             flag_show_loading_window = settings_data.get("flag_show_loading_window",
                 "Неизвестно")
@@ -180,6 +170,36 @@ class SettingsManager:
             f"{self.loading_window_timer_duration}")
         simple_log(f"Показ окна загрузки: {self.flag_show_loading_window}")
 
+    def update_settings_param(self, param_name: str, new_value) -> None:
+        """
+        Обновляет конкретное поле в файле настроек, не трогая остальные.
+
+        :param param_name: Имя поля для обновления (например, "app_name")
+
+        :param new_value: Новое значение для этого поля
+
+        :return: None
+        """
+
+        settings_data = {}
+
+        if self.config_path.exists():
+            try:
+                with open(self.config_path, 'r', encoding='utf-8') as file:
+                    settings_data = json.load(file)
+
+            except (json.JSONDecodeError, IOError):
+                warning_log(f"Не удалось прочитать файл настроек")
+
+        settings_data[param_name] = new_value
+
+        with open(self.config_path, 'w', encoding='utf-8') as file:
+            json.dump(settings_data, file, ensure_ascii=False, indent=4)
+
+        self.settings = settings_data
+
+        debug_log(f"Обновлено поле '{param_name}' = {new_value}")
+
     def set_app_name_settings(self, app_name: str):
         """
         Функция для задания нового имени приложения.
@@ -192,9 +212,8 @@ class SettingsManager:
         :return: None.
         """
 
-        debug_log(f"Имя приложения изменено с {self.app_name} на {app_name}")
         self.app_name = app_name
-        self.rewrite_settings()
+        self.update_settings_param("app_name", app_name)
 
     def get_app_name(self) -> str:
         """
@@ -205,7 +224,7 @@ class SettingsManager:
         :return: Str(self.app_name).
         """
 
-        app_name =self.app_name
+        app_name = self.app_name
 
         return app_name
 
@@ -224,10 +243,8 @@ class SettingsManager:
         :return: None.
         """
 
-        debug_log(f"Время работы таймера загрузочного окна изменено с "
-            f"{self.loading_window_timer_duration} на {loading_window_timer_duration}")
         self.loading_window_timer_duration = loading_window_timer_duration
-        self.rewrite_settings()
+        self.update_settings_param("loading_window_timer", loading_window_timer_duration)
 
     def get_loading_window_timer_duration(self) -> int:
         """
@@ -240,7 +257,7 @@ class SettingsManager:
         :return: Int(self.loading_window_timer_duration).
         """
 
-        loading_window_timer_duration =self.loading_window_timer_duration
+        loading_window_timer_duration = self.loading_window_timer_duration
 
         return loading_window_timer_duration
 
@@ -256,11 +273,9 @@ class SettingsManager:
         :return: None.
         """
 
-        debug_log(
-        f"Версия приложения изменена с {self.app_version} на {version}")
-
         self.app_version = version
-        self.rewrite_settings()
+
+        self.update_settings_param("version", version)
 
     def get_app_version(self) -> str:
         """
@@ -275,6 +290,32 @@ class SettingsManager:
         app_version = self.app_version
 
         return app_version
+
+    def check_appname_and_appversion(self) -> None:
+        """
+        Функция для проверки соответствия стандартным значениям (значения атрибутов класса - стандартные)
+        имени приложения и версии - потому, что они не должны отличаться от стандартных.
+
+        :return: None
+        """
+
+        standard_app_name = self.app_name
+        standard_app_version = self.app_version
+
+        settings_data = self.settings
+
+        app_name = settings_data.get("app_name", "Неизвестно")
+        app_version = settings_data.get("version", "Неизвестно")
+
+        debug_log("Проверка имени и версии приложения")
+
+        if app_name != standard_app_name:
+            self.update_settings_param("app_name", standard_app_name)
+            debug_log(f"Имя приложения в файле настроек изменено с {app_name} на {standard_app_name}")
+
+        if app_version != standard_app_version:
+            self.update_settings_param("version", standard_app_version)
+            debug_log(f"Версия приложения в файле настроек изменено с {app_version} на {standard_app_version}")
 
 settings = SettingsManager()
 
