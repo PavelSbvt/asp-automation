@@ -35,6 +35,8 @@ class MainWindow(QWidget):
     def __init__(self) -> None:
         super().__init__()
 
+        self.setObjectName("main_window")
+
         self.stop_generation: bool = False  # булевый флаг остановки сборки пдф и парсинга
 
         # устанавливаю дефолтные пути к файлам пустыми
@@ -1199,7 +1201,7 @@ class MainWindow(QWidget):
         if hasattr(self, 'sound_effect') and self.sound_effect.source().isValid():
             self.sound_effect.play()
         else:
-            warning_log("Звук не воспроизведён - файл не найден или не загружен")
+            warning_log( "Звук не воспроизведён - файл не найден или не загружен")
 
     def mousePressEvent(self, event) -> None:
         """

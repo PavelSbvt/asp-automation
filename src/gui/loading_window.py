@@ -5,8 +5,8 @@ from PyQt6.QtGui import QFontDatabase, QFont
 from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame)
 
 from utils.output_rich import enter_log, debug_log
-from gui.animations.animations_for_windows import (animationAppearanceWindow,
-    animationDindisappearanceAndClosing)
+from gui.animations.animations_for_windows import (animation_appearance_window,
+    animation_disappearance_and_closing)
 from utils.functions_for_window_gui import (center_window,
     background_window_by_time_of_day, update_animation_gradient)
 from utils.citations import get_citation_with_author
@@ -29,24 +29,38 @@ class MyLoadingWindow(QWidget):
 
         super().__init__()
 
+        self.setObjectName("loading_window")
+
         # Добавляю новые семейства шрифтов из ресурсов проекта.
-        front_Inter_italic_path = Path("resources/fonts/Inter/Inter-Italic-VariableFont_opsz,wght.ttf")
+        front_Inter_italic_path = Path("resources/fonts/Inter/"
+                                       "Inter-Italic-VariableFont_opsz,wght.ttf")
         font_Inter_path = Path("resources/fonts/Inter/Inter-VariableFont_opsz,wght.ttf")
 
-        font_Inter_italic_id = QFontDatabase.addApplicationFont(front_Inter_italic_path.as_posix())
+        font_Inter_italic_id = (
+            QFontDatabase.addApplicationFont(front_Inter_italic_path.as_posix()))
         font_Inter_id = QFontDatabase.addApplicationFont(font_Inter_path.as_posix())
 
-        self.font_family_Inter = QFontDatabase.applicationFontFamilies(font_Inter_id)[0]
-        self.font_family_Inter_italic = QFontDatabase.applicationFontFamilies(font_Inter_italic_id)[0]
+        self.font_family_Inter = (
+            QFontDatabase.applicationFontFamilies(font_Inter_id))[0]
+        self.font_family_Inter_italic = (
+            QFontDatabase.applicationFontFamilies(font_Inter_italic_id))[0]
 
-        font_Playfair_Display_path = Path("resources/fonts/Playfair_Display/PlayfairDisplay-VariableFont_wght.ttf")
-        font_Playfair_Display_italic_path = Path("resources/fonts/Playfair_Display/PlayfairDisplay-Italic-VariableFont_wght.ttf")
+        font_Playfair_Display_path = (
+            Path("resources/fonts/Playfair_Display/"
+                 "PlayfairDisplay-VariableFont_wght.ttf"))
+        font_Playfair_Display_italic_path = (
+            Path("resources/fonts/Playfair_Display/"
+                 "PlayfairDisplay-Italic-VariableFont_wght.ttf"))
 
-        font_Playfair_Display_id = QFontDatabase.addApplicationFont(font_Playfair_Display_path.as_posix())
-        font_Playfair_Display_italic_id = QFontDatabase.addApplicationFont(font_Playfair_Display_italic_path.as_posix())
+        font_Playfair_Display_id = (
+            QFontDatabase.addApplicationFont(font_Playfair_Display_path.as_posix()))
+        font_Playfair_Display_italic_id = (
+            QFontDatabase.addApplicationFont(font_Playfair_Display_italic_path.as_posix()))
 
-        self.font_family_Playfair_Display = QFontDatabase.applicationFontFamilies(font_Playfair_Display_id)[0]
-        self.font_family_Playfair_Display_italic = QFontDatabase.applicationFontFamilies(font_Playfair_Display_italic_id)[0]
+        self.font_family_Playfair_Display = (
+            QFontDatabase.applicationFontFamilies(font_Playfair_Display_id))[0]
+        self.font_family_Playfair_Display_italic = (
+            QFontDatabase.applicationFontFamilies(font_Playfair_Display_italic_id))[0]
 
         self.drag_position: QPoint = QPoint()
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
@@ -109,7 +123,8 @@ class MyLoadingWindow(QWidget):
         self.background_widget_text.move(10,60)
         self.label_text = QLabel(self.background_widget_text)
         self.label_text.setText("PDF_maker - приложение для "
-            "автоматизации работы УПиАКВК, сборки и генерации pdf протоколов заседания экзаменационной комиссии по приему кандидатского экзамена")
+            "автоматизации работы УПиАКВК, сборки и генерации pdf протоколов"
+            " заседания экзаменационной комиссии по приему кандидатского экзамена")
         self.label_text.setWordWrap(True)
         self.label_text.setFont(QFont(self.font_family_Inter, 12))
         self.label_text.setGeometry(10,40, 340, 130)
@@ -228,7 +243,7 @@ class MyLoadingWindow(QWidget):
         self.timer_animation.timeout.connect(lambda: update_progress_bar_animation(self))
         self.timer_animation.start(32)
 
-        animationAppearanceWindow(self, duration = 700)
+        animation_appearance_window(self, duration = 700)
 
         debug_log("Запуск таймера на 3 секунды, после чего окна закроется")
 
@@ -282,15 +297,13 @@ class MyLoadingWindow(QWidget):
         :return: None
         """
 
-        debug_log("Запуск анимации исчезания окна")
-
         if hasattr(self, 'gradient_timer'):
             self.gradient_timer.stop()
 
         if hasattr(self, 'timer_animation'):
             self.timer_animation.stop()
 
-        animationDindisappearanceAndClosing(self, duration=1000)
+        animation_disappearance_and_closing(self, duration=1000)
 
     def mousePressEvent(self, event) -> None:
         """

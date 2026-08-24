@@ -112,26 +112,32 @@ def background_window_by_time_of_day(target_label, target_widget) -> tuple[int, 
     current_hour = datetime.now().hour
     # current_hour = 12 # - отладка и тестирование
 
-    debug_log(f"Текущее время {current_hour}")
+    time_of_day = ""
 
     debug_log("Вывод приветствия в соответствии с текущим времени")
 
     if 6 <= current_hour < 11:
+        time_of_day = "утро"
         target_label.setText("Доброе утро!")
         folder_path = "resources/images/for_start_window/images/morning"
 
 
     elif 11 <= current_hour < 17:
+        time_of_day = "день"
         target_label.setText("Добрый день")
         folder_path = "resources/images/for_start_window/images/day"
 
     elif 17 <= current_hour < 21:
+        time_of_day = "вечер"
         target_label.setText("Добрый вечер")
         folder_path = "resources/images/for_start_window/images/evening"
 
     else:
+        time_of_day = "ночь"
         target_label.setText("Доброй ночи")
         folder_path = "resources/images/for_start_window/images/night"
+
+    debug_log(f"Текущее время {current_hour} часа ({time_of_day})")
 
     img_path = get_random_image_from_folder(folder_path)
     path_bg_loading = Path(f'{img_path}')

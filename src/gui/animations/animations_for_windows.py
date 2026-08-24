@@ -1,17 +1,25 @@
 from PyQt6.QtCore import (QPropertyAnimation,QEasingCurve)
-from PyQt6.QtWidgets import QGraphicsOpacityEffect
+from PyQt6.QtWidgets import QGraphicsOpacityEffect, QWidget
 
 from utils.output_rich import debug_log
 
 
-def animationAppearanceWindow(widget, duration: int = 700,
-easing: QEasingCurve.Type = QEasingCurve.Type.OutCubic) -> QPropertyAnimation:
+def animation_appearance_window(widget: QWidget, duration: int = 700,
+    easing: QEasingCurve.Type = QEasingCurve.Type.OutCubic) -> QPropertyAnimation:
     """
-    анимация появления окна (увеличение прозрачности)
-    :param widget:
-    :param duration:
-    :param easing:
-    :return: QPropertyAnimation
+    Анимация появления окна (увеличение прозрачности от 0 до 1)
+
+    :param widget: Принимает имя виджета, для которого нужно сделать анимацию появления
+
+    :param duration: Принимает значение времени анимации
+
+    :param easing: Принимает тип кривой ускорения
+    (тип кривой определят скорость изменения свойств функции - по аналогии с
+    математическими функциями - линейная, кубическая и др. + специальные). Также может
+    определять, когда именно это ускорение применяется - в начале или в конце анимации.
+
+    :return: QPropertyAnimation - созданный объект анимации для управления её ходом
+         (остановка, пауза, изменение параметров)
     """
 
     opacity_effect = widget.graphicsEffect()
@@ -28,17 +36,29 @@ easing: QEasingCurve.Type = QEasingCurve.Type.OutCubic) -> QPropertyAnimation:
 
     widget.appearance_animation = animation_appearance
 
+    debug_log(f"Запуск анимации появления окна ({widget.objectName() or widget.__class__.__name__})")
+
     return animation_appearance
 
-def animationDisappearanceWindow(widget, duration: int = 450,
-easing: QEasingCurve.Type = QEasingCurve.Type.InCubic, callback=None) -> QPropertyAnimation:
+def animation_disappearance_window(widget: QWidget, duration: int = 450,
+    easing: QEasingCurve.Type = QEasingCurve.Type.InCubic, callback = None) \
+        -> QPropertyAnimation:
     """
-    анимация плавного исчезания окна (уменьшение прозрачности)
-    :param widget:
-    :param duration:
-    :param easing:
-    :param callback:
-    :return: QPropertyAnimation
+    Анимация плавного исчезания окна (уменьшение прозрачности от 1 до 0)
+
+    :param widget: Принимает имя виджета, для которого нужно сделать анимацию исчезания
+
+    :param duration: Принимает значение времени, которое отведено анимации
+
+    :param easing: Принимает тип кривой ускорения
+    (тип кривой определят скорость изменения свойств функции - по аналогии с
+    математическими функциями - линейная, кубическая и др. + специальные). Также может
+    определять, когда именно это ускорение применяется - в начале или в конце анимации.
+
+    :param callback: Функция, вызываемая после завершения анимации. Опционально.
+
+    :return: QPropertyAnimation - созданный объект анимации для управления её ходом
+         (остановка, пауза, изменение параметров)
     """
 
     opacity_effect = widget.graphicsEffect()
@@ -57,25 +77,39 @@ easing: QEasingCurve.Type = QEasingCurve.Type.InCubic, callback=None) -> QProper
 
     animation_disappearance.start()
 
+    debug_log(f"Запуск анимации исчезания окна ({widget.objectName() or widget.__class__.__name__})")
+
     return animation_disappearance
 
-def animationDindisappearanceAndClosing(widget, duration: int = 450) -> None:
+def animation_disappearance_and_closing(widget: QWidget, duration: int = 450) -> None:
     """
-    функция для создания анимации плавного исчезания окна и его закрытия
-    :param widget:
-    :param duration:
+    Функция для создания анимации плавного исчезания окна и его закрытия
+
+    :param widget: Принимает имя виджета, который нужно закрыть с анимацией исчезания
+
+    :param duration: Время, за которое виджет должен полностью стать прозрачным
+
     :return: None
     """
 
-    def closeWindow():
+    def close_window() -> None:
+        """
+        Функция для закрытия окна (виджета, который принимает функция).
+
+        :return: None
+        """
+
         widget.close()
-        debug_log("Закрытие загрузочного окна")
+        debug_log(f"Закрытие окна ({widget.objectName() or widget.__class__.__name__})")
+
         if hasattr(widget, 'closed'):
             widget.closed.emit()
+
         widget.deleteLater()
 
-    widget.close_animation = animationDisappearanceWindow(
+    # Вызов функции исчезания виджета с последующим закрытием
+    widget.close_animation = animation_disappearance_window(
         widget,
         duration=duration,
-        callback=closeWindow
+        callback=close_window
     )
