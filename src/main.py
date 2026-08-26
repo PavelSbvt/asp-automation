@@ -24,7 +24,9 @@ def main() -> None:
     icon_path = Path('resources/images/icons/icon_pdf_maker_255_size.ico')
     app.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
     loading_win = MyLoadingWindow()
-    loading_win.show()
+
+    if settings.get_flag_show_loading_window():
+        loading_win.show()
 
     main_win = MainWindow()
 
