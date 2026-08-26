@@ -76,6 +76,25 @@ class SettingsManager:
             success_log("Настройки получены")
             return settings_data
 
+    def read_one_param(self, param_name: str):
+        """
+        Функция для чтения из файла настроек только одного параметра
+
+        :param param_name: принимает имя параметра из настроек, по которому будет искать значение
+
+        :return: param_value
+        """
+
+        debug_log(f"Получение '{param_name}' из настроек.")
+        if not self.config_path.exists():
+            warning_log(f"Файл с настройками не найден: {self.config_path}")
+            return "Неизвестно"
+
+        with open(self.config_path, 'r', encoding='utf-8') as file:
+            settings_data = json.load(file)
+            param_value = settings_data.get(f"{param_name}", "Неизвестно")
+            return param_value
+
     def rewrite_settings(self) -> None:
         """
         Функция для перезаписи файла с настройками.
@@ -244,7 +263,8 @@ class SettingsManager:
         """
 
         self.loading_window_timer_duration = loading_window_timer_duration
-        self.update_settings_param("loading_window_timer", loading_window_timer_duration)
+        self.update_settings_param("loading_window_timer",
+            loading_window_timer_duration)
 
     def get_loading_window_timer_duration(self) -> int:
         """
@@ -293,7 +313,8 @@ class SettingsManager:
 
     def check_appname_and_appversion(self) -> None:
         """
-        Функция для проверки соответствия стандартным значениям (значения атрибутов класса - стандартные)
+        Функция для проверки соответствия стандартным значениям
+        (значения атрибутов класса - стандартные)
         имени приложения и версии - потому, что они не должны отличаться от стандартных.
 
         :return: None
@@ -311,11 +332,30 @@ class SettingsManager:
 
         if app_name != standard_app_name:
             self.update_settings_param("app_name", standard_app_name)
-            debug_log(f"Имя приложения в файле настроек изменено с {app_name} на {standard_app_name}")
+            debug_log(f"Имя приложения в файле настроек изменено "
+                f"с {app_name} на {standard_app_name}")
 
         if app_version != standard_app_version:
             self.update_settings_param("version", standard_app_version)
-            debug_log(f"Версия приложения в файле настроек изменено с {app_version} на {standard_app_version}")
+            debug_log(f"Версия приложения в "
+                f"файле настроек изменено с {app_version} на {standard_app_version}")
+
+    def get_flag_show_loading_window(self):
+        """
+        Функция для проверки разрешения приложения на показ загрузочного окна
+
+        :return: None
+        """
+
+        flag_show = self.read_one_param("flag_show_loading_window")
+        if flag_show:
+            debug_log("Показ загрузочного окна разрешён")
+        else:
+            debug_log("Показ загрузочного она запрещен")
+
+        return flag_show
+
+
 
 settings = SettingsManager()
 
