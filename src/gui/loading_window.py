@@ -1,7 +1,6 @@
 from pathlib import Path
 
 from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
-from PyQt6.QtGui import QFontDatabase, QFont
 from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame)
 
 from utils.output_rich import enter_log, debug_log
@@ -12,6 +11,7 @@ from utils.functions_for_window_gui import (center_window,
 from utils.citations import get_citation_with_author
 from core.settings_manager import settings
 from utils.update_gui import update_progress_bar_animation
+from utils.fonts import fonts
 
 
 
@@ -30,37 +30,6 @@ class MyLoadingWindow(QWidget):
         super().__init__()
 
         self.setObjectName("loading_window")
-
-        # Добавляю новые семейства шрифтов из ресурсов проекта.
-        front_Inter_italic_path = Path("resources/fonts/Inter/"
-                                       "Inter-Italic-VariableFont_opsz,wght.ttf")
-        font_Inter_path = Path("resources/fonts/Inter/Inter-VariableFont_opsz,wght.ttf")
-
-        font_Inter_italic_id = (
-            QFontDatabase.addApplicationFont(front_Inter_italic_path.as_posix()))
-        font_Inter_id = QFontDatabase.addApplicationFont(font_Inter_path.as_posix())
-
-        self.font_family_Inter = (
-            QFontDatabase.applicationFontFamilies(font_Inter_id))[0]
-        self.font_family_Inter_italic = (
-            QFontDatabase.applicationFontFamilies(font_Inter_italic_id))[0]
-
-        font_Playfair_Display_path = (
-            Path("resources/fonts/Playfair_Display/"
-                 "PlayfairDisplay-VariableFont_wght.ttf"))
-        font_Playfair_Display_italic_path = (
-            Path("resources/fonts/Playfair_Display/"
-                 "PlayfairDisplay-Italic-VariableFont_wght.ttf"))
-
-        font_Playfair_Display_id = (
-            QFontDatabase.addApplicationFont(font_Playfair_Display_path.as_posix()))
-        font_Playfair_Display_italic_id = (
-            QFontDatabase.addApplicationFont(font_Playfair_Display_italic_path.as_posix()))
-
-        self.font_family_Playfair_Display = (
-            QFontDatabase.applicationFontFamilies(font_Playfair_Display_id))[0]
-        self.font_family_Playfair_Display_italic = (
-            QFontDatabase.applicationFontFamilies(font_Playfair_Display_italic_id))[0]
 
         self.drag_position: QPoint = QPoint()
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
@@ -87,13 +56,13 @@ class MyLoadingWindow(QWidget):
         self.loading_window.setFixedSize(390,500)
         self.loading_window.move(380,10)
 
-        debug_log("Вывод сообщения о сообщения о загрузке ('Приложение загружается...')")
+        debug_log("Вывод сообщения о загрузке приложения ('Приложение загружается...')")
 
         # Сообщение о загрузке
         self.lb_blс_m_load = QLabel(self)
         self.lb_blс_m_load.setText("Приложение загружается, подождите, пожалуйста...")
         self.lb_blс_m_load.setStyleSheet("color: rgb(169, 183, 198);")
-        self.lb_blс_m_load.setFont(QFont(self.font_family_Inter, 10))
+        self.lb_blс_m_load.setFont(fonts.get_qfont("Inter", 10))
         self.lb_blс_m_load.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.lb_blс_m_load.setGeometry(0, 490, 370, 30)
         self.lb_blс_m_load.setWordWrap(True)
@@ -109,11 +78,11 @@ class MyLoadingWindow(QWidget):
 
         # Название приложения
         self.block_app_name = QLabel(self)
-        self.block_app_name.setStyleSheet("color: white; font: bold;")
-        self.block_app_name.setFont(QFont(self.font_family_Playfair_Display, 30))
+        self.block_app_name.setStyleSheet("color: rgba(253,251,212, 0.9); font: bold;")
+        self.block_app_name.setFont(fonts.get_qfont("Inter", 30))
         self.block_app_name.setText(f"{settings.get_app_name()}")
         self.block_app_name.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.block_app_name.setGeometry(50,0,370,50)
+        self.block_app_name.setGeometry(50,5,370,50)
 
         # фон текста
         self.background_widget_text = QWidget(self)
@@ -121,19 +90,22 @@ class MyLoadingWindow(QWidget):
             "background-color: rgba(255, 255, 255, 0.03); border-radius: 10px;")
         self.background_widget_text.setFixedSize(360, 150)
         self.background_widget_text.move(10,60)
+
+        # Текст для краткого описания программы.
         self.label_text = QLabel(self.background_widget_text)
         self.label_text.setText("PDF_maker - приложение для "
             "автоматизации работы УПиАКВК, сборки и генерации pdf протоколов"
             " заседания экзаменационной комиссии по приему кандидатского экзамена")
         self.label_text.setWordWrap(True)
-        self.label_text.setFont(QFont(self.font_family_Inter, 12))
+        self.label_text.setStyleSheet("color: rgba(253,251,212, 0.85);")
+        self.label_text.setFont(fonts.get_qfont("Inter", 12))
         self.label_text.setGeometry(10,40, 340, 130)
         self.label_text.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         # Текст приветствия (меняется по времени суток)
         self.lb_hi_prog = QLabel(self)
         self.lb_hi_prog.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.lb_hi_prog.setFont(QFont(self.font_family_Playfair_Display, 20))
+        self.lb_hi_prog.setFont(fonts.get_qfont("Playfair_Display", 20))
         self.lb_hi_prog.setGeometry(10, 60, 370, 40)
 
         # Виджет для цитат
@@ -157,16 +129,19 @@ class MyLoadingWindow(QWidget):
         self.citation_label.setText(citation_text)
         self.citation_label.setWordWrap(True)
         self.citation_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
         if len(citation_text) < 37:
-            self.citation_label.setFont(QFont(self.font_family_Playfair_Display, 18))
+            self.citation_label.setFont(fonts.get_qfont("Playfair_Display", 18))
         elif len(citation_text) < 70:
-            self.citation_label.setFont(QFont(self.font_family_Playfair_Display, 14))
+            self.citation_label.setFont(fonts.get_qfont("Playfair_Display", 14))
         elif len(citation_text) < 150:
-            self.citation_label.setFont(QFont(self.font_family_Playfair_Display, 12))
+            self.citation_label.setFont(fonts.get_qfont("Playfair_Display", 12))
         else:
-            self.citation_label.setFont(QFont(self.font_family_Playfair_Display, 10))
+            self.citation_label.setFont(fonts.get_qfont("Playfair_Display", 10))
+
         self.citation_label.setStyleSheet("""
-            color: #E8E8E8;
+            color: rgba(253,251,212, 0.8);
+            font: bold;
             line-height: 1.7;
             font-weight: 300;
             padding: 5px;
@@ -187,14 +162,16 @@ class MyLoadingWindow(QWidget):
         self.citation_author_label.setText(author_text)
         self.citation_author_label.setWordWrap(True)
         self.citation_author_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+
         if len(author_text) < 40:
-            self.citation_author_label.setFont(QFont(self.font_family_Inter, 12))
+            self.citation_author_label.setFont(fonts.get_qfont("Inter", 12))
         elif len(author_text) < 80:
-            self.citation_author_label.setFont(QFont(self.font_family_Inter, 10))
+            self.citation_author_label.setFont(fonts.get_qfont("Inter", 10))
         elif len(author_text) > 120:
-            self.citation_author_label.setFont(QFont(self.font_family_Inter, 6))
+            self.citation_author_label.setFont(fonts.get_qfont("Inter", 6))
         else:
-            self.citation_author_label.setFont(QFont(self.font_family_Inter, 8))
+            self.citation_author_label.setFont(fonts.get_qfont("Inter", 8))
+
         self.citation_author_label.setStyleSheet("""
             color: #42A5F5;
             font-weight: 400;
@@ -245,12 +222,16 @@ class MyLoadingWindow(QWidget):
 
         animation_appearance_window(self, duration = 700)
 
-        debug_log("Запуск таймера на 3 секунды, после чего окна закроется")
+        timer_time = settings.get_loading_window_timer_duration() / 1000
 
+        debug_log(f"Запуск таймера на {timer_time:.2f} сек., после чего окна закроется")
+
+        # Основной таймер работы загрузочного окна
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.start_closing)
         self.timer.start(settings.get_loading_window_timer_duration())
 
+        # Центрирование окна
         center_window(self)
 
         # Таймер для запуска анимации градиента
