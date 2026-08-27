@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
-from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame)
+from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame, QPushButton)
 
 from utils.output_rich import enter_log, debug_log
 from gui.animations.animations_for_windows import (animation_appearance_window,
@@ -52,9 +52,12 @@ class MyLoadingWindow(QWidget):
         self.widget_gradient.move(0,0)
 
         # фото
-        self.loading_window = QWidget(self)
+        self.loading_window = QPushButton(self)
         self.loading_window.setFixedSize(390,500)
         self.loading_window.move(380,10)
+        self.loading_window.setCursor(Qt.CursorShape.PointingHandCursor)
+
+        self.loading_window.clicked.connect(self.loading_window_img_click)
 
         debug_log("Вывод сообщения о загрузке приложения ('Приложение загружается...')")
 
@@ -270,6 +273,26 @@ class MyLoadingWindow(QWidget):
         self.change_color_direction = 1
 
         self.gradient_timer.timeout.connect(lambda: update_animation_gradient(self))
+
+    def loading_window_img_click(self) -> None:
+        """
+        Функция для смены фонового изображения загрузочного окна по кнопке (изображение
+        является кнопкой). Ещё раз запускает функцию выбора случайного изображения на
+        фон загрузочного окна и обновляет главные цвета изображения, которые передадутся
+        функции обновления градиента.
+
+        :return: None
+        """
+
+        debug_log("нажата кнопка изменения фонового изображения загрузочного окна")
+
+        background_window_by_time_of_day(self.lb_hi_prog, self.loading_window)
+
+        self.current_r, self.current_g, self.current_b \
+            = background_window_by_time_of_day(self.lb_hi_prog, self.loading_window)
+
+        debug_log("Фоновое изображение загрузочного окна изменено, "
+            "цвета фонового градиента изменены.")
 
     def start_closing(self) -> None:
         """
