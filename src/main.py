@@ -6,12 +6,12 @@ from PyQt6.QtGui import QIcon
 
 from gui.loading_window import MyLoadingWindow
 from gui.pyqt6_code import MainWindow
-from utils.output_rich import enter_log, exit_log
+from utils.output_rich import enter_log, exit_log, debug_log
 from utils.functions_for_window_gui import load_cached_data
 from core.settings_manager import settings
 
 
-def main() -> None:
+def start_with_loading_window() -> None:
     """
     Функция-связка для показа загрузочного и основного окон приложения.
     Запускает показа загрузочного окна приложения и про его закрытии показывает
@@ -20,13 +20,10 @@ def main() -> None:
     :return: None
     """
 
-    app = QApplication(sys.argv)
-    icon_path = Path('resources/images/icons/icon_pdf_maker_255_size.ico')
-    app.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
+    debug_log("Запуск приложения с загрузочным окном")
     loading_win = MyLoadingWindow()
 
-    if settings.get_flag_show_loading_window():
-        loading_win.show()
+    loading_win.show()
 
     main_win = MainWindow()
 
@@ -46,8 +43,32 @@ def main() -> None:
         enter_log("Показ главного окна")
 
     loading_win.closed.connect(on_loading_closed)
-    sys.exit(app.exec())
+
+def start_without_loading_window() -> None:
+    """
+    Функция для запуска приложения буз загрузочного окна
+
+    :return: None
+    """
+
+    debug_log("Запуск приложения без загрузочного окна")
+    main_win = MainWindow()
+
+    load_cached_data(main_win)
+
+    enter_log("Показ главного окна")
+    main_win.show()
 
 if __name__ == "__main__":
     settings.print_settings()
-    main()
+
+    app = QApplication(sys.argv)
+    icon_path = Path('resources/images/icons/icon_pdf_maker_255_size.ico')
+    app.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
+
+    if settings.get_flag_show_loading_window():
+        start_with_loading_window()
+    else:
+        start_without_loading_window()
+
+    sys.exit(app.exec())
