@@ -5,7 +5,7 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 
 from gui.loading_window import MyLoadingWindow
-from gui.pyqt6_code import MainWindow
+from gui.old_main_window import MainWindow
 from utils.output_rich import enter_log, exit_log, debug_log
 from utils.functions_for_window_gui import load_cached_data
 from core.settings_manager import settings

@@ -454,7 +454,7 @@ class MainWindow(QWidget):
             }
         """)
 
-        # виджет, используемый для фона для ралиокнопок выбора семестра и лейбла
+        # виджет, используемый для фона для радиокнопок выбора семестра и лейбла
         background_widget_for_choosing_term = QWidget(tab_3)
         background_widget_for_choosing_term.setFixedSize(300, 200)
         background_widget_for_choosing_term.setStyleSheet(
