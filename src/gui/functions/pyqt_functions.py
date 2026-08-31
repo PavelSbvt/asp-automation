@@ -21,8 +21,9 @@ def parsing(self) -> None:
     self.stop_generation = False
     self.stop_parsing_button.setVisible(True)
     self.stop_parsing_button.setEnabled(True)
-    self.parsing_button.setVisible(False)
-    self.parsing_button.setEnabled(False)
+    self.run_button.setVisible(False)
+    self.run_button.setEnabled(False)
+    self.progress_bar_parsing.setVisible(True)
 
     try:
         print("[I] Проверяю наличие файлов...")
@@ -218,6 +219,7 @@ def parsing(self) -> None:
         self.stop_generation = False
         self.stop_parsing_button.setVisible(False)
         self.stop_parsing_button.setEnabled(False)
-        self.parsing_button.setVisible(True)
-        self.parsing_button.setEnabled(True)
+        self.progress_bar_parsing.setVisible(False)
+        self.run_button.setVisible(True)
+        self.run_button.setEnabled(True)
         print("[I] Состояние кнопок восстановлено")

@@ -85,7 +85,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
             )
             self.stop_generation = False
             self.stop_parsing_button.setVisible(False)
-            self.parsing_button.setVisible(True)
+            self.run_button.setVisible(True)
             self.progress_bar_parsing.setValue(processed_count)
             QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
             return

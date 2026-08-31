@@ -2,6 +2,8 @@ import os
 
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
+from utils.output_rich import success_log, debug_log, warning_log
+
 
 def choose_parsing_save_folder(self) -> None:
     """
@@ -39,7 +41,9 @@ def open_parsing_pdf_folder(self) -> None:
 
 def choose_universal_excel(self) -> None:
     """
-    выбор универсальной таблицы
+    Функция для выбора файла "универсальной" таблицы и сохранения его
+    пути в атрибут класса главного окна
+
     :return: None
     """
 
@@ -49,26 +53,29 @@ def choose_universal_excel(self) -> None:
         "",
         "Excel files (*.xlsx *.xls);;All files (*.*)"
     )
-    # если пользователь выбрал файл
+
     if file_path:
-        # Сохраняем путь в атрибут класса
         self.universal_file_path = file_path
-        selected_file = file_path
 
-        # Обновляем label (показываем имя файла)
-        if len(f"{os.path.basename(file_path)}") > 30:
-            self.universal_excel_label.setStyleSheet(
-                "font-size: 12px; color: white; background-color: rgb(105,208,73);")
-            self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
-        else:
-            self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
-            self.universal_excel_label.setStyleSheet(
-                "font-size: 14px; color: white; background-color: rgb(105,208,73);")
+        # # Обновление label (показ имени выбранного файла)
+        # if len(f"{os.path.basename(file_path)}") > 30:
+        #     self.universal_excel_label.setStyleSheet(
+        #         "font-size: 12px; color: white; background-color: rgb(105,208,73);")
+        #     self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
+        #
+        # else:
+        #     self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
+        #     self.universal_excel_label.setStyleSheet(
+        #         "font-size: 14px; color: white; background-color: rgb(105,208,73);")
 
-        # return selected_file
+        self.universal_excel_label.setText(f"{file_path}")
 
-        # Выводим в лог
-        print(f"[I] Выбран файл: {file_path}")
+        self.universal_excel_label.setStyleSheet(
+            "font: bold; padding: 15px;"
+            "color: white; background-color: rgb(105,208,73);"
+        )
+
+        success_log(f"Выбран файл универсальной таблицы: {file_path}")
 
 def choose_history_excel(self) -> None:
     """
