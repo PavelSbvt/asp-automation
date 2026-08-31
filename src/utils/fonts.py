@@ -30,6 +30,8 @@ class FontManager:
             debug_log("Инициализация шрифтов...")
 
             # Добавляю новые семейства шрифтов из ресурсов проекта.
+
+            # Inter и Inter italic
             font_Inter_italic_path = Path("resources/fonts/Inter/"
                 "Inter-Italic-VariableFont_opsz,wght.ttf")
             font_Inter_path = Path("resources/fonts/Inter/"
@@ -44,6 +46,7 @@ class FontManager:
             self.font_family_Inter_italic = (
                 QFontDatabase.applicationFontFamilies(font_Inter_italic_id))[0]
 
+            # Playfair_Display и Playfair_Display italic
             font_Playfair_Display_path = (
                 Path("resources/fonts/Playfair_Display/"
                      "PlayfairDisplay-VariableFont_wght.ttf"))
@@ -63,6 +66,22 @@ class FontManager:
                 QFontDatabase.applicationFontFamilies(
                     font_Playfair_Display_italic_id))[0]
 
+            # JetBrainsMono Regular
+            font_JetBrains_Regular_path = Path("resources/fonts/JetBrains/"
+                                          "JetBrainsMonoNL-Regular.ttf")
+            font_JetBrains_Regular_id = (
+                QFontDatabase.addApplicationFont(font_JetBrains_Regular_path.as_posix()))
+            self.font_JetBrains_Regular = (
+                QFontDatabase.applicationFontFamilies(font_JetBrains_Regular_id))[0]
+
+            # JetBrainsMono Medium
+            font_JetBrainsMono_Medium_path = Path("resources/fonts/JetBrains/"
+                                          "JetBrainsMono-Medium.ttf")
+            font_JetBrainsMono_Medium_id = (
+                QFontDatabase.addApplicationFont(font_JetBrainsMono_Medium_path.as_posix()))
+            self.font_JetBrainsMono_Medium = (
+                QFontDatabase.applicationFontFamilies(font_JetBrainsMono_Medium_id))[0]
+
 
             self.initialized = True
 
@@ -81,6 +100,10 @@ class FontManager:
             return self.font_family_Inter
         elif font_name == "Playfair_Display":
             return self.font_family_Playfair_Display
+        elif font_name == "JetBrains_Regular":
+            return self.font_JetBrains_Regular
+        elif font_name == "JetBrains_Medium":
+            return self.font_JetBrainsMono_Medium
         else:
             warning_log(f"Передано неправильное имя шрифта: {font_name}")
             debug_log("Применён стандартный шрифт 'Inter'")
