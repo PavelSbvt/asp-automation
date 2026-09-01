@@ -63,7 +63,7 @@ class MainWindow(QMainWindow):
 
         # Главный виджет
         self.main_back_widget = QWidget(self)
-        self.main_back_widget.setStyleSheet("background-color: #2B2D30; border-radius: 0px;")
+        self.main_back_widget.setStyleSheet(f"background-color: {style.background_color}; border-radius: 0px;")
         self.setCentralWidget(self.main_back_widget)
 
         # Главный вертикальный layout
@@ -72,9 +72,9 @@ class MainWindow(QMainWindow):
 
         # Работа с вкладками
         self.tab_widget = QTabWidget()
-        self.tab_widget.setFont(fonts.get_qfont("Inter", 10))
+        self.tab_widget.setFont(fonts.get_qfont("JetBrains_Regular", 10))
         self.tab_widget.setStyleSheet(
-            "color: rgba(253,251,212, 1);"
+            f"color: {style.light_font_color};"
         )
 
         # Вкладки
@@ -102,22 +102,22 @@ class MainWindow(QMainWindow):
         self.app_name_button = QPushButton()
         self.app_name_button.setText(settings.get_app_name())
         self.app_name_button.setFont(fonts.get_qfont("JetBrains_Regular", 14))
-        self.app_name_button.setStyleSheet("""
-            QPushButton {
+        self.app_name_button.setStyleSheet(f"""
+            QPushButton {{
                 background: transparent;
-                color: rgba(253,251,212, 1);
+                color: {style.light_font_color};
                 border: none;
                 border-radius: 4px;
                 padding: 6px 10px;
                 font-size: 15px;
-            }
-            QPushButton:hover {
+            }}
+            QPushButton:hover {{
                 background: #4a4a4a;
                 color: #6C5CE7;
-            }
-            QPushButton:pressed {
+            }}
+            QPushButton:pressed {{
                 background: #3a3a3a;
-            }
+            }}
         """)
         self.app_name_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.app_name_button.clicked.connect(self.app_name_clicked)
@@ -146,63 +146,46 @@ class MainWindow(QMainWindow):
         self.settings_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.settings_button.clicked.connect(self.open_settings_tab)
 
-        self.run_button = QPushButton(">")
-        self.run_button.setStyleSheet("""
-            QPushButton {
-                background: #3c8d4a;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 8px 20px;
-                font-weight: bold;
-                font-size: 13px;
-            }
-            QPushButton:hover {
-                background: #4ca85a;
-            }
-            QPushButton:pressed {
-                background: #2d6e38;
-            }
+        run_button_path = Path("resources/images/icons/run_button.png")
+        run_button_hover_path = Path("resources/images/icons/run_button_hover.png")
+
+        self.run_button = QPushButton()
+        self.run_button.setFixedSize(30,31)
+        self.run_button.setStyleSheet(f"""
+            QPushButton {{
+                background-image: url({run_button_path.as_posix()});
+            }}
+            QPushButton:hover {{
+                background-image: url({run_button_hover_path.as_posix()});
+            }}
+            QPushButton:pressed {{
+                background-image: url({run_button_hover_path.as_posix()});
+            }}
         """)
         self.run_button.clicked.connect(self.run)
 
-        self.stop_parsing_button = QPushButton("ll")
-        self.stop_parsing_button.setStyleSheet("""
-                    QPushButton {
-                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 rgba(255, 80, 80, 180),
-                            stop: 0.3 rgba(220, 50, 50, 200),
-                            stop: 0.7 rgba(180, 30, 30, 220),
-                            stop: 1 rgba(140, 15, 15, 240));
-                        color: white;
-                        border: 1px solid rgba(255, 150, 150, 100);
-                        border-radius: 10px;
-                        font-size: 14px;
-                        font-weight: bold;
-                        padding: 8px 20px;
-                    }
-                    QPushButton:hover {
-                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 rgba(255, 100, 100, 200),
-                            stop: 0.3 rgba(240, 70, 70, 220),
-                            stop: 0.7 rgba(200, 40, 40, 240),
-                            stop: 1 rgba(160, 20, 20, 255));
-                        border: 1px solid rgba(255, 200, 200, 150);
-                    }
-                    QPushButton:pressed {
-                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 rgba(120, 10, 10, 255),
-                            stop: 1 rgba(80, 5, 5, 255));
-                        padding-top: 6px;
-                        padding-bottom: 4px;
-                    }
-                    QPushButton:disabled {
+        stop_button_path = Path("resources/images/icons/stop_button_hover.png")
+        stop_button_hover_path = Path("resources/images/icons/stop_button_hover.png")
+
+        self.stop_parsing_button = QPushButton()
+        self.stop_parsing_button.setFixedSize(30,31)
+        self.stop_parsing_button.setStyleSheet(f"""
+                    QPushButton {{
+                        background-image: url({stop_button_path.as_posix()});
+                    }}
+                    QPushButton:hover {{
+                        background-image: url({stop_button_hover_path.as_posix()});
+                    }}
+                    QPushButton:pressed {{
+                        background-image: url({stop_button_path.as_posix()});
+                    }}
+                    QPushButton:disabled {{
                         background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
                             stop: 0 rgba(100, 50, 50, 120),
                             stop: 1 rgba(70, 35, 35, 160));
                         color: rgba(200, 200, 200, 120);
                         border: 1px solid rgba(100, 50, 50, 80);
-                    }
+                    }}
                 """
         )
         self.stop_parsing_button.clicked.connect(self.stop_generation_process)
@@ -223,7 +206,7 @@ class MainWindow(QMainWindow):
         self.widget_bg_main_tab = QWidget(tab_main_widget)
 
         self.widget_bg_main_tab.setMinimumHeight(200)
-        self.widget_bg_main_tab.setMaximumWidth(1400)
+        self.widget_bg_main_tab.setMaximumWidth(1900)
 
         self.get_bg_for_main_tab_widget("resources/images/for_main_window")
 
@@ -237,8 +220,6 @@ class MainWindow(QMainWindow):
         bg_layout.addWidget(label)
         self.widget_bg_main_tab.setLayout(bg_layout)
 
-
-
         bg_main_tab_layout = QHBoxLayout()
         bg_main_tab_layout.addWidget(self.widget_bg_main_tab)
 
@@ -250,26 +231,36 @@ class MainWindow(QMainWindow):
                 border: none;
             }
             QScrollBar:vertical {
-                background: rgba(43, 43, 43, 180);
+                background: #1E1F22;
                 width: 12px;
                 border-radius: 6px;
             }
             QScrollBar::handle:vertical {
-                background: rgba(100, 140, 65, 180);
+                background: #4D4E51;
                 border-radius: 6px;
                 min-height: 30px;
             }
             QScrollBar::handle:vertical:hover {
-                background: rgba(100, 200, 70, 200);
+                background: #7A7B7E;
             }
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
                 height: 0px;
             }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: transparent; 
+            }
         """)
 
+        horizontal_windget_for_position = QHBoxLayout()
+
         container_widget_main_tab = QWidget()
+
+        horizontal_windget_for_position.addWidget(container_widget_main_tab)
+
+        # container_widget_main_tab.setMaximumWidth(750)
         container_layout_main_tab = QVBoxLayout(container_widget_main_tab)
-        container_widget_main_tab.setStyleSheet("background-color: #1E1F22;")
+        container_widget_main_tab.setStyleSheet(
+            f"background-color: {style.background_dark_color}; border-radius: 10px;")
 
         main_tab_scroll_area.setWidget(container_widget_main_tab)
 
@@ -321,7 +312,7 @@ class MainWindow(QMainWindow):
         self.radio_buttons_background.setFixedHeight(200)
         self.radio_buttons_background.setFixedWidth(350)
         self.radio_buttons_background.setStyleSheet(
-            "background-color: #2B2D30; border-radius: 10px;"
+            f"background-color: {style.background_color}; border-radius: 10px;"
             )
 
         radio_buttons_vertical_layout = QVBoxLayout()
@@ -330,7 +321,7 @@ class MainWindow(QMainWindow):
         self.label_for_radio_buttons = QLabel()
         self.label_for_radio_buttons.setText("Выберите семестр:")
         self.label_for_radio_buttons.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_for_radio_buttons.setStyleSheet("color: rgba(253,251,212, 1); margin: 10px; font-weight: bold;")
+        self.label_for_radio_buttons.setStyleSheet(f"color: {style.light_font_color}; margin: 10px; font-weight: bold;")
         self.label_for_radio_buttons.setFont(fonts.get_qfont("JetBrains_Regular", 14))
 
         radio_buttons_vertical_layout.addWidget(self.label_for_radio_buttons)
@@ -425,7 +416,7 @@ class MainWindow(QMainWindow):
 
         self.widget_for_choose_files_commission = QWidget()
         self.widget_for_choose_files_commission.setStyleSheet(
-            "background-color: #2B2D30; border-radius: 10px;"
+            f"background-color: {style.background_color}; border-radius: 10px;"
         )
         self.widget_for_choose_files_commission.setFixedHeight(200)
         self.widget_for_choose_files_commission.setFixedWidth(350)
@@ -441,7 +432,7 @@ class MainWindow(QMainWindow):
         # кнопка для выбора .xlsx файла - таблицы с данными "универсальной таблицы"
         self.btn_choose_universal_xl = QPushButton(
             "Выберите таблицу для парсинга")
-        self.btn_choose_universal_xl.setFixedHeight(35)
+        self.btn_choose_universal_xl.setFixedHeight(50)
         self.btn_choose_universal_xl.setMaximumWidth(330)
         self.btn_choose_universal_xl.setStyleSheet(style.button_blue_style)
         self.btn_choose_universal_xl.setFont(fonts.get_qfont("JetBrains_Regular", 10))
@@ -452,13 +443,13 @@ class MainWindow(QMainWindow):
         vertical_layout_for_choosing_files.addWidget(self.btn_choose_universal_xl)
 
         self.universal_excel_label = QLabel()
-        self.universal_excel_label.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+        self.universal_excel_label.setFont(fonts.get_qfont("JetBrains_Light", 8))
         self.universal_excel_label.setMaximumHeight(120)
         self.universal_excel_label.setText("Имя файла универсальной таблицы")
         self.universal_excel_label.setStyleSheet(
-            "color: white;"
-            "background-color: #1E1F22;"
-            "padding: 15px;"
+            f"color: {style.dark_font_color};"
+            f"background-color: {style.background_dark_color};"
+            f"padding: 10px;"
         )
         self.universal_excel_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.universal_excel_label.setWordWrap(True)
@@ -472,7 +463,7 @@ class MainWindow(QMainWindow):
         widget_for_choose_commission_file.setMaximumWidth(730)
         widget_for_choose_commission_file.setMinimumHeight(150)
         widget_for_choose_commission_file.setStyleSheet(
-            "background-color: #2B2D30; border-radius: 10px;"
+            f"background-color: {style.background_color}; border-radius: 10px;"
         )
 
         vertical_layout_for_chose_doc_files = QVBoxLayout()
@@ -493,10 +484,13 @@ class MainWindow(QMainWindow):
           lambda: choose_history_excel(self))
 
         self.history_xl_choused_label = QLabel()
-        self.history_xl_choused_label.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+        self.history_xl_choused_label.setMinimumHeight(50)
+        self.history_xl_choused_label.setWordWrap(True)
+        self.history_xl_choused_label.setFont(fonts.get_qfont(
+            "JetBrains_Light", 10))
         self.history_xl_choused_label.setStyleSheet(
-            "color: rgb(211, 211, 211); font: bold;"
-            "background-color: #1E1F22; border-radius: 10px;"
+            f"color: {style.dark_font_color};"
+            f"background-color: {style.background_dark_color}; border-radius: 10px;"
         )
         self.history_xl_choused_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.history_xl_choused_label.setText(
@@ -516,10 +510,13 @@ class MainWindow(QMainWindow):
           lambda: choose_foreign_excel(self))
 
         self.foreign_xl_choosed_label = QLabel()
-        self.foreign_xl_choosed_label.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+        self.foreign_xl_choosed_label.setFont(fonts.get_qfont(
+            "JetBrains_Light", 10))
+        self.foreign_xl_choosed_label.setMinimumHeight(50)
+        self.foreign_xl_choosed_label.setWordWrap(True)
         self.foreign_xl_choosed_label.setStyleSheet(
-            "color: rgb(211, 211, 211); font: bold;"
-            "background-color: #1E1F22; border-radius: 10px;"
+            f"color: {style.dark_font_color};"
+            f"background-color: {style.background_dark_color}; border-radius: 10px;"
         )
         self.foreign_xl_choosed_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.foreign_xl_choosed_label.setText(
@@ -539,10 +536,13 @@ class MainWindow(QMainWindow):
             lambda: choose_specialization_excel(self))
 
         self.specialization_xl_choosed_lb = QLabel()
-        self.specialization_xl_choosed_lb.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+        self.specialization_xl_choosed_lb.setMinimumHeight(50)
+        self.specialization_xl_choosed_lb.setWordWrap(True)
+        self.specialization_xl_choosed_lb.setFont(fonts.get_qfont(
+            "JetBrains_Light", 10))
         self.specialization_xl_choosed_lb.setStyleSheet(
-            "color: rgb(211, 211, 211); font: bold;"
-            "background-color: #1E1F22; border-radius: 10px;"
+            f"color: {style.dark_font_color};"
+            f"background-color: {style.background_dark_color}; border-radius: 10px;"
         )
         self.specialization_xl_choosed_lb.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.specialization_xl_choosed_lb.setText(
@@ -554,10 +554,11 @@ class MainWindow(QMainWindow):
         self.time_update_label.setFixedWidth(220)
         self.time_update_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.time_update_label.setStyleSheet(
-            "color: rgb(211, 211, 211); background-color: #1E1F22;"
+            f"color: {style.dark_font_color}; "
+            f"background-color: {style.background_dark_color};"
         )
         self.time_update_label.setText("время последнего обновления")
-        self.time_update_label.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+        self.time_update_label.setFont(fonts.get_qfont("JetBrains_Light", 10))
 
         self.button_to_update_date = QPushButton()
         self.button_to_update_date.setText("Обновить данные")
@@ -571,7 +572,7 @@ class MainWindow(QMainWindow):
         self.label_info_last_update_cache = QLabel()
         self.label_info_last_update_cache.setText("Дата и время последнего обновления:")
         self.label_info_last_update_cache.setFont(fonts.get_qfont("JetBrains_Regular", 10))
-        self.label_info_last_update_cache.setStyleSheet("color: white;")
+        self.label_info_last_update_cache.setStyleSheet(f"color: {style.light_font_color};")
 
         # ======================================================================
 
@@ -635,10 +636,7 @@ class MainWindow(QMainWindow):
 
         container_layout_main_tab.addLayout(horizontal_widget_for_input_commission)
 
-        # tab_main_layout.addStretch()
-
         container_layout_main_tab.addLayout(horizontal_position_layout_for_center_poz)
-        # tab_main_layout.addWidget(widget_for_radio_buttons_and_choose_universal_excel)
 
         container_layout_main_tab.addLayout(horizontal_layout_for_widget_for_choose_commission_file)
 

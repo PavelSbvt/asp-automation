@@ -82,6 +82,22 @@ class FontManager:
             self.font_JetBrainsMono_Medium = (
                 QFontDatabase.applicationFontFamilies(font_JetBrainsMono_Medium_id))[0]
 
+            # JetBrainsMono Light
+            font_JetBrainsMono_Light_path = Path("resources/fonts/JetBrains/"
+                                                  "JetBrainsMono-Light.ttf")
+            font_JetBrainsMono_Light_id = (
+                QFontDatabase.addApplicationFont(font_JetBrainsMono_Light_path.as_posix()))
+            self.font_JetBrainsMono_Light = (
+                QFontDatabase.applicationFontFamilies(font_JetBrainsMono_Light_id))[0]
+
+            # JetBrainsMono LightItalic
+            font_JetBrainsMono_LightItalic_path = Path("resources/fonts/JetBrains/"
+                                                 "JetBrainsMono-Light.ttf")
+            font_JetBrainsMono_LightItalic_id = (
+                QFontDatabase.addApplicationFont(font_JetBrainsMono_LightItalic_path.as_posix()))
+            self.font_JetBrainsMono_LightItalic = (
+                QFontDatabase.applicationFontFamilies(font_JetBrainsMono_LightItalic_id))[0]
+
 
             self.initialized = True
 
@@ -104,6 +120,10 @@ class FontManager:
             return self.font_JetBrains_Regular
         elif font_name == "JetBrains_Medium":
             return self.font_JetBrainsMono_Medium
+        elif font_name == "JetBrains_Light":
+            return self.font_JetBrainsMono_Light
+        elif font_name == "JetBrains_LightItalic":
+            return self.font_JetBrainsMono_LightItalic
         else:
             warning_log(f"Передано неправильное имя шрифта: {font_name}")
             debug_log("Применён стандартный шрифт 'Inter'")

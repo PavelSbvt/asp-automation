@@ -57,29 +57,14 @@ def choose_universal_excel(self) -> None:
     if file_path:
         self.universal_file_path = file_path
 
-        # # Обновление label (показ имени выбранного файла)
-        # if len(f"{os.path.basename(file_path)}") > 30:
-        #     self.universal_excel_label.setStyleSheet(
-        #         "font-size: 12px; color: white; background-color: rgb(105,208,73);")
-        #     self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
-        #
-        # else:
-        #     self.universal_excel_label.setText(f"{os.path.basename(file_path)}")
-        #     self.universal_excel_label.setStyleSheet(
-        #         "font-size: 14px; color: white; background-color: rgb(105,208,73);")
-
         self.universal_excel_label.setText(f"{file_path}")
-
-        self.universal_excel_label.setStyleSheet(
-            "font: bold; padding: 15px;"
-            "color: white; background-color: rgb(105,208,73);"
-        )
 
         success_log(f"Выбран файл универсальной таблицы: {file_path}")
 
 def choose_history_excel(self) -> None:
     """
     выбор doc файла с таблицей, содержащей информацию и комиссии по истории
+
     :return: None
     """
 
@@ -91,21 +76,15 @@ def choose_history_excel(self) -> None:
     )
     if file_path:
         self.history_commission_path = file_path
-        # Обновляем label
-        short_name = os.path.basename(file_path)
-        if len(short_name) > 30:
-            self.history_xl_choused_label.setStyleSheet(
-                "font-size: 11px; color: white; background-color: rgb(105,208,73);")
-            self.history_xl_choused_label.setText(short_name)
-        else:
-            self.history_xl_choused_label.setText(short_name)
-            self.history_xl_choused_label.setStyleSheet(
-                "font-size: 13px; color: white; background-color: rgb(105,208,73);")
+
+        self.history_xl_choused_label.setText(file_path)
+
         print(f"[I] Выбран файл комиссии по истории: {file_path}")
 
 def choose_foreign_excel(self) -> None:
     """
     выбор doc файла с таблицей, содержащей информацию и комиссии по иностранному
+
     :return: None
     """
 
@@ -117,20 +96,15 @@ def choose_foreign_excel(self) -> None:
     )
     if file_path:
         self.foreign_commission_path = file_path
-        short_name = os.path.basename(file_path)
-        if len(short_name) > 30:
-            self.foreign_xl_choosed_label.setStyleSheet(
-                "font-size: 11px; color: white; background-color: rgb(105,208,73);")
-            self.foreign_xl_choosed_label.setText(short_name)
-        else:
-            self.foreign_xl_choosed_label.setText(short_name)
-            self.foreign_xl_choosed_label.setStyleSheet(
-                "font-size: 13px; color: white; background-color: rgb(105,208,73);")
+
+        self.foreign_xl_choosed_label.setText(file_path)
+
         print(f"[I] Выбран файл комиссии по иностранному: {file_path}")
 
 def choose_specialization_excel(self) -> None:
     """
     выбор doc файла с таблицей, содержащей информацию и комиссии по специальности
+
     :return: None
     """
 
@@ -142,15 +116,9 @@ def choose_specialization_excel(self) -> None:
     )
     if file_path:
         self.specialization_commission_path = file_path
-        short_name = os.path.basename(file_path)
-        if len(short_name) > 30:
-            self.specialization_xl_choosed_lb.setStyleSheet(
-                "font-size: 11px; color: white; background-color: rgb(105,208,73);")
-            self.specialization_xl_choosed_lb.setText(short_name)
-        else:
-            self.specialization_xl_choosed_lb.setText(short_name)
-            self.specialization_xl_choosed_lb.setStyleSheet(
-                "font-size: 13px; color: white; background-color: rgb(105,208,73);")
+
+        self.specialization_xl_choosed_lb.setText(file_path)
+
         print(f"[I] Выбран файл комиссии по специальности: {file_path}")
 
 def choose_save_folder_path(self) -> None:
