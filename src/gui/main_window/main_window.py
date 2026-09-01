@@ -20,6 +20,7 @@ from gui.functions.choose_files import (choose_universal_excel,
 from utils.fonts import fonts
 from gui.functions.pyqt_functions import parsing
 from gui.main_window.for_main_window.styles import style
+from parser.sait_parsing import update_data
 
 
 class MainWindow(QMainWindow):
@@ -549,6 +550,31 @@ class MainWindow(QMainWindow):
 
         # ======================================================================
 
+        self.time_update_label = QLabel()
+        self.time_update_label.setFixedWidth(220)
+        self.time_update_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.time_update_label.setStyleSheet(
+            "color: rgb(211, 211, 211); background-color: #1E1F22;"
+        )
+        self.time_update_label.setText("время последнего обновления")
+        self.time_update_label.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+
+        self.button_to_update_date = QPushButton()
+        self.button_to_update_date.setText("Обновить данные")
+        self.button_to_update_date.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.button_to_update_date.setFixedHeight(50)
+        self.button_to_update_date.setFixedWidth(200)
+        self.button_to_update_date.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button_to_update_date.setStyleSheet(style.button_blue_style)
+        self.button_to_update_date.clicked.connect(lambda: update_data(self))
+
+        self.label_info_last_update_cache = QLabel()
+        self.label_info_last_update_cache.setText("Дата и время последнего обновления:")
+        self.label_info_last_update_cache.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.label_info_last_update_cache.setStyleSheet("color: white;")
+
+        # ======================================================================
+
         horizontal_layout_for_widget_for_choose_commission_file.addWidget(
             widget_for_choose_commission_file)
 
@@ -578,6 +604,25 @@ class MainWindow(QMainWindow):
         self.radio_button_3.toggled.connect(
             lambda checked: self.on_semester_changed(checked, "specialization"))
 
+        widget_for_cache = QWidget()
+        widget_for_cache.setFixedWidth(730)
+        widget_for_cache.setFixedHeight(70)
+        widget_for_cache.setStyleSheet(
+            "background-color: #2B2D30; border-radius: 10px;"
+        )
+        horizontal_widget_layout_for_cache = QHBoxLayout()
+        widget_for_cache.setLayout(horizontal_widget_layout_for_cache)
+
+        # horizontal_widget_layout_for_cache.setSpacing(20)
+
+        horizontal_widget_layout_for_cache.addWidget(self.label_info_last_update_cache)
+        horizontal_widget_layout_for_cache.addWidget(self.time_update_label)
+        horizontal_widget_layout_for_cache.addStretch()
+        horizontal_widget_layout_for_cache.addWidget(self.button_to_update_date)
+
+
+
+
 
 
 
@@ -599,11 +644,20 @@ class MainWindow(QMainWindow):
 
         container_layout_main_tab.addStretch()
 
+        container_layout_main_tab.addWidget(widget_for_cache, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # container_layout_main_tab.addWidget(self.time_update_label)
+        # container_layout_main_tab.addWidget(self.button_to_update_date)
+
+        container_layout_main_tab.addStretch()
+
         container_layout_main_tab.addLayout(widgets_horizontal_main_tab_layout)
 
     def stop_generation_process(self) -> None:
         """
         Останавливает процесс генерации
+
+        :return: None
         """
 
         simple_log("Остановка процесса по запросу пользователя")

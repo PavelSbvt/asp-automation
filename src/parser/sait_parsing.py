@@ -229,7 +229,7 @@ def site_parce_dn() -> List[Tuple[str, str]]:
     """
 
     url = 'http://dn.tstu.ru/index.php/specialties'
-    response = requests.get(url, timeout=10)
+    response = requests.get(url, timeout=60)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, 'html.parser')
@@ -275,7 +275,7 @@ def site_parce_main() -> List[Tuple[str, str]]:
                   'application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
     }  # Имитируем браузер
-    response = requests.get(url, headers=headers, timeout=10)
+    response = requests.get(url, headers=headers, timeout=60)
     # Пытаемся получить ответ от сайта
     response.raise_for_status()
 
