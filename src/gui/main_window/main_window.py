@@ -73,12 +73,14 @@ class MainWindow(QMainWindow):
         self.main_v_layout = QVBoxLayout()
         self.main_back_widget.setLayout(self.main_v_layout)
 
+        self.main_image_color = "(211, 211, 211)"
+
         # Работа с вкладками
         self.tab_widget = QTabWidget()
         self.tab_widget.setFont(fonts.get_qfont("JetBrains_Regular", 10))
-        self.tab_widget.setStyleSheet(
-            f"color: {style.light_font_color};"
-        )
+        # self.tab_widget.setStyleSheet(
+        #     f"color: {style.light_font_color};"
+        # )
 
         # Вкладки
         tab_main_widget = QWidget()
@@ -740,19 +742,53 @@ class MainWindow(QMainWindow):
 
     def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
         """
+        Функция для смены фона виджета с фотографией в главной вкладке.
+        Выбирает случайный путь к изображению и передаёт его стилям qss, которые
+        устанавливают его на фон. Также по этому случайному изображению с помощью
+        функции get_main_color_image() вычисляется главный (средний по всему
+        изображению) цвет, который после также используется в стилях qss для
+        QTabWidget - вкладок главного окна и небольшого градиента в шапке
+        возле имени приложения.
 
-        :param folder_path:
-        :return:
+        Также функция включает проверку на повторение фона (актуально, потому что,
+        нажав на фон главного окна, снова его поменять - на другое случайное
+        изображение. Для этого есть проверка и в атрибут класса постоянно сохраняется
+         путь к последнему фоновому изображению и сличается с новым случайным путём -
+         чтобы не было повторов.).
+
+        :param folder_path: Принимает путь к папке, в которой можно брать случайное изображение
+
+        :return: None
         """
 
         old_bg_path = self.bg_path_check
 
-        img_path = get_random_image_from_folder(folder_path)
-        path_bg_widget = Path(f'{img_path}')
+        def get_random_path() -> str:
+            """
+            Вложенная функция для получения случайного пути к изображению из папки
+            (путь к папке берётся из аргумента основной функции)
 
-        new_image_path = path_bg_widget.as_posix()
+            :return: Str - путь к случайному изображению.
+            """
 
-        def use_random_photo(photo_path):
+            img_path_new = get_random_image_from_folder(folder_path)
+            path_bg_widget_new = Path(f'{img_path_new}')
+
+            return path_bg_widget_new.as_posix()
+
+        new_image_path = get_random_path()
+
+        def use_random_photo(photo_path: str) -> None:
+            """
+            Вложенная функция для использования изображения по случайному пути -
+            для стилей qss и обновления пути в атрибуте класса - сохранение последнего
+             выбранного пути к случайному изображению.
+
+            :param photo_path: Принимает путь к случайному изображению.
+
+            :return: None
+            """
+
             self.widget_bg_main_tab.setStyleSheet(
                 f"background-image: url({photo_path});"
                 f" background-position: center;"
@@ -766,30 +802,53 @@ class MainWindow(QMainWindow):
 
             self.cap_widget.setStyleSheet(
                 f"""
-                            background: qlineargradient(
-                            x1: 0, y1: 0, 
-                            x2: 1, y2: 0,    
-                            stop: 0 rgba({main_color_str}, 0.02),
-                            stop: 0.025 rgba({main_color_str}, 0.1),
-                            stop: 0.05 rgba({main_color_str}, 0.18),
-                            stop: 0.15 rgba({main_color_str}, 0.13),
-                            stop: 0.2 rgba({main_color_str}, 0.02),
-                            stop: 0.25 rgba({main_color_str}, 0.01),
-                            stop: 0.3 rgba(1, 1, 1, 0),
-                            stop: 1 rgba(1, 1, 1, 0)
-                            );
-                        """
+                    background: qlineargradient(
+                    x1: 0, y1: 0, 
+                    x2: 1, y2: 0,    
+                    stop: 0 rgba({main_color_str}, 0.02),
+                    stop: 0.025 rgba({main_color_str}, 0.1),
+                    stop: 0.05 rgba({main_color_str}, 0.18),
+                    stop: 0.15 rgba({main_color_str}, 0.13),
+                    stop: 0.2 rgba({main_color_str}, 0.02),
+                    stop: 0.25 rgba({main_color_str}, 0.01),
+                    stop: 0.3 rgba(1, 1, 1, 0),
+                    stop: 1 rgba(1, 1, 1, 0)
+                    );
+                """
             )
+
+            self.tab_widget.setStyleSheet(f"""
+                QTabWidget::pane {{
+                    background-color: #2B2B2B;
+                    border: none;
+                    top: -1px;
+                }}
+                QTabBar {{
+                    background-color: {style.background_color};
+                }}
+                QTabBar::tab {{
+                    background: transparent;
+                    color: {style.dark_font_color};
+                    padding: 10px 20px;
+                    margin-right: 0px;
+                    border: none;
+                    border-bottom: 2px solid transparent;
+                }}
+                QTabBar::tab:selected {{
+                    background: transparent;
+                    color: {style.light_font_color};
+                    border-bottom: 2px solid rgb({main_color_str});
+                    font-weight: bold;
+                }}            
+                QTabBar::tab:hover:!selected {{
+                    color: {style.light_font_color};
+                    border-bottom: 2px solid #4D4E51;
+                }}
+            """)
 
             self.bg_path_check = f"{photo_path}"
 
-            debug_log(f"Для фона главного окна выбрано изображение: {photo_path}")
-
-        def get_random_path():
-            img_path_new = get_random_image_from_folder(folder_path)
-            path_bg_widget_new = Path(f'{img_path_new}')
-
-            return path_bg_widget_new.as_posix()
+            simple_log(f"Для фона главного окна выбрано изображение: {photo_path}")
 
         if self.bg_path_check == "":
             use_random_photo(new_image_path)
@@ -818,14 +877,17 @@ class MainWindow(QMainWindow):
         if current_index == 0:
             tab_name = tabs_name[0]
             self.choose_tab = 0
+            self.run_button.setVisible(True)
 
         elif current_index == 1:
             tab_name = tabs_name[1]
             self.choose_tab = 1
+            self.run_button.setVisible(True)
 
         elif current_index == 2:
             tab_name = tabs_name[2]
             self.choose_tab = 2
+            self.run_button.setVisible(False)
 
         else:
             tab_name = "неизвестно"
