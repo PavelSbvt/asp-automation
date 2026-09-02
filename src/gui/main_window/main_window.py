@@ -12,7 +12,8 @@ QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea)
 
 from core.settings_manager import settings
 from utils.output_rich import debug_log, warning_log, simple_log
-from utils.functions_for_window_gui import get_random_image_from_folder
+from utils.functions_for_window_gui import (get_random_image_from_folder,
+    get_main_color_image)
 from gui.functions.choose_files import (choose_universal_excel,
     choose_parsing_save_folder, open_parsing_pdf_folder,
     choose_history_excel, choose_foreign_excel, choose_specialization_excel,
@@ -54,6 +55,8 @@ class MainWindow(QMainWindow):
         self.foreign_commission_path: Optional[str] = None
         self.specialization_commission_path: Optional[str] = None
 
+        self.bg_path_check = ""
+
         # стандартная папка сохранения пдф фалов в результате работы функций
         self.save_folder_path: str = str(Path.home() / "Desktop" / "results_folder")
         self.parsing_save_folder_path = self.save_folder_path
@@ -88,6 +91,8 @@ class MainWindow(QMainWindow):
 
         self.tab_widget.setTabVisible(2, False)
 
+        self.main_image_color = "(211, 211, 211)"
+
         # Шапка
         self.cap_widget = QWidget(self)
 
@@ -109,14 +114,7 @@ class MainWindow(QMainWindow):
                 border: none;
                 border-radius: 4px;
                 padding: 6px 10px;
-                font-size: 15px;
-            }}
-            QPushButton:hover {{
-                background: #4a4a4a;
-                color: #6C5CE7;
-            }}
-            QPushButton:pressed {{
-                background: #3a3a3a;
+                margin-left: 30px;
             }}
         """)
         self.app_name_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -125,23 +123,21 @@ class MainWindow(QMainWindow):
         self.cap.addWidget(self.app_name_button)
         self.cap.addStretch()
 
-        self.settings_button = QPushButton("⚙️")
-        self.settings_button.setStyleSheet("""
-            QPushButton {
-                background: transparent;
-                color: #bbbbbb;
+        settings_path = Path("resources/images/icons/settings_pycharm_icon.png")
+        settings_hover_path = Path("resources/images/icons/settings_pycharm_icon_hover.png")
+
+        self.settings_button = QPushButton()
+        self.settings_button.setFixedSize(30, 31)
+        self.settings_button.setStyleSheet(f"""
+            QPushButton {{
+                background-image: url({settings_path.as_posix()});
                 border: none;
                 border-radius: 4px;
                 padding: 6px 10px;
-                font-size: 15px;
-            }
-            QPushButton:hover {
-                background: #4a4a4a;
-                color: white;
-            }
-            QPushButton:pressed {
-                background: #3a3a3a;
-            }
+            }}
+            QPushButton:hover {{
+                background-image: url({settings_hover_path.as_posix()});
+            }}
         """)
         self.settings_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.settings_button.clicked.connect(self.open_settings_tab)
@@ -203,12 +199,14 @@ class MainWindow(QMainWindow):
         self.main_v_layout.addWidget(self.tab_widget)
 
         # Виджет для фона основной вкладки приложения
-        self.widget_bg_main_tab = QWidget(tab_main_widget)
-
+        self.widget_bg_main_tab = QPushButton()
+        self.widget_bg_main_tab.setCursor(Qt.CursorShape.PointingHandCursor)
         self.widget_bg_main_tab.setMinimumHeight(200)
         self.widget_bg_main_tab.setMaximumWidth(1900)
 
         self.get_bg_for_main_tab_widget("resources/images/for_main_window")
+
+        self.widget_bg_main_tab.clicked.connect(self.on_bg_clicked)
 
         # Лейбл для того, чтобы показался виджет с фоном (без текста)
         label = QLabel(self.widget_bg_main_tab)
@@ -627,6 +625,7 @@ class MainWindow(QMainWindow):
 
 
 
+        container_layout_main_tab.addWidget(self.widget_bg_main_tab)
 
         container_layout_main_tab.addStretch()
 
@@ -650,6 +649,9 @@ class MainWindow(QMainWindow):
         container_layout_main_tab.addStretch()
 
         container_layout_main_tab.addLayout(widgets_horizontal_main_tab_layout)
+
+    def on_bg_clicked(self):
+        self.get_bg_for_main_tab_widget("resources/images/for_main_window")
 
     def stop_generation_process(self) -> None:
         """
@@ -743,15 +745,62 @@ class MainWindow(QMainWindow):
         :return:
         """
 
+        old_bg_path = self.bg_path_check
+
         img_path = get_random_image_from_folder(folder_path)
         path_bg_widget = Path(f'{img_path}')
 
-        self.widget_bg_main_tab.setStyleSheet(
-            f"background-image: url({path_bg_widget.as_posix()});"
-            f" background-position: center;"
-            f" background-repeat: no-repeat;"
-            f"border-radius: 10px;"
-        )
+        new_image_path = path_bg_widget.as_posix()
+
+        def use_random_photo(photo_path):
+            self.widget_bg_main_tab.setStyleSheet(
+                f"background-image: url({photo_path});"
+                f" background-position: center;"
+                f" background-repeat: no-repeat;"
+                f"border-radius: 10px;"
+            )
+
+            main_color_img = get_main_color_image(photo_path)
+
+            main_color_str = f"{main_color_img[0]}, {main_color_img[1]}, {main_color_img[2]}"
+
+            self.cap_widget.setStyleSheet(
+                f"""
+                            background: qlineargradient(
+                            x1: 0, y1: 0, 
+                            x2: 1, y2: 0,    
+                            stop: 0 rgba({main_color_str}, 0.02),
+                            stop: 0.025 rgba({main_color_str}, 0.1),
+                            stop: 0.05 rgba({main_color_str}, 0.18),
+                            stop: 0.15 rgba({main_color_str}, 0.13),
+                            stop: 0.2 rgba({main_color_str}, 0.02),
+                            stop: 0.25 rgba({main_color_str}, 0.01),
+                            stop: 0.3 rgba(1, 1, 1, 0),
+                            stop: 1 rgba(1, 1, 1, 0)
+                            );
+                        """
+            )
+
+            self.bg_path_check = f"{photo_path}"
+
+            debug_log(f"Для фона главного окна выбрано изображение: {photo_path}")
+
+        def get_random_path():
+            img_path_new = get_random_image_from_folder(folder_path)
+            path_bg_widget_new = Path(f'{img_path_new}')
+
+            return path_bg_widget_new.as_posix()
+
+        if self.bg_path_check == "":
+            use_random_photo(new_image_path)
+        elif old_bg_path != new_image_path:
+            use_random_photo(new_image_path)
+        else:
+            image_path = get_random_path()
+            while image_path == old_bg_path:
+                image_path = get_random_path()
+            else:
+                use_random_photo(image_path)
 
     def what_tab_is_show_now(self) -> int:
         """
