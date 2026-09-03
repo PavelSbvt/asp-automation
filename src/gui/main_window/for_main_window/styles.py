@@ -27,6 +27,23 @@ class Styles:
                     background-color: #2557ba;
                 }}
             """
+
+        self.button_hide_style = f"""
+                        QPushButton {{
+                            background-color: #595959;
+                            color: {self.dark_font_color};
+                            border-radius: 10px;
+                            font-weight: bold;
+                            padding: 0px 10px 0px 10px;
+                        }}
+                        QPushButton:hover {{
+                            background-color: rgb(110,110,110);
+                        }}
+                        QPushButton:pressed {{
+                            background-color: rgb(60,60,60);
+                        }}
+                    """
+
         self.radio_button_style = f"""
                 QRadioButton {{
                     color: {self.light_font_color};
