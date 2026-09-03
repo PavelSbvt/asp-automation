@@ -340,11 +340,12 @@ class SettingsManager:
             debug_log(f"Версия приложения в "
                 f"файле настроек изменено с {app_version} на {standard_app_version}")
 
-    def get_flag_show_loading_window(self):
+    def get_flag_show_loading_window(self) -> bool:
         """
         Функция для проверки разрешения приложения на показ загрузочного окна
 
-        :return: None
+        :return: flag_show - Текущее значение флага, разрешающего или
+        запрещающего показ загрузочного окна
         """
 
         flag_show = self.read_one_param("flag_show_loading_window")
@@ -354,6 +355,21 @@ class SettingsManager:
             debug_log("Показ загрузочного она запрещен")
 
         return flag_show
+
+    def set_flag_show_loading_window(self, bool_value: bool) -> None:
+        """
+        Функция для задания нового значения флагу разрешения показа загрузочного окна.
+
+        Атрибут класса настроек (self.flag_show_loading_window) получает новое значение.
+
+        :param bool_value: Принимается новое значения флага для показа загрузочного окна
+
+        :return: None.
+        """
+
+        self.flag_show_loading_window = bool_value
+
+        self.update_settings_param("flag_show_loading_window", bool_value)
 
 
 
