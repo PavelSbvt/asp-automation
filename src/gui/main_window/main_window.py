@@ -8,7 +8,7 @@ from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, QUrl
 from PyQt6.QtGui import QIcon, QTransform, QCursor
 from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
 QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QMessageBox,
-QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea)
+QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea, QSlider)
 
 from core.settings_manager import settings
 from utils.output_rich import debug_log, warning_log, simple_log
@@ -37,9 +37,12 @@ class MainWindow(QMainWindow):
 
         self.setWindowTitle(settings.get_app_name())
 
+        # Текущая ширина окна. Установлено стандартное значение
         self.width_now = 0
+        # Текущая высота окна. Установлено стандартное значение
         self.height_now = 0
 
+        # Текущая открытая вкладка. Для обработки ошибок установлено значение -1
         self.choose_tab = -1
 
         self.stop_generation: bool = False  # булевый флаг остановки сборки пдф и парсинга
@@ -55,6 +58,8 @@ class MainWindow(QMainWindow):
         self.foreign_commission_path: Optional[str] = None
         self.specialization_commission_path: Optional[str] = None
 
+        # Путь к последнему установленному фоновому
+        # изображению для фона виджета основной вкладки
         self.bg_path_check = ""
 
         # стандартная папка сохранения пдф фалов в результате работы функций
@@ -73,39 +78,31 @@ class MainWindow(QMainWindow):
         self.main_v_layout = QVBoxLayout()
         self.main_back_widget.setLayout(self.main_v_layout)
 
-        self.main_image_color = "(211, 211, 211)"
-
         # Работа с вкладками
         self.tab_widget = QTabWidget()
         self.tab_widget.setFont(fonts.get_qfont("JetBrains_Regular", 10))
-        # self.tab_widget.setStyleSheet(
-        #     f"color: {style.light_font_color};"
-        # )
 
         # Вкладки
         tab_main_widget = QWidget()
         tab_second_widget = QWidget()
         tab_settings_widget = QWidget()
 
+        # Загрузка вкладок
         self.tab_widget.addTab(tab_main_widget, "Главная")
         self.tab_widget.addTab(tab_second_widget, "ЛР по формированию PDF")
         self.tab_widget.addTab(tab_settings_widget, "Настройки")
 
+        # Вкладка с настройками скрыта, открывается только с кнопки
         self.tab_widget.setTabVisible(2, False)
 
-        self.main_image_color = "(211, 211, 211)"
-
-        # Шапка
+        # Шапка главного окна
         self.cap_widget = QWidget(self)
-
         self.cap = QHBoxLayout()
-
         self.cap_widget.setLayout(self.cap)
         self.cap_widget.setFixedHeight(48)
-        # self.cap_widget.setMaximumWidth(1400)
-
         self.cap.setContentsMargins(12,0,12,0)
 
+        # Кнопка с именем приложения - ссылка на репозиторий проекта
         self.app_name_button = QPushButton()
         self.app_name_button.setText(settings.get_app_name())
         self.app_name_button.setFont(fonts.get_qfont("JetBrains_Regular", 14))
@@ -122,12 +119,10 @@ class MainWindow(QMainWindow):
         self.app_name_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.app_name_button.clicked.connect(self.app_name_clicked)
 
-        self.cap.addWidget(self.app_name_button)
-        self.cap.addStretch()
-
         settings_path = Path("resources/images/icons/settings_pycharm_icon.png")
         settings_hover_path = Path("resources/images/icons/settings_pycharm_icon_hover.png")
 
+        # Кнопка для перехода во вкладку настоек
         self.settings_button = QPushButton()
         self.settings_button.setFixedSize(30, 31)
         self.settings_button.setStyleSheet(f"""
@@ -147,6 +142,7 @@ class MainWindow(QMainWindow):
         run_button_path = Path("resources/images/icons/run_button.png")
         run_button_hover_path = Path("resources/images/icons/run_button_hover.png")
 
+        # Кнопка запуска процессов - одна на всё приложение
         self.run_button = QPushButton()
         self.run_button.setFixedSize(30,31)
         self.run_button.setStyleSheet(f"""
@@ -165,6 +161,8 @@ class MainWindow(QMainWindow):
         stop_button_path = Path("resources/images/icons/stop_button_hover.png")
         stop_button_hover_path = Path("resources/images/icons/stop_button_hover.png")
 
+        # Кнопка остановки процесса парсинга и сборки - изначально скрыта.
+        # Появится только при запуске процесса
         self.stop_parsing_button = QPushButton()
         self.stop_parsing_button.setFixedSize(30,31)
         self.stop_parsing_button.setStyleSheet(f"""
@@ -189,43 +187,46 @@ class MainWindow(QMainWindow):
         self.stop_parsing_button.clicked.connect(self.stop_generation_process)
         self.stop_parsing_button.setVisible(False)
 
+        # Вызов функции для получения индекса текущей вкладки
         self.what_tab_is_show_now()
+        # И вызов её при открытии другой вкладки
         self.tab_widget.currentChanged.connect(self.what_tab_is_show_now)
 
+        # Добавление виджетов в шапку
+        self.cap.addWidget(self.app_name_button)
+        self.cap.addStretch()
         self.cap.addWidget(self.run_button)
         self.cap.addWidget(self.stop_parsing_button)
         self.cap.addWidget(self.settings_button)
 
+        # Добавление в главный вертикальный layout шапки и виджета с вкладками
         self.main_v_layout.addWidget(self.cap_widget)
-
         self.main_v_layout.addWidget(self.tab_widget)
 
-        # Виджет для фона основной вкладки приложения
+        # Виджет для фона основной вкладки приложения (кнопка, при нажатии которой можно сменить фон)
         self.widget_bg_main_tab = QPushButton()
         self.widget_bg_main_tab.setCursor(Qt.CursorShape.PointingHandCursor)
         self.widget_bg_main_tab.setMinimumHeight(200)
         self.widget_bg_main_tab.setMaximumWidth(1900)
 
+        # ПУть к папке с изображениями для фона главного окна (основной вкладки)
         self.get_bg_for_main_tab_widget("resources/images/for_main_window")
 
+        # подключение функции изменения фона основной вкладки
         self.widget_bg_main_tab.clicked.connect(self.on_bg_clicked)
 
-        # Лейбл для того, чтобы показался виджет с фоном (без текста)
+        # Лейбл для отображения виджет с фоном (без текста)
         label = QLabel(self.widget_bg_main_tab)
-        label.setStyleSheet("color: white; font-size: 20px; font-weight: bold;")
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Layout для виджета, чтобы расположить текст лейбла
-        bg_layout = QVBoxLayout()
-        bg_layout.addWidget(label)
-        self.widget_bg_main_tab.setLayout(bg_layout)
-
+        # Виджет для позиционирования кнопки с фоном основного окна
         bg_main_tab_layout = QHBoxLayout()
         bg_main_tab_layout.addWidget(self.widget_bg_main_tab)
 
-        main_tab_scroll_area = QScrollArea()
-        main_tab_scroll_area.setWidgetResizable(True)
-        main_tab_scroll_area.setStyleSheet("""
+        # Скролл виджет для всех виджетов и кнопок в основной вкладке
+        self.main_tab_scroll_area = QScrollArea()
+        self.main_tab_scroll_area.setWidgetResizable(True)
+        self.main_tab_scroll_area.setStyleSheet("""
             QScrollArea {
                 background: transparent;
                 border: none;
@@ -252,38 +253,22 @@ class MainWindow(QMainWindow):
         """)
 
         horizontal_windget_for_position = QHBoxLayout()
-
         container_widget_main_tab = QWidget()
-
         horizontal_windget_for_position.addWidget(container_widget_main_tab)
-
-        # container_widget_main_tab.setMaximumWidth(750)
         container_layout_main_tab = QVBoxLayout(container_widget_main_tab)
         container_widget_main_tab.setStyleSheet(
             f"background-color: {style.background_dark_color}; border-radius: 10px;")
 
-        main_tab_scroll_area.setWidget(container_widget_main_tab)
+        self.main_tab_scroll_area.setWidget(container_widget_main_tab)
 
         # Установка лейаута для главной вкладки и загрузка в неё виджета фона
         tab_main_layout = QVBoxLayout(tab_main_widget)
-
         tab_main_layout.addLayout(bg_main_tab_layout)
-        # tab_main_layout.addStretch()
-
         tab_main_widget.setLayout(tab_main_layout)
-
-        tab_main_layout.addWidget(main_tab_scroll_area)
-
-        # =======================================================
+        tab_main_layout.addWidget(self.main_tab_scroll_area)
 
         # Специальный лейаут для кнопок и остального на главной вкладке
         widgets_horizontal_main_tab_layout = QHBoxLayout()
-
-        widgets_horizontal_main_tab_layout.addStretch()
-
-        widgets_vertical_main_tab_layout = QVBoxLayout()
-        widgets_horizontal_main_tab_layout.addLayout(widgets_vertical_main_tab_layout)
-
         widgets_horizontal_main_tab_layout.addStretch()
 
         # кнопка открытия папки с пдф (главная вкладка
@@ -306,18 +291,18 @@ class MainWindow(QMainWindow):
         self.button_to_find_where_save.clicked.connect(
             lambda: choose_parsing_save_folder(self))
 
-        # ================================================================
-
+        # Виджет для фона радиокнопок и заголовка
         self.radio_buttons_background = QWidget(tab_main_widget)
         self.radio_buttons_background.setFixedHeight(200)
         self.radio_buttons_background.setFixedWidth(350)
         self.radio_buttons_background.setStyleSheet(
             f"background-color: {style.background_color}; border-radius: 10px;"
             )
-
+        # Вертикальный лейаут для радиокнопок
         radio_buttons_vertical_layout = QVBoxLayout()
         self.radio_buttons_background.setLayout(radio_buttons_vertical_layout)
 
+        # Заголовок для радиокнопок
         self.label_for_radio_buttons = QLabel()
         self.label_for_radio_buttons.setText("Выберите семестр:")
         self.label_for_radio_buttons.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -326,21 +311,21 @@ class MainWindow(QMainWindow):
 
         radio_buttons_vertical_layout.addWidget(self.label_for_radio_buttons)
 
-        horizontal_position_layout_for_center_poz = QHBoxLayout()
-
         widget_for_radio_buttons_and_choose_universal_excel = QWidget()
         widget_for_radio_buttons_and_choose_universal_excel.setMaximumWidth(750)
 
+        horizontal_position_layout_for_center_poz = QHBoxLayout()
         horizontal_position_layout_for_center_poz.addWidget(widget_for_radio_buttons_and_choose_universal_excel)
 
         horizontal_layout_for_radio_buttons_and_button = QHBoxLayout()
-
         widget_for_radio_buttons_and_choose_universal_excel.setLayout(
             horizontal_layout_for_radio_buttons_and_button)
-
         horizontal_layout_for_radio_buttons_and_button.addWidget(self.radio_buttons_background)
         horizontal_layout_for_radio_buttons_and_button.addStretch()
 
+        widgets_vertical_main_tab_layout = QVBoxLayout()
+        widgets_horizontal_main_tab_layout.addLayout(widgets_vertical_main_tab_layout)
+        widgets_horizontal_main_tab_layout.addStretch()
         widgets_vertical_main_tab_layout.addWidget(self.button_to_find_where_save)
         widgets_vertical_main_tab_layout.addWidget(self.open_folder_button)
 
@@ -374,9 +359,7 @@ class MainWindow(QMainWindow):
         radio_buttons_vertical_layout.setContentsMargins(10,30,10,20)
         radio_buttons_vertical_layout.addStretch()
 
-        # =============================================
-
-        # прогресс бар для второй вкладки (с парсингом)
+        # прогресс бар для второй вкладки (с парсингом). Изначально скрыто
         self.progress_bar_parsing = QProgressBar()
         self.progress_bar_parsing.setFixedWidth(730)
         self.progress_bar_parsing.setFixedHeight(25)
@@ -412,8 +395,7 @@ class MainWindow(QMainWindow):
         horizontal_widget_for_input_commission = QHBoxLayout()
         horizontal_widget_for_input_commission.addWidget(self.input_commission)
 
-        # ===========================================================
-
+        # Виджет для фона виджета и кнопки выбора файла универсальной таблицы
         self.widget_for_choose_files_commission = QWidget()
         self.widget_for_choose_files_commission.setStyleSheet(
             f"background-color: {style.background_color}; border-radius: 10px;"
@@ -428,7 +410,6 @@ class MainWindow(QMainWindow):
         self.widget_for_choose_files_commission.setLayout(
             vertical_layout_for_choosing_files)
 
-
         # кнопка для выбора .xlsx файла - таблицы с данными "универсальной таблицы"
         self.btn_choose_universal_xl = QPushButton(
             "Выберите таблицу для парсинга")
@@ -442,6 +423,7 @@ class MainWindow(QMainWindow):
 
         vertical_layout_for_choosing_files.addWidget(self.btn_choose_universal_xl)
 
+        # Лейбл для показа пути к выбранной универсальной таблицы
         self.universal_excel_label = QLabel()
         self.universal_excel_label.setFont(fonts.get_qfont("JetBrains_Light", 8))
         self.universal_excel_label.setMaximumHeight(120)
@@ -455,10 +437,10 @@ class MainWindow(QMainWindow):
         self.universal_excel_label.setWordWrap(True)
         vertical_layout_for_choosing_files.addWidget(self.universal_excel_label)
 
-        # ================================================================
-
         horizontal_layout_for_widget_for_choose_commission_file = QHBoxLayout()
 
+        # Виджет для фона для кнопки выбора файла таблицы с информацией о комиссии
+        # и лейбла с её (таблицы) именем
         widget_for_choose_commission_file = QWidget()
         widget_for_choose_commission_file.setMaximumWidth(730)
         widget_for_choose_commission_file.setMinimumHeight(150)
@@ -469,8 +451,6 @@ class MainWindow(QMainWindow):
         vertical_layout_for_chose_doc_files = QVBoxLayout()
         widget_for_choose_commission_file.setLayout(
             vertical_layout_for_chose_doc_files)
-
-        # ======================================================================
 
         # кнопка для выбора doc файла с данными комиссии по истории
         self.btn_choose_history_commission = QPushButton(
@@ -483,6 +463,7 @@ class MainWindow(QMainWindow):
         self.btn_choose_history_commission.clicked.connect(
           lambda: choose_history_excel(self))
 
+        # Лейбл для отображения пути выбранной таблицы с комиссией по истории
         self.history_xl_choused_label = QLabel()
         self.history_xl_choused_label.setMinimumHeight(50)
         self.history_xl_choused_label.setWordWrap(True)
@@ -496,8 +477,6 @@ class MainWindow(QMainWindow):
         self.history_xl_choused_label.setText(
             "Здесь будет имя выбранного файла...")
 
-
-
         # кнопка для выбора doc файла с данными комиссии по иностранному
         self.btn_choose_foreign_commission = QPushButton(
             "Выберите таблицу с данными комиссии по иностранному")
@@ -509,6 +488,7 @@ class MainWindow(QMainWindow):
         self.btn_choose_foreign_commission.clicked.connect(
           lambda: choose_foreign_excel(self))
 
+        # Лейбл для отображения пути выбранной таблицы с комиссией по иностранному
         self.foreign_xl_choosed_label = QLabel()
         self.foreign_xl_choosed_label.setFont(fonts.get_qfont(
             "JetBrains_Light", 10))
@@ -522,8 +502,6 @@ class MainWindow(QMainWindow):
         self.foreign_xl_choosed_label.setText(
             "Здесь будет имя выбранного файла...")
 
-
-
         # кнопка для выбора doc файла с данными комиссии по специальности
         self.btn_choose_specialization_commission = QPushButton(
             "Выберите таблицу с данными комиссии по специальности")
@@ -535,6 +513,7 @@ class MainWindow(QMainWindow):
         self.btn_choose_specialization_commission.clicked.connect(
             lambda: choose_specialization_excel(self))
 
+        # Лейбл для отображения пути выбранной таблицы с комиссией по специализации
         self.specialization_xl_choosed_lb = QLabel()
         self.specialization_xl_choosed_lb.setMinimumHeight(50)
         self.specialization_xl_choosed_lb.setWordWrap(True)
@@ -548,8 +527,8 @@ class MainWindow(QMainWindow):
         self.specialization_xl_choosed_lb.setText(
             "Здесь будет имя выбранного файла...")
 
-        # ======================================================================
-
+        # Лейбл отображения времени последнего обновления файла
+        # с кешем направлений аспирантов
         self.time_update_label = QLabel()
         self.time_update_label.setFixedWidth(220)
         self.time_update_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -560,6 +539,7 @@ class MainWindow(QMainWindow):
         self.time_update_label.setText("время последнего обновления")
         self.time_update_label.setFont(fonts.get_qfont("JetBrains_Light", 10))
 
+        # Кнопка для обновления кеша с информацией о направлениях аспирантов
         self.button_to_update_date = QPushButton()
         self.button_to_update_date.setText("Обновить данные")
         self.button_to_update_date.setFont(fonts.get_qfont("JetBrains_Regular", 10))
@@ -569,12 +549,11 @@ class MainWindow(QMainWindow):
         self.button_to_update_date.setStyleSheet(style.button_blue_style)
         self.button_to_update_date.clicked.connect(lambda: update_data(self))
 
+        # Заголовок с инфо о последнем обновлении
         self.label_info_last_update_cache = QLabel()
         self.label_info_last_update_cache.setText("Дата и время последнего обновления:")
         self.label_info_last_update_cache.setFont(fonts.get_qfont("JetBrains_Regular", 10))
         self.label_info_last_update_cache.setStyleSheet(f"color: {style.light_font_color};")
-
-        # ======================================================================
 
         horizontal_layout_for_widget_for_choose_commission_file.addWidget(
             widget_for_choose_commission_file)
@@ -591,6 +570,8 @@ class MainWindow(QMainWindow):
             self.btn_choose_specialization_commission, alignment=Qt.AlignmentFlag.AlignCenter)
         vertical_layout_for_chose_doc_files.addWidget(self.specialization_xl_choosed_lb)
 
+        # Скрываю все кнопки и лейблы для выбора файлов комиссии,
+        # кроме дефолтного - комиссии по истории
         self.btn_choose_history_commission.setVisible(True)
         self.history_xl_choused_label.setVisible(True)
         self.btn_choose_foreign_commission.setVisible(False)
@@ -598,6 +579,8 @@ class MainWindow(QMainWindow):
         self.btn_choose_specialization_commission.setVisible(False)
         self.specialization_xl_choosed_lb.setVisible(False)
 
+        # Подключение к радиокнопкам сигала для показа кнопки и лейбла выбора файла
+        # комиссии в соответствии с выбранным семестром
         self.radio_button_1.toggled.connect(
             lambda checked: self.on_semester_changed(checked, "history"))
         self.radio_button_2.toggled.connect(
@@ -605,33 +588,29 @@ class MainWindow(QMainWindow):
         self.radio_button_3.toggled.connect(
             lambda checked: self.on_semester_changed(checked, "specialization"))
 
+        # Виджет для кеша
         widget_for_cache = QWidget()
         widget_for_cache.setFixedWidth(730)
         widget_for_cache.setFixedHeight(70)
         widget_for_cache.setStyleSheet(
-            "background-color: #2B2D30; border-radius: 10px;"
+            f"background-color: {style.background_color}; border-radius: 10px;"
         )
         horizontal_widget_layout_for_cache = QHBoxLayout()
         widget_for_cache.setLayout(horizontal_widget_layout_for_cache)
 
-        # horizontal_widget_layout_for_cache.setSpacing(20)
-
+        # Добавление виджета, лейбла и кнопки для кеша
         horizontal_widget_layout_for_cache.addWidget(self.label_info_last_update_cache)
         horizontal_widget_layout_for_cache.addWidget(self.time_update_label)
         horizontal_widget_layout_for_cache.addStretch()
         horizontal_widget_layout_for_cache.addWidget(self.button_to_update_date)
 
-
-
-
-
-
-
+        # Добавление в основной layout
         container_layout_main_tab.addWidget(self.widget_bg_main_tab)
 
         container_layout_main_tab.addStretch()
 
-        container_layout_main_tab.addWidget(self.progress_bar_parsing, alignment=Qt.AlignmentFlag.AlignCenter)
+        container_layout_main_tab.addWidget(
+            self.progress_bar_parsing, alignment=Qt.AlignmentFlag.AlignCenter)
 
         container_layout_main_tab.addStretch()
 
@@ -639,36 +618,196 @@ class MainWindow(QMainWindow):
 
         container_layout_main_tab.addLayout(horizontal_position_layout_for_center_poz)
 
-        container_layout_main_tab.addLayout(horizontal_layout_for_widget_for_choose_commission_file)
+        container_layout_main_tab.addLayout(
+            horizontal_layout_for_widget_for_choose_commission_file)
 
         container_layout_main_tab.addStretch()
 
-        container_layout_main_tab.addWidget(widget_for_cache, alignment=Qt.AlignmentFlag.AlignCenter)
-
-        # container_layout_main_tab.addWidget(self.time_update_label)
-        # container_layout_main_tab.addWidget(self.button_to_update_date)
+        container_layout_main_tab.addWidget(
+            widget_for_cache, alignment=Qt.AlignmentFlag.AlignCenter)
 
         container_layout_main_tab.addStretch()
 
         container_layout_main_tab.addLayout(widgets_horizontal_main_tab_layout)
 
-    def on_bg_clicked(self):
+        # Вторая вкладка
+
+        tab_settings_layout = QVBoxLayout()
+        tab_settings_widget.setLayout(tab_settings_layout)
+
+        self.settings_cap = QWidget()
+        self.settings_cap.setStyleSheet(
+            f"background-color: {style.background_dark_color};")
+        self.settings_cap.setFixedHeight(48)
+
+        self.settings_label = QLabel()
+        self.settings_label.setText("Настройки")
+        self.settings_label.setFont(fonts.get_qfont("JetBrains_Regular", 14))
+        self.settings_label.setStyleSheet(
+            f"color: {style.light_font_color}; font: bold;")
+
+        layout_for_settings_cap = QHBoxLayout()
+        layout_for_settings_cap.addWidget(self.settings_label)
+
+        self.settings_cap.setLayout(layout_for_settings_cap)
+
+        tab_settings_layout.addWidget(self.settings_cap, alignment=Qt.AlignmentFlag.AlignTop)
+
+        self.settings_main_widget = QWidget()
+        self.settings_main_widget.setFixedWidth(740)
+        self.settings_main_widget.setStyleSheet(
+            f"background: {style.background_dark_color}; border-radius: 10px;")
+
+        layout_for_settings = QVBoxLayout()
+        self.settings_main_widget.setLayout(layout_for_settings)
+
+        loading_window_param_widget = QWidget()
+        loading_window_param_widget.setStyleSheet(
+            f"background-color: {style.background_color}; border-radius: 10px;")
+        loading_window_param_widget.setMaximumWidth(720)
+
+        loading_param_h_layout = QHBoxLayout()
+        loading_window_param_widget.setLayout(loading_param_h_layout)
+
+        self.param_show_loading_window = QLabel()
+        self.param_show_loading_window.setText("Загрузочное окно")
+        self.param_show_loading_window.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.param_show_loading_window.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+
+        self.button_show_loading_window = QPushButton()
+        self.button_show_loading_window.setText("Показывать")
+        self.button_show_loading_window.setFixedHeight(35)
+        self.button_show_loading_window.setFixedWidth(200)
+        self.button_show_loading_window.setFont(fonts.get_qfont("JetBrains_Light", 8))
+        self.button_show_loading_window.clicked.connect(self.set_true_show_loading_window)
+        if settings.get_flag_show_loading_window():
+            self.button_show_loading_window.setStyleSheet(style.button_blue_style)
+        else:
+            self.button_show_loading_window.setStyleSheet(style.button_hide_style)
+
+        self.button_hide_loading_window = QPushButton()
+        self.button_hide_loading_window.setText("Скрывать")
+        self.button_hide_loading_window.setFixedHeight(35)
+        self.button_hide_loading_window.setFixedWidth(200)
+        self.button_hide_loading_window.setFont(fonts.get_qfont("JetBrains_Light", 8))
+        self.button_hide_loading_window.clicked.connect(self.set_false_show_loading_window)
+        if not settings.get_flag_show_loading_window():
+            self.button_hide_loading_window.setStyleSheet(style.button_blue_style)
+        else:
+            self.button_hide_loading_window.setStyleSheet(style.button_hide_style)
+
+        loading_param_h_layout.addWidget( self.param_show_loading_window)
+        loading_param_h_layout.addWidget( self.button_show_loading_window)
+        loading_param_h_layout.addWidget( self.button_hide_loading_window)
+
+        loading_window_timer_duration_param_widget = QWidget()
+        loading_window_timer_duration_param_widget.setStyleSheet(
+            f"background-color: {style.background_color}; border-radius: 10px;")
+        loading_window_timer_duration_param_widget.setMaximumWidth(720)
+
+        loading_timer_duration_param_h_layout = QHBoxLayout()
+        loading_window_timer_duration_param_widget.setLayout(loading_timer_duration_param_h_layout)
+
+        self.param_timer_duration_loading_window = QLabel()
+        self.param_timer_duration_loading_window.setText("Время показа загрузочного окна")
+        self.param_timer_duration_loading_window.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.param_timer_duration_loading_window.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+
+        self.slider_loading_window_timer_duration = QSlider(Qt.Orientation.Horizontal)
+        self.slider_loading_window_timer_duration.setRange(1000, 15000)
+        self.slider_loading_window_timer_duration.setValue(settings.get_loading_window_timer_duration())
+        self.slider_loading_window_timer_duration.setMaximumWidth(400)
+        self.slider_loading_window_timer_duration.setStyleSheet("""
+            QSlider::groove:horizontal {
+                height: 4px;
+                background: #3C3E42;
+                border-radius: 2px;
+            }
+
+            QSlider::sub-page:horizontal {
+                background: #3574F0;
+                border-radius: 2px;
+            }
+
+            QSlider::handle:horizontal {
+                background: #ffffff;
+                width: 16px;
+                height: 16px;
+                margin: -6px 0px;
+                border-radius: 8px;
+                border: 2px solid #3574F0;
+            }
+
+            QSlider::handle:horizontal:hover {
+                background: #f0f8ff;
+                border-color: #4A8BF5;
+                width: 18px;
+                height: 18px;
+                margin: -7px 0px;
+            }
+
+            QSlider::handle:horizontal:pressed {
+                background: #e6f0ff;
+                border-color: #2A5FD0;
+            }
+        """)
+
+        loading_timer_duration_param_h_layout.addWidget(self.param_timer_duration_loading_window)
+        loading_timer_duration_param_h_layout.addWidget(self.slider_loading_window_timer_duration)
+
+        layout_for_settings.addWidget(loading_window_param_widget)
+        layout_for_settings.addWidget(loading_window_timer_duration_param_widget)
+
+        tab_settings_layout.addWidget(self.settings_main_widget, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        tab_settings_layout.addStretch()
+
+    def set_true_show_loading_window(self) -> None:
+        """
+        Функция для разрешения показа загрузочного окна (передает True флагу
+        разрешения показа - в настойках). Установка стиля "скрытой" кнопки
+        для кнопки "Скрывать" и установка обычного стиля для кнопки "Показывать".
+
+        :return: None
+        """
+
+        settings.set_flag_show_loading_window(True)
+        self.button_show_loading_window.setStyleSheet(style.button_blue_style)
+        self.button_hide_loading_window.setStyleSheet(style.button_hide_style)
+
+    def set_false_show_loading_window(self) -> None:
+        """
+        Функция для запрета показа загрузочного окна (передает False флагу
+        разрешения показа - в настойках). Установка стиля "скрытой" кнопки
+        для кнопки "Показывать" и установка обычного стиля для кнопки "Скрывать".
+
+        :return: None
+        """
+
+        settings.set_flag_show_loading_window(False)
+        self.button_show_loading_window.setStyleSheet(style.button_hide_style)
+        self.button_hide_loading_window.setStyleSheet(style.button_blue_style)
+
+    def on_bg_clicked(self) -> None:
+        """
+        Функция для установления случайного изображения на фон
+        виджета для главной вкладки
+
+        :return: None
+        """
+
         self.get_bg_for_main_tab_widget("resources/images/for_main_window")
 
     def stop_generation_process(self) -> None:
         """
-        Останавливает процесс генерации
+        Останавливает процесс генерации и парсинга из основной вкладки главного окна
 
         :return: None
         """
 
         simple_log("Остановка процесса по запросу пользователя")
         self.stop_generation = True
-        # self.blc_for_stop.setVisible(True)
         self.run_button.setVisible(False)
-
-
-        # Делаем кнопку неактивной, чтобы нельзя было нажать дважды
         self.stop_parsing_button.setEnabled(False)
 
         QMessageBox.information(
@@ -678,7 +817,12 @@ class MainWindow(QMainWindow):
             "Программа завершит текущую операцию и остановится."
         )
 
-    def run(self):
+    def run(self) -> None:
+        """
+        Сигнал для кнопки запуска процессов для run_button
+
+        :return:None
+        """
         if self.choose_tab == 0:
             parsing(self)
         else:
@@ -687,9 +831,11 @@ class MainWindow(QMainWindow):
     def on_semester_changed(self, checked: bool, semester: str) -> None:
         """
         Показывает нужные кнопки в зависимости от выбранного семестра
+        (выбранной радиокнопки)
 
         :return: None
         """
+
         if not checked:
             return
 
@@ -722,9 +868,11 @@ class MainWindow(QMainWindow):
 
     def resizeEvent(self, event):
         """
-        Вызывается при изменении размера окна.
+        Вызывается при изменении размера окна. Используется для адаптации размера фона.
 
         :param event: QResizeEvent — содержит новую информацию о размере
+
+        :return: None
         """
 
         width = self.width()
@@ -863,9 +1011,9 @@ class MainWindow(QMainWindow):
 
     def what_tab_is_show_now(self) -> int:
         """
-        Функция для получения индекса текущей вкладки
+        Функция для получения индекса текущей вкладки.
 
-        :return: int
+        :return: int - индекс открытой вкладки
         """
 
         tabs_name = ["Главная", "ЛР по формированию PDF", "Настройки"]
