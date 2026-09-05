@@ -33,6 +33,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setObjectName("MainWindow")
+
         self.setMinimumSize(900, 650)
 
         self.setWindowTitle(settings.get_app_name())
@@ -71,7 +72,8 @@ class MainWindow(QMainWindow):
 
         # Главный виджет
         self.main_back_widget = QWidget(self)
-        self.main_back_widget.setStyleSheet(f"background-color: {style.background_color}; border-radius: 0px;")
+        self.main_back_widget.setStyleSheet(
+            f"background-color: {style.background_color}; border-radius: 0px;")
         self.setCentralWidget(self.main_back_widget)
 
         # Главный вертикальный layout
@@ -175,13 +177,6 @@ class MainWindow(QMainWindow):
                     QPushButton:pressed {{
                         background-image: url({stop_button_path.as_posix()});
                     }}
-                    QPushButton:disabled {{
-                        background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                            stop: 0 rgba(100, 50, 50, 120),
-                            stop: 1 rgba(70, 35, 35, 160));
-                        color: rgba(200, 200, 200, 120);
-                        border: 1px solid rgba(100, 50, 50, 80);
-                    }}
                 """
         )
         self.stop_parsing_button.clicked.connect(self.stop_generation_process)
@@ -226,31 +221,7 @@ class MainWindow(QMainWindow):
         # Скролл виджет для всех виджетов и кнопок в основной вкладке
         self.main_tab_scroll_area = QScrollArea()
         self.main_tab_scroll_area.setWidgetResizable(True)
-        self.main_tab_scroll_area.setStyleSheet("""
-            QScrollArea {
-                background: transparent;
-                border: none;
-            }
-            QScrollBar:vertical {
-                background: #1E1F22;
-                width: 12px;
-                border-radius: 6px;
-            }
-            QScrollBar::handle:vertical {
-                background: #4D4E51;
-                border-radius: 6px;
-                min-height: 30px;
-            }
-            QScrollBar::handle:vertical:hover {
-                background: #7A7B7E;
-            }
-            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
-                height: 0px;
-            }
-            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-                background: transparent; 
-            }
-        """)
+        self.main_tab_scroll_area.setStyleSheet(style.q_scroll_bar_style)
 
         horizontal_windget_for_position = QHBoxLayout()
         container_widget_main_tab = QWidget()
@@ -306,7 +277,8 @@ class MainWindow(QMainWindow):
         self.label_for_radio_buttons = QLabel()
         self.label_for_radio_buttons.setText("Выберите семестр:")
         self.label_for_radio_buttons.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.label_for_radio_buttons.setStyleSheet(f"color: {style.light_font_color}; margin: 10px; font-weight: bold;")
+        self.label_for_radio_buttons.setStyleSheet(
+            f"color: {style.light_font_color}; margin: 10px; font-weight: bold;")
         self.label_for_radio_buttons.setFont(fonts.get_qfont("JetBrains_Regular", 14))
 
         radio_buttons_vertical_layout.addWidget(self.label_for_radio_buttons)
@@ -374,22 +346,7 @@ class MainWindow(QMainWindow):
         self.input_commission.setPlaceholderText(
             "Введите текст приказа..."
         )
-        self.input_commission.setStyleSheet("""
-                   QLineEdit {
-                       background-color: #2B2D30;
-                       color: white;
-                       border: 2px solid #4D4E51;
-                       border-radius: 8px;
-                       padding: 5px 10px;
-                   }
-                   QLineEdit:focus {
-                       border: 2px solid #CED0D6;
-                       background-color: #4D4E51;
-                   }
-                   QLineEdit::placeholder {
-                       color: #6272a4;
-                   }
-               """)
+        self.input_commission.setStyleSheet(style.q_line_edit_style)
         self.input_commission.setFont(fonts.get_qfont("JetBrains_Medium", 10))
 
         horizontal_widget_for_input_commission = QHBoxLayout()
@@ -708,52 +665,34 @@ class MainWindow(QMainWindow):
         loading_timer_duration_param_h_layout = QHBoxLayout()
         loading_window_timer_duration_param_widget.setLayout(loading_timer_duration_param_h_layout)
 
+        # Лейбл для заголовка времени показа загрузочного экрана
         self.param_timer_duration_loading_window = QLabel()
         self.param_timer_duration_loading_window.setText("Время показа загрузочного окна")
         self.param_timer_duration_loading_window.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.param_timer_duration_loading_window.setFont(fonts.get_qfont("JetBrains_Medium", 10))
 
+        # Слайдер, который меняет время показа загрузочного окна
         self.slider_loading_window_timer_duration = QSlider(Qt.Orientation.Horizontal)
         self.slider_loading_window_timer_duration.setRange(1000, 15000)
         self.slider_loading_window_timer_duration.setValue(settings.get_loading_window_timer_duration())
-        self.slider_loading_window_timer_duration.setMaximumWidth(400)
-        self.slider_loading_window_timer_duration.setStyleSheet("""
-            QSlider::groove:horizontal {
-                height: 4px;
-                background: #3C3E42;
-                border-radius: 2px;
-            }
+        self.slider_loading_window_timer_duration.setFixedWidth(350)
+        self.slider_loading_window_timer_duration.setStyleSheet(style.q_slider_style)
+        self.slider_loading_window_timer_duration.valueChanged.connect(self.on_slider_changed)
 
-            QSlider::sub-page:horizontal {
-                background: #3574F0;
-                border-radius: 2px;
-            }
-
-            QSlider::handle:horizontal {
-                background: #ffffff;
-                width: 16px;
-                height: 16px;
-                margin: -6px 0px;
-                border-radius: 8px;
-                border: 2px solid #3574F0;
-            }
-
-            QSlider::handle:horizontal:hover {
-                background: #f0f8ff;
-                border-color: #4A8BF5;
-                width: 18px;
-                height: 18px;
-                margin: -7px 0px;
-            }
-
-            QSlider::handle:horizontal:pressed {
-                background: #e6f0ff;
-                border-color: #2A5FD0;
-            }
-        """)
+        # Индикатор текущей длительности показа загрузочного окна
+        self.indicate_loading_window_timer_duration = QLabel()
+        self.indicate_loading_window_timer_duration.setFixedWidth(60)
+        self.indicate_loading_window_timer_duration.setFont(fonts.get_qfont("JetBrains_Light", 10))
+        self.indicate_loading_window_timer_duration.setStyleSheet(f"color: {style.dark_font_color};")
+        self.indicate_loading_window_timer_duration.setText(
+            f"{str(settings.get_loading_window_timer_duration())} мс")
+        self.indicate_loading_window_timer_duration.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         loading_timer_duration_param_h_layout.addWidget(self.param_timer_duration_loading_window)
+        loading_timer_duration_param_h_layout.addStretch()
         loading_timer_duration_param_h_layout.addWidget(self.slider_loading_window_timer_duration)
+        loading_timer_duration_param_h_layout.addStretch()
+        loading_timer_duration_param_h_layout.addWidget(self.indicate_loading_window_timer_duration)
 
         layout_for_settings.addWidget(loading_window_param_widget)
         layout_for_settings.addWidget(loading_window_timer_duration_param_widget)
@@ -761,6 +700,17 @@ class MainWindow(QMainWindow):
         tab_settings_layout.addWidget(self.settings_main_widget, alignment=Qt.AlignmentFlag.AlignCenter)
 
         tab_settings_layout.addStretch()
+
+    def on_slider_changed(self, value):
+        """
+        Функция для установления нового времени для таймера показа главного окна.
+        Принимает значение от слайдера (от 1 до 15 секунд (от 1000 до 15000 мс)).
+
+        :return: None
+        """
+
+        self.indicate_loading_window_timer_duration.setText(f"{str(value)} мс")
+        settings.set_loading_window_timer_duration(value)
 
     def set_true_show_loading_window(self) -> None:
         """

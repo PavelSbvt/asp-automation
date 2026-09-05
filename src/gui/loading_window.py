@@ -221,7 +221,8 @@ class MyLoadingWindow(QWidget):
         # Таймер для progressbar
         self.timer_animation = QTimer()
         self.timer_animation.timeout.connect(lambda: update_progress_bar_animation(self))
-        self.timer_animation.start(32)
+        time_progress_bar_step = int(settings.get_loading_window_timer_duration() // 125)
+        self.timer_animation.start(time_progress_bar_step)
 
         animation_appearance_window(self, duration = 700)
 
@@ -239,7 +240,8 @@ class MyLoadingWindow(QWidget):
 
         # Таймер для запуска анимации градиента
         self.gradient_timer = QTimer()
-        self.gradient_timer.start(30)
+        gradient_timer_duration = int(settings.get_loading_window_timer_duration() * 0.005)
+        self.gradient_timer.start(gradient_timer_duration)
 
         # Флаг окончания анимации градиента (градиент проходит по одному разу
         # сначала слева направо, а затем возвращается - нужно передать момент остановки)
