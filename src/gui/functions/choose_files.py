@@ -7,7 +7,9 @@ from utils.output_rich import success_log, debug_log, warning_log
 
 def choose_parsing_save_folder(self) -> None:
     """
-    выбор папки сохранения для собранных пдф по таблице с собранным БД
+    выбор папки сохранения для собранных пдф по напарсенным данным
+
+    :return: None
     """
 
     folder_path = QFileDialog.getExistingDirectory(
@@ -19,10 +21,26 @@ def choose_parsing_save_folder(self) -> None:
         self.parsing_save_folder_path = folder_path
         self.save_path_label.setText(folder_path)
 
+def choose_save_folder_second_tab(self) -> None:
+    """
+    выбор папки сохранения для собранных пдф по таблице с собранным БД
+
+    :return: None
+    """
+
+    folder_path = QFileDialog.getExistingDirectory(
+        self,
+        "Выберите папку для сохранения PDF (парсинг)",
+        self.save_folder_second_tab_path
+    )
+    if folder_path:
+        self.save_folder_second_tab_path = folder_path
+        self.current_save_path_label.setText(folder_path)
+
 def open_parsing_pdf_folder(self) -> None:
     """
     Открывает папку с созданными по напарсенным данным PDF
-    :param self:
+
     :return: None
     """
 
@@ -33,7 +51,27 @@ def open_parsing_pdf_folder(self) -> None:
                 "Папка не найдена",
                 f"Папка '{folder_path}' не существует.\n\n"
                 f"Сначала создайте PDF файлы, нажав кнопку "
-                f"'Начать парсинг и генерацию PDF' на второй вкладке."
+                f"запуска процесса на первой вкладке."
+        )
+        print("[E] ошибка с открытием папки с пдф")
+        return
+    os.startfile(folder_path)
+
+def open_pdf_folder(self) -> None:
+    """
+    Открывает папку с созданными по готовым данным PDF
+
+    :return: None
+    """
+
+    folder_path = self.save_folder_second_tab_path
+    if not os.path.exists(folder_path):
+        QMessageBox.warning(
+            self,
+            "Папка не найдена",
+            f"Папка '{folder_path}' не существует.\n\n"
+            f"Сначала создайте PDF файлы, нажав кнопку "
+            f"запуска процесса на первой вкладке."
         )
         print("[E] ошибка с открытием папки с пдф")
         return

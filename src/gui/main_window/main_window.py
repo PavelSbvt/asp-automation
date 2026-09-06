@@ -17,7 +17,9 @@ from utils.functions_for_window_gui import (get_random_image_from_folder,
 from gui.functions.choose_files import (choose_universal_excel,
     choose_parsing_save_folder, open_parsing_pdf_folder,
     choose_history_excel, choose_foreign_excel, choose_specialization_excel,
+    open_pdf_folder, choose_save_folder_second_tab
     )
+from core.generate_pdf import choose_file, get_pdf
 from utils.fonts import fonts
 from gui.functions.pyqt_functions import parsing
 from gui.main_window.for_main_window.styles import style
@@ -64,7 +66,8 @@ class MainWindow(QMainWindow):
         self.bg_path_check = ""
 
         # стандартная папка сохранения пдф фалов в результате работы функций
-        self.save_folder_path: str = str(Path.home() / "Desktop" / "results_folder")
+        self.save_folder_path: str = str(
+            Path.home() / "Desktop" / "results_folder")
         self.parsing_save_folder_path = self.save_folder_path
 
         # атрибут для хранения позиции мыши(x,y), объект класса qpoint
@@ -251,20 +254,9 @@ class MainWindow(QMainWindow):
         self.open_folder_button.setStyleSheet(style.button_blue_style)
         self.open_folder_button.clicked.connect(lambda: open_parsing_pdf_folder(self))
 
-        # кнопка изменения пути сохранения
-        self.button_to_find_where_save = QPushButton(tab_main_widget)
-        self.button_to_find_where_save.setMaximumWidth(400)
-        self.button_to_find_where_save.setFixedHeight(30)
-        self.button_to_find_where_save.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.button_to_find_where_save.setStyleSheet(style.button_blue_style)
-        self.button_to_find_where_save.setText("Изменить путь для сохранения PDF")
-        self.button_to_find_where_save.setFont(fonts.get_qfont("JetBrains_Regular", 10))
-        self.button_to_find_where_save.clicked.connect(
-            lambda: choose_parsing_save_folder(self))
-
         # Виджет для фона радиокнопок и заголовка
         self.radio_buttons_background = QWidget(tab_main_widget)
-        self.radio_buttons_background.setFixedHeight(200)
+        self.radio_buttons_background.setMinimumHeight(200)
         self.radio_buttons_background.setFixedWidth(350)
         self.radio_buttons_background.setStyleSheet(
             f"background-color: {style.background_color}; border-radius: 10px;"
@@ -298,7 +290,6 @@ class MainWindow(QMainWindow):
         widgets_vertical_main_tab_layout = QVBoxLayout()
         widgets_horizontal_main_tab_layout.addLayout(widgets_vertical_main_tab_layout)
         widgets_horizontal_main_tab_layout.addStretch()
-        widgets_vertical_main_tab_layout.addWidget(self.button_to_find_where_save)
         widgets_vertical_main_tab_layout.addWidget(self.open_folder_button)
 
         # Радиокнопки
@@ -357,8 +348,8 @@ class MainWindow(QMainWindow):
         self.widget_for_choose_files_commission.setStyleSheet(
             f"background-color: {style.background_color}; border-radius: 10px;"
         )
-        self.widget_for_choose_files_commission.setFixedHeight(200)
-        self.widget_for_choose_files_commission.setFixedWidth(350)
+        self.widget_for_choose_files_commission.setMinimumHeight(200)
+        self.widget_for_choose_files_commission.setFixedWidth(370)
 
         horizontal_layout_for_radio_buttons_and_button.addWidget(
             self.widget_for_choose_files_commission)
@@ -371,7 +362,7 @@ class MainWindow(QMainWindow):
         self.btn_choose_universal_xl = QPushButton(
             "Выберите таблицу для парсинга")
         self.btn_choose_universal_xl.setFixedHeight(50)
-        self.btn_choose_universal_xl.setMaximumWidth(330)
+        self.btn_choose_universal_xl.setMaximumWidth(350)
         self.btn_choose_universal_xl.setStyleSheet(style.button_blue_style)
         self.btn_choose_universal_xl.setFont(fonts.get_qfont("JetBrains_Regular", 10))
         self.btn_choose_universal_xl.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -383,8 +374,8 @@ class MainWindow(QMainWindow):
         # Лейбл для показа пути к выбранной универсальной таблицы
         self.universal_excel_label = QLabel()
         self.universal_excel_label.setFont(fonts.get_qfont("JetBrains_Light", 8))
-        self.universal_excel_label.setMaximumHeight(120)
-        self.universal_excel_label.setText("Имя файла универсальной таблицы")
+        self.universal_excel_label.setMinimumHeight(120)
+        self.universal_excel_label.setText("Путь к выбранной таблице")
         self.universal_excel_label.setStyleSheet(
             f"color: {style.dark_font_color};"
             f"background-color: {style.background_dark_color};"
@@ -411,9 +402,9 @@ class MainWindow(QMainWindow):
 
         # кнопка для выбора doc файла с данными комиссии по истории
         self.btn_choose_history_commission = QPushButton(
-            "Выберите таблицу с данными комиссии по истории")
+            "Выберите файл")
         self.btn_choose_history_commission.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_choose_history_commission.setFixedWidth(450)
+        self.btn_choose_history_commission.setFixedWidth(150)
         self.btn_choose_history_commission.setFixedHeight(50)
         self.btn_choose_history_commission.setStyleSheet(style.button_blue_style)
         self.btn_choose_history_commission.setFont(fonts.get_qfont("JetBrains_Regular", 10))
@@ -436,9 +427,9 @@ class MainWindow(QMainWindow):
 
         # кнопка для выбора doc файла с данными комиссии по иностранному
         self.btn_choose_foreign_commission = QPushButton(
-            "Выберите таблицу с данными комиссии по иностранному")
+            "Выберите файл")
         self.btn_choose_foreign_commission.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_choose_foreign_commission.setFixedWidth(450)
+        self.btn_choose_foreign_commission.setFixedWidth(150)
         self.btn_choose_foreign_commission.setFixedHeight(50)
         self.btn_choose_foreign_commission.setStyleSheet(style.button_blue_style)
         self.btn_choose_foreign_commission.setFont(fonts.get_qfont("JetBrains_Regular", 10))
@@ -461,9 +452,9 @@ class MainWindow(QMainWindow):
 
         # кнопка для выбора doc файла с данными комиссии по специальности
         self.btn_choose_specialization_commission = QPushButton(
-            "Выберите таблицу с данными комиссии по специальности")
+            "Выберите файл")
         self.btn_choose_specialization_commission.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_choose_specialization_commission.setFixedWidth(450)
+        self.btn_choose_specialization_commission.setFixedWidth(150)
         self.btn_choose_specialization_commission.setFixedHeight(50)
         self.btn_choose_specialization_commission.setStyleSheet(style.button_blue_style)
         self.btn_choose_specialization_commission.setFont(fonts.get_qfont("JetBrains_Regular", 10))
@@ -515,16 +506,38 @@ class MainWindow(QMainWindow):
         horizontal_layout_for_widget_for_choose_commission_file.addWidget(
             widget_for_choose_commission_file)
 
-        vertical_layout_for_chose_doc_files.addWidget(
-            self.btn_choose_history_commission, alignment=Qt.AlignmentFlag.AlignCenter)
+        # Лейбл-заголовок для отображения вида комиссии, файл с
+        # которой можно будет выбрать
+        self.label_commission_title = QLabel()
+        self.label_commission_title.setFixedHeight(50)
+        self.label_commission_title.setMaximumWidth(400)
+        self.label_commission_title.setStyleSheet(
+            f"color: {style.light_font_color}; padding: 10px;"
+            f"background-color: {style.background_color}; border-radius: 10px;")
+        self.label_commission_title.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.label_commission_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_commission_title.setText("Таблица с комиссией по истории")
+
+        h_layout_title_choose_commission_file_and_button_choose = QHBoxLayout()
+        h_layout_title_choose_commission_file_and_button_choose.addWidget(self.label_commission_title)
+        h_layout_title_choose_commission_file_and_button_choose.addStretch()
+
+        vertical_layout_for_chose_doc_files.addLayout(
+            h_layout_title_choose_commission_file_and_button_choose)
+
+        h_layout_title_choose_commission_file_and_button_choose.addWidget(
+            self.btn_choose_history_commission)
+
         vertical_layout_for_chose_doc_files.addWidget(self.history_xl_choused_label)
 
-        vertical_layout_for_chose_doc_files.addWidget(
-            self.btn_choose_foreign_commission, alignment=Qt.AlignmentFlag.AlignCenter)
+        h_layout_title_choose_commission_file_and_button_choose.addWidget(
+            self.btn_choose_foreign_commission)
+
         vertical_layout_for_chose_doc_files.addWidget(self.foreign_xl_choosed_label)
 
-        vertical_layout_for_chose_doc_files.addWidget(
-            self.btn_choose_specialization_commission, alignment=Qt.AlignmentFlag.AlignCenter)
+        h_layout_title_choose_commission_file_and_button_choose.addWidget(
+            self.btn_choose_specialization_commission)
+
         vertical_layout_for_chose_doc_files.addWidget(self.specialization_xl_choosed_lb)
 
         # Скрываю все кнопки и лейблы для выбора файлов комиссии,
@@ -561,6 +574,59 @@ class MainWindow(QMainWindow):
         horizontal_widget_layout_for_cache.addStretch()
         horizontal_widget_layout_for_cache.addWidget(self.button_to_update_date)
 
+        # кнопка изменения пути сохранения
+        self.button_change_save_path = QPushButton()
+        self.button_change_save_path.setMaximumWidth(100)
+        self.button_change_save_path.setFixedHeight(50)
+        self.button_change_save_path.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.button_change_save_path.setStyleSheet(style.button_blue_style)
+        self.button_change_save_path.setText("Изменить")
+        self.button_change_save_path.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.button_change_save_path.clicked.connect(
+            lambda: choose_parsing_save_folder(self))
+
+        widget_for_change_save_path = QWidget()
+        widget_for_change_save_path.setFixedWidth(730)
+        widget_for_change_save_path.setStyleSheet(
+            f"background-color: {style.background_color}; border-radius: 10px;"
+            f"padding: 10px;")
+        horizontal_layout_for_change_save_path = QHBoxLayout()
+        widget_for_change_save_path.setLayout(horizontal_layout_for_change_save_path)
+
+        # Лейбл с заголовком об изменении пути сохранения ПДФ
+        change_path_label = QLabel()
+        change_path_label.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        change_path_label.setText("Путь сохранения:")
+        change_path_label.setStyleSheet(f"color: {style.light_font_color};")
+
+        vertical_layout_for_pos_title = QVBoxLayout()
+        vertical_layout_for_pos_title.addWidget(change_path_label)
+        vertical_layout_for_pos_title.addStretch()
+
+        self.save_path_label = QLabel()
+        self.save_path_label.setFixedWidth(550)
+        self.save_path_label.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+        self.save_path_label.setStyleSheet(f"color: {style.dark_font_color};"
+            f"background-color: {style.background_dark_color}; border-radius: 10px;"
+            f"padding: 10px;")
+        self.save_path_label.setWordWrap(True)
+        self.save_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.save_path_label.setText(self.save_folder_path)
+
+        vertical_layout_for_show_save_path_and_button_change = QVBoxLayout()
+        vertical_layout_for_show_save_path_and_button_change.addWidget(
+            self.save_path_label)
+        vertical_layout_for_show_save_path_and_button_change.addStretch()
+        vertical_layout_for_show_save_path_and_button_change.addWidget(
+            self.button_change_save_path, alignment=Qt.AlignmentFlag.AlignRight)
+        vertical_layout_for_show_save_path_and_button_change.setSpacing(15)
+
+        horizontal_layout_for_change_save_path.addLayout(
+            vertical_layout_for_pos_title)
+        horizontal_layout_for_change_save_path.addStretch()
+        horizontal_layout_for_change_save_path.addLayout(
+            vertical_layout_for_show_save_path_and_button_change)
+
         # Добавление в основной layout
         container_layout_main_tab.addWidget(self.widget_bg_main_tab)
 
@@ -585,9 +651,203 @@ class MainWindow(QMainWindow):
 
         container_layout_main_tab.addStretch()
 
+        container_layout_main_tab.addWidget(
+            widget_for_change_save_path, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        container_layout_main_tab.addStretch()
+
         container_layout_main_tab.addLayout(widgets_horizontal_main_tab_layout)
 
-        # Вторая вкладка
+        # Первая вкладка - сбор пдф по готовой таблице ==================================
+        # ===============================================================================
+
+        tab_second_widget.setStyleSheet(
+            f"background-color: {style.background_dark_color}; border-radius: 10px;"
+            f"margin: 10px;")
+
+        main_layout_for_second_tab = QVBoxLayout()
+        tab_second_widget.setLayout(main_layout_for_second_tab)
+
+        # Виджет для фона заголовка
+        background_widget_for_second_tab = QWidget()
+        background_widget_for_second_tab.setStyleSheet(
+            f"background-color: {style.background_dark_color}; border-radius: 10px;")
+
+        main_layout_for_second_tab.addWidget(
+            background_widget_for_second_tab)
+
+        # Заголовок для вкладки
+        second_tab_title = QLabel()
+        second_tab_title.setText("Сборка ПДФ по готовой таблице")
+        second_tab_title.setStyleSheet(f"color: {style.light_font_color}; font: bold;"
+            f"background-color: {style.background_color}; padding: 10px;")
+        second_tab_title.setFont(fonts.get_qfont("JetBrains_Regular", 12))
+
+        title_second_tab_widget = QWidget()
+
+        # Лейаут для позиционирования заголовка по левому краю
+        horizontal_layout_for_second_tab_title = QHBoxLayout()
+        title_second_tab_widget.setLayout(horizontal_layout_for_second_tab_title)
+        horizontal_layout_for_second_tab_title.addWidget(second_tab_title)
+        horizontal_layout_for_second_tab_title.addStretch()
+
+        # Основной вертикальный контейнер для второй (первой) вкладки
+        background_widget_for_second_tab_container = QVBoxLayout()
+        background_widget_for_second_tab.setLayout(
+            background_widget_for_second_tab_container)
+
+        # Виджет для кнопки выбора пути сохранения ПДФ, лейбла с текущим путём
+        # сохранения и заголовка
+        widget_for_pos_button_path_and_title_choose_save_path = QWidget()
+        widget_for_pos_button_path_and_title_choose_save_path.setFixedWidth(740)
+        widget_for_pos_button_path_and_title_choose_save_path.setMinimumHeight(50)
+        widget_for_pos_button_path_and_title_choose_save_path.setStyleSheet(
+            f"background-color: {style.background_color}; border-radius: 10px;")
+
+        # Заголовок изменения пути сохранения
+        title_change_save_path = QLabel()
+        title_change_save_path.setFont(fonts.get_qfont("JetBrains_Regular", 12))
+        title_change_save_path.setStyleSheet(f"color: {style.light_font_color};"
+            f"background-color: {style.background_color}; border-radius: 10px;"
+            f"margin-top: 20px;")
+        title_change_save_path.setText("Текущий путь сохранения:")
+
+        # Отдельный путь для сохранения ПДФ (без парсинга)
+        self.save_folder_second_tab_path: str = str(
+            Path.home() / "Desktop" / "results_folder")
+
+        # Лейбл для отображения текущего пути сохранения ПДФ
+        self.current_save_path_label = QLabel()
+        self.current_save_path_label.setMinimumHeight(70)
+        self.current_save_path_label.setFixedWidth(450)
+        self.current_save_path_label.setWordWrap(True)
+        self.current_save_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.current_save_path_label.setFont(fonts.get_qfont("JetBrains_Medium", 10))
+        self.current_save_path_label.setStyleSheet(f"color: {style.dark_font_color};"
+            f"background-color: {style.background_dark_color}; border-radius: 10px;")
+        self.current_save_path_label.setText(self.save_folder_second_tab_path)
+
+        self.button_shouse_save_path_for_second_tab = QPushButton()
+        self.button_shouse_save_path_for_second_tab.setFixedWidth(150)
+        self.button_shouse_save_path_for_second_tab.setFixedHeight(60)
+        self.button_shouse_save_path_for_second_tab.setCursor(
+            Qt.CursorShape.PointingHandCursor)
+        self.button_shouse_save_path_for_second_tab.setStyleSheet(
+            style.button_blue_style)
+        self.button_shouse_save_path_for_second_tab.setText("Изменить")
+        self.button_shouse_save_path_for_second_tab.setFont(fonts.get_qfont(
+            "JetBrains_Regular", 10))
+        self.button_shouse_save_path_for_second_tab.clicked.connect(
+            lambda: choose_save_folder_second_tab(self))
+
+        # Лейаут для виджетов: кнопки выбора пути сохранения, лейбла с путём и заголовка
+        layout_for_save_path_widgets = QHBoxLayout()
+        widget_for_pos_button_path_and_title_choose_save_path.setLayout(
+            layout_for_save_path_widgets)
+
+        vertical_layout_for_pos_title_second_tab =QVBoxLayout()
+        vertical_layout_for_pos_title_second_tab.addWidget(title_change_save_path)
+        vertical_layout_for_pos_title_second_tab.addStretch()
+
+        vertical_layout_save_path_widgets = QVBoxLayout()
+        vertical_layout_save_path_widgets.addWidget(self.current_save_path_label)
+        vertical_layout_save_path_widgets.addWidget(
+            self.button_shouse_save_path_for_second_tab,
+            alignment=Qt.AlignmentFlag.AlignRight)
+        vertical_layout_save_path_widgets.addStretch()
+
+        layout_for_save_path_widgets.addLayout(vertical_layout_for_pos_title_second_tab)
+        layout_for_save_path_widgets.addLayout(vertical_layout_save_path_widgets)
+
+        background_widget_for_second_tab_container.addWidget(
+            title_second_tab_widget)
+
+        widget_for_choose_table = QWidget()
+        widget_for_choose_table.setFixedWidth(730)
+        widget_for_choose_table.setStyleSheet(
+            f"background-color: {style.background_color}; border-radius: 10px;")
+
+        title_choose_table_label = QLabel()
+        title_choose_table_label.setFixedHeight(60)
+        title_choose_table_label.setMaximumWidth(250)
+        title_choose_table_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title_choose_table_label.setFont(fonts.get_qfont("JetBrains_Regular", 12))
+        title_choose_table_label.setStyleSheet(f"color: {style.light_font_color};"
+            f"background-color: {style.background_color}; border-radius: 10px;")
+        title_choose_table_label.setText("Таблица с данными")
+
+        self.label_current_tabel = QLabel()
+        self.label_current_tabel.setWordWrap(True)
+        self.label_current_tabel.setMinimumHeight(60)
+        self.label_current_tabel.setFixedWidth(450)
+        self.label_current_tabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.label_current_tabel.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.label_current_tabel.setStyleSheet(f"color: {style.dark_font_color};"
+            f"background-color: {style.background_dark_color}; border-radius: 10px;"
+            f"padding: 10px;")
+        if self.excel_file_path:
+            self.label_current_tabel.setText(self.excel_file_path)
+        else:
+            self.label_current_tabel.setText("Путь к выбранной таблице")
+
+        # Кнопка выбора файла с таблицей для сборки
+        self.button_shouse_table = QPushButton()
+        self.button_shouse_table.setFixedWidth(150)
+        self.button_shouse_table.setFixedHeight(60)
+        self.button_shouse_table.setCursor(
+            Qt.CursorShape.PointingHandCursor)
+        self.button_shouse_table.setStyleSheet(
+            style.button_blue_style)
+        self.button_shouse_table.setText("Выбрать файл")
+        self.button_shouse_table.setFont(fonts.get_qfont(
+            "JetBrains_Regular", 10))
+        self.button_shouse_table.clicked.connect(
+            lambda: choose_file(self))
+
+        self.button_open_folder_with_pdf = QPushButton()
+        self.button_open_folder_with_pdf.setFixedWidth(250)
+        self.button_open_folder_with_pdf.setFixedHeight(60)
+        self.button_open_folder_with_pdf.setCursor(
+            Qt.CursorShape.PointingHandCursor)
+        self.button_open_folder_with_pdf.setStyleSheet(
+            style.button_blue_style)
+        self.button_open_folder_with_pdf.setText("Открыть папку с PDF")
+        self.button_open_folder_with_pdf.setFont(fonts.get_qfont(
+            "JetBrains_Regular", 10))
+        self.button_open_folder_with_pdf.clicked.connect(
+            lambda: open_pdf_folder(self))
+
+        layout_for_choose_table = QVBoxLayout()
+        widget_for_choose_table.setLayout(layout_for_choose_table)
+
+        horizontal_pos_layout = QHBoxLayout()
+
+        layout_for_choose_table.addLayout(horizontal_pos_layout)
+
+        horizontal_pos_layout.addWidget(
+            title_choose_table_label)
+
+        horizontal_pos_layout.addStretch()
+
+        horizontal_pos_layout.addWidget(
+            self.label_current_tabel)
+
+        layout_for_choose_table.addWidget(
+            self.button_shouse_table, alignment=Qt.AlignmentFlag.AlignRight)
+
+        background_widget_for_second_tab_container.addWidget(
+            widget_for_choose_table, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        background_widget_for_second_tab_container.addWidget(
+            widget_for_pos_button_path_and_title_choose_save_path,
+            alignment=Qt.AlignmentFlag.AlignCenter)
+
+        background_widget_for_second_tab_container.addStretch()
+        background_widget_for_second_tab_container.addWidget(
+            self.button_open_folder_with_pdf, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        # Вторая вкладка - настройки ====================================================
+        # ===============================================================================
 
         tab_settings_layout = QVBoxLayout()
         tab_settings_widget.setLayout(tab_settings_layout)
@@ -775,6 +1035,8 @@ class MainWindow(QMainWindow):
         """
         if self.choose_tab == 0:
             parsing(self)
+        elif self.choose_tab == 1:
+            get_pdf(self)
         else:
             return
 
@@ -799,12 +1061,15 @@ class MainWindow(QMainWindow):
         if semester == "history":
             self.btn_choose_history_commission.setVisible(True)
             self.history_xl_choused_label.setVisible(True)
+            self.label_commission_title.setText("Таблица с комиссией по истории")
         elif semester == "foreign":
             self.btn_choose_foreign_commission.setVisible(True)
             self.foreign_xl_choosed_label.setVisible(True)
+            self.label_commission_title.setText("Таблица с комиссией по иностранному")
         elif semester == "specialization":
             self.btn_choose_specialization_commission.setVisible(True)
             self.specialization_xl_choosed_lb.setVisible(True)
+            self.label_commission_title.setText("Таблица с комиссией по специальности")
 
     def app_name_clicked(self):
         """

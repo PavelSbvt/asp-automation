@@ -133,7 +133,7 @@ def choose_save_folder(self) -> None:
 def choose_file(self) -> None:
     """
     Функция для выбора файла обрабатываемой таблицы для генерации пдф.
-    :param self:
+
     :return: None
     """
 
@@ -146,14 +146,13 @@ def choose_file(self) -> None:
 
     if file_path:
         self.excel_file_path = file_path
+        self.label_current_tabel.setText(self.excel_file_path)
         console.log(f"[green]✓ Выбран файл (таблица с данными):[/green] [yellow]{file_path}[/yellow]")
-        string = f"[I] Выбран файл (таблица с данными): {file_path}"
-        self.output_text.append(string)
-        QApplication.processEvents()
 
 def get_pdf(self) -> None:
     """
     Функция, собирающая PDF по таблицу, которую выбирает пользователь
+
     :return: None
     """
 
@@ -174,33 +173,27 @@ def get_pdf(self) -> None:
     except Exception as e:
         print_big_separator()
         print_out_string(f"[E] ОШИБКА при чтении файла: {e}")
-        self.output_text.append(f"[E] ОШИБКА при чтении файла: {e}")
-        QApplication.processEvents()
         print_big_separator()
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
     EXCEL_FILE = self.excel_file_path
     print_big_separator()
-    self.output_text.append("=" * 80)
 
     count_peoples_in_work = f"[I] Найдено {len(df)} человек"
     print_out_string(count_peoples_in_work)
-    self.output_text.append(count_peoples_in_work)
-    QApplication.processEvents()
 
     # прогресс бар
-    self.progress_bar.setValue(0)
-    self.progress_bar.setMaximum(100)
+    # self.progress_bar.setValue(0)
+    # self.progress_bar.setMaximum(100)
 
     print_big_separator()
-    self.output_text.append("=" * 80)
 
     output_pdf_name = self.save_folder_path
 
     os.makedirs(f"{output_pdf_name}", exist_ok=True)
 
-    processed_count = 0
+    # processed_count = 0
 
     for string_number in range(len(df)):
         surname_datelnyi_p = str(df.iloc[string_number, 0]).strip()
@@ -208,8 +201,8 @@ def get_pdf(self) -> None:
         direction = str(df.iloc[string_number, 10]).strip()
         discipline = str(df.iloc[string_number, 1]).strip()
 
-        processed_count += 1
-        self.update_progress(processed_count, len(df))
+        # processed_count += 1
+        # self.update_progress(processed_count, len(df))
 
         if surname_datelnyi_p == "nan" or surname_name_p == "nan" or surname_name_p =="":
             continue
@@ -218,11 +211,8 @@ def get_pdf(self) -> None:
 
         msg = f"[I] Делаю PDF для: {surname_name_p}"
         print_out_string(msg)
-        self.output_text.append(msg)
-        QApplication.processEvents()
 
         print_separator_points()
-        self.output_text.append("." * 80)
 
         wb = load_workbook(EXCEL_FILE)
         ws = wb["Протокол"]
@@ -245,7 +235,8 @@ def get_pdf(self) -> None:
         cell = ws['A1']
         text = (
             "МИНИСТЕРСТВО НАУКИ И ВЫСШЕГО ОБРАЗОВАНИЯ РОССИЙСКОЙ ФЕДЕРАЦИИ\n"
-"Федеральное государственное бюджетное образовательное учреждение высшего образования\n"
+            "Федеральное государственное бюджетное образовательное "
+            "учреждение высшего образования\n"
             "«Тамбовский государственный технический университет»"
         )
         cell.value = text
@@ -467,22 +458,17 @@ def get_pdf(self) -> None:
         msg = f"[S] Готов: {code} {surname_name_p}.pdf"
 
         print_out_string(msg)
-        self.output_text.append(msg)
-        QApplication.processEvents()
 
         print_separator()
-        self.output_text.append("-" * 80)
 
     msg = (f"[S] Программа завершила работу. "
            f"Документы PDF сохранены в папке '{output_pdf_name}'")
     print_big_separator()
     print_out_string(msg)
-    self.output_text.append(msg)
     print_big_separator()
-    self.output_text.append("=" * 80)
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
-    self.progress_bar.setValue(100)
+    # self.progress_bar.setValue(100)
 
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
     QMessageBox.information(
