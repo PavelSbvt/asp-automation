@@ -1,17 +1,16 @@
 import sys
-import random
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 import webbrowser
 
-from PyQt6.QtCore import QPoint, QTimer, Qt, QSize, QUrl
-from PyQt6.QtGui import QIcon, QTransform, QCursor
-from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton, QTextEdit,
-QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit, QMessageBox,
-QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea, QSlider)
+from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton,
+    QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit,
+    QMessageBox, QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea, QSlider)
 
 from core.settings_manager import settings
-from utils.output_rich import debug_log, warning_log, simple_log
+from utils.output_rich import debug_log, simple_log
 from utils.functions_for_window_gui import (get_random_image_from_folder,
     get_main_color_image)
 from gui.functions.choose_files import (choose_universal_excel,
@@ -49,6 +48,8 @@ class MainWindow(QMainWindow):
         self.choose_tab = -1
 
         self.stop_generation: bool = False  # булевый флаг остановки сборки пдф и парсинга
+
+        self.stop_building_pdf: bool = False  # булевый флаг остановки сборки пдф
 
         # устанавливаю дефолтные пути к файлам пустыми
         self.excel_file_path: Optional[str] = None  # путь к файлу - шаблон для ЛР
@@ -185,6 +186,23 @@ class MainWindow(QMainWindow):
         self.stop_parsing_button.clicked.connect(self.stop_generation_process)
         self.stop_parsing_button.setVisible(False)
 
+        self.stop_button = QPushButton()
+        self.stop_button.setFixedSize(30, 31)
+        self.stop_button.setStyleSheet(f"""
+                            QPushButton {{
+                                background-image: url({stop_button_path.as_posix()});
+                            }}
+                            QPushButton:hover {{
+                                background-image: url({stop_button_hover_path.as_posix()});
+                            }}
+                            QPushButton:pressed {{
+                                background-image: url({stop_button_path.as_posix()});
+                            }}
+                        """
+                                               )
+        self.stop_button.clicked.connect(self.stop_generation_second_tab)
+        self.stop_button.setVisible(False)
+
         # Вызов функции для получения индекса текущей вкладки
         self.what_tab_is_show_now()
         # И вызов её при открытии другой вкладки
@@ -195,6 +213,7 @@ class MainWindow(QMainWindow):
         self.cap.addStretch()
         self.cap.addWidget(self.run_button)
         self.cap.addWidget(self.stop_parsing_button)
+        self.cap.addWidget(self.stop_button)
         self.cap.addWidget(self.settings_button)
 
         # Добавление в главный вертикальный layout шапки и виджета с вкладками
@@ -322,7 +341,7 @@ class MainWindow(QMainWindow):
         radio_buttons_vertical_layout.setContentsMargins(10,30,10,20)
         radio_buttons_vertical_layout.addStretch()
 
-        # прогресс бар для второй вкладки (с парсингом). Изначально скрыто
+        # прогресс бар для нулевой вкладки (с парсингом). Изначально скрыто
         self.progress_bar_parsing = QProgressBar()
         self.progress_bar_parsing.setFixedWidth(730)
         self.progress_bar_parsing.setFixedHeight(25)
@@ -662,8 +681,7 @@ class MainWindow(QMainWindow):
         # ===============================================================================
 
         tab_second_widget.setStyleSheet(
-            f"background-color: {style.background_dark_color}; border-radius: 10px;"
-            f"margin: 10px;")
+            f"background-color: {style.background_dark_color}; border-radius: 10px;")
 
         main_layout_for_second_tab = QVBoxLayout()
         tab_second_widget.setLayout(main_layout_for_second_tab)
@@ -679,8 +697,7 @@ class MainWindow(QMainWindow):
         # Заголовок для вкладки
         second_tab_title = QLabel()
         second_tab_title.setText("Сборка ПДФ по готовой таблице")
-        second_tab_title.setStyleSheet(f"color: {style.light_font_color}; font: bold;"
-            f"background-color: {style.background_color}; padding: 10px;")
+        second_tab_title.setStyleSheet(f"color: {style.light_font_color}; font: bold;")
         second_tab_title.setFont(fonts.get_qfont("JetBrains_Regular", 12))
 
         title_second_tab_widget = QWidget()
@@ -699,18 +716,19 @@ class MainWindow(QMainWindow):
         # Виджет для кнопки выбора пути сохранения ПДФ, лейбла с текущим путём
         # сохранения и заголовка
         widget_for_pos_button_path_and_title_choose_save_path = QWidget()
-        widget_for_pos_button_path_and_title_choose_save_path.setFixedWidth(740)
+        widget_for_pos_button_path_and_title_choose_save_path.setFixedWidth(730)
         widget_for_pos_button_path_and_title_choose_save_path.setMinimumHeight(50)
         widget_for_pos_button_path_and_title_choose_save_path.setStyleSheet(
-            f"background-color: {style.background_color}; border-radius: 10px;")
+            f"background-color: {style.background_color}; border-radius: 10px;"
+            f"padding: 10px;")
 
         # Заголовок изменения пути сохранения
         title_change_save_path = QLabel()
-        title_change_save_path.setFont(fonts.get_qfont("JetBrains_Regular", 12))
+        title_change_save_path.setFont(fonts.get_qfont("JetBrains_Regular", 11))
         title_change_save_path.setStyleSheet(f"color: {style.light_font_color};"
             f"background-color: {style.background_color}; border-radius: 10px;"
-            f"margin-top: 20px;")
-        title_change_save_path.setText("Текущий путь сохранения:")
+            f"margin-top: 5px; font: bold;")
+        title_change_save_path.setText("Текущий путь сохранения")
 
         # Отдельный путь для сохранения ПДФ (без парсинга)
         self.save_folder_second_tab_path: str = str(
@@ -718,7 +736,7 @@ class MainWindow(QMainWindow):
 
         # Лейбл для отображения текущего пути сохранения ПДФ
         self.current_save_path_label = QLabel()
-        self.current_save_path_label.setMinimumHeight(70)
+        self.current_save_path_label.setMinimumHeight(50)
         self.current_save_path_label.setFixedWidth(450)
         self.current_save_path_label.setWordWrap(True)
         self.current_save_path_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -727,9 +745,10 @@ class MainWindow(QMainWindow):
             f"background-color: {style.background_dark_color}; border-radius: 10px;")
         self.current_save_path_label.setText(self.save_folder_second_tab_path)
 
+        # Кнопка выбора пути сохранения ПДФ
         self.button_shouse_save_path_for_second_tab = QPushButton()
         self.button_shouse_save_path_for_second_tab.setFixedWidth(150)
-        self.button_shouse_save_path_for_second_tab.setFixedHeight(60)
+        self.button_shouse_save_path_for_second_tab.setFixedHeight(50)
         self.button_shouse_save_path_for_second_tab.setCursor(
             Qt.CursorShape.PointingHandCursor)
         self.button_shouse_save_path_for_second_tab.setStyleSheet(
@@ -739,6 +758,13 @@ class MainWindow(QMainWindow):
             "JetBrains_Regular", 10))
         self.button_shouse_save_path_for_second_tab.clicked.connect(
             lambda: choose_save_folder_second_tab(self))
+
+        # прогресс бар для первой вкладки (без парсинга). Изначально скрыто
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setFixedWidth(730)
+        self.progress_bar.setFixedHeight(25)
+        self.progress_bar.setStyleSheet(style.progress_bar_style_blue)
+        self.progress_bar.setVisible(False)
 
         # Лейаут для виджетов: кнопки выбора пути сохранения, лейбла с путём и заголовка
         layout_for_save_path_widgets = QHBoxLayout()
@@ -758,6 +784,7 @@ class MainWindow(QMainWindow):
 
         layout_for_save_path_widgets.addLayout(vertical_layout_for_pos_title_second_tab)
         layout_for_save_path_widgets.addLayout(vertical_layout_save_path_widgets)
+        vertical_layout_save_path_widgets.setSpacing(15)
 
         background_widget_for_second_tab_container.addWidget(
             title_second_tab_widget)
@@ -765,20 +792,22 @@ class MainWindow(QMainWindow):
         widget_for_choose_table = QWidget()
         widget_for_choose_table.setFixedWidth(730)
         widget_for_choose_table.setStyleSheet(
-            f"background-color: {style.background_color}; border-radius: 10px;")
+            f"background-color: {style.background_color}; border-radius: 10px;"
+            f"padding: 10px;")
 
         title_choose_table_label = QLabel()
-        title_choose_table_label.setFixedHeight(60)
+        title_choose_table_label.setFixedHeight(50)
         title_choose_table_label.setMaximumWidth(250)
         title_choose_table_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        title_choose_table_label.setFont(fonts.get_qfont("JetBrains_Regular", 12))
+        title_choose_table_label.setFont(fonts.get_qfont("JetBrains_Regular", 11))
         title_choose_table_label.setStyleSheet(f"color: {style.light_font_color};"
-            f"background-color: {style.background_color}; border-radius: 10px;")
+            f"background-color: {style.background_color}; border-radius: 10px;"
+            f"font: bold;")
         title_choose_table_label.setText("Таблица с данными")
 
         self.label_current_tabel = QLabel()
         self.label_current_tabel.setWordWrap(True)
-        self.label_current_tabel.setMinimumHeight(60)
+        self.label_current_tabel.setMinimumHeight(50)
         self.label_current_tabel.setFixedWidth(450)
         self.label_current_tabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.label_current_tabel.setFont(fonts.get_qfont("JetBrains_Regular", 10))
@@ -793,7 +822,7 @@ class MainWindow(QMainWindow):
         # Кнопка выбора файла с таблицей для сборки
         self.button_shouse_table = QPushButton()
         self.button_shouse_table.setFixedWidth(150)
-        self.button_shouse_table.setFixedHeight(60)
+        self.button_shouse_table.setFixedHeight(50)
         self.button_shouse_table.setCursor(
             Qt.CursorShape.PointingHandCursor)
         self.button_shouse_table.setStyleSheet(
@@ -804,9 +833,10 @@ class MainWindow(QMainWindow):
         self.button_shouse_table.clicked.connect(
             lambda: choose_file(self))
 
+        # Кнопка открытия папки сохранения
         self.button_open_folder_with_pdf = QPushButton()
         self.button_open_folder_with_pdf.setFixedWidth(250)
-        self.button_open_folder_with_pdf.setFixedHeight(60)
+        self.button_open_folder_with_pdf.setFixedHeight(50)
         self.button_open_folder_with_pdf.setCursor(
             Qt.CursorShape.PointingHandCursor)
         self.button_open_folder_with_pdf.setStyleSheet(
@@ -819,6 +849,7 @@ class MainWindow(QMainWindow):
 
         layout_for_choose_table = QVBoxLayout()
         widget_for_choose_table.setLayout(layout_for_choose_table)
+        layout_for_choose_table.setSpacing(15)
 
         horizontal_pos_layout = QHBoxLayout()
 
@@ -836,6 +867,9 @@ class MainWindow(QMainWindow):
             self.button_shouse_table, alignment=Qt.AlignmentFlag.AlignRight)
 
         background_widget_for_second_tab_container.addWidget(
+            self.progress_bar, alignment=Qt.AlignmentFlag.AlignCenter)
+
+        background_widget_for_second_tab_container.addWidget(
             widget_for_choose_table, alignment=Qt.AlignmentFlag.AlignCenter)
 
         background_widget_for_second_tab_container.addWidget(
@@ -846,11 +880,16 @@ class MainWindow(QMainWindow):
         background_widget_for_second_tab_container.addWidget(
             self.button_open_folder_with_pdf, alignment=Qt.AlignmentFlag.AlignCenter)
 
+        background_widget_for_second_tab_container.setSpacing(15)
+
         # Вторая вкладка - настройки ====================================================
         # ===============================================================================
 
         tab_settings_layout = QVBoxLayout()
         tab_settings_widget.setLayout(tab_settings_layout)
+        tab_settings_widget.setStyleSheet(
+            f"background-color: {style.background_dark_color}; "
+            f"border-radius: 10px;")
 
         self.settings_cap = QWidget()
         self.settings_cap.setStyleSheet(
@@ -1007,6 +1046,26 @@ class MainWindow(QMainWindow):
         """
 
         self.get_bg_for_main_tab_widget("resources/images/for_main_window")
+
+    def stop_generation_second_tab(self) -> None:
+        """
+        Останавливает процесс генерации пдф из второй вкладки главного окна
+
+        :return: None
+        """
+
+        simple_log("Остановка процесса по запросу пользователя")
+        self.stop_building_pdf= True
+        self.run_button.setVisible(False)
+        self.stop_button.setEnabled(False)
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
+        QMessageBox.information(
+            self,
+            "Остановка",
+            "Процесс остановки запущен...\n\n"
+            "Программа завершит текущую операцию и остановится."
+        )
 
     def stop_generation_process(self) -> None:
         """

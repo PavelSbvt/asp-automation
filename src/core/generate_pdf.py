@@ -16,12 +16,13 @@ from utils.basic_functions import (print_separator, print_big_separator,
 print_separator_points, print_out_string, get_time)
 from utils.output_rich import log_error
 
+
 console = Console()
 
 def open_pdf_folder(self) -> None:
     """
     Функция для открытия папки сохранения пдф.
-    :param self:
+
     :return: None
     """
 
@@ -149,6 +150,16 @@ def choose_file(self) -> None:
         self.label_current_tabel.setText(self.excel_file_path)
         console.log(f"[green]✓ Выбран файл (таблица с данными):[/green] [yellow]{file_path}[/yellow]")
 
+def update_progress(self, current: int, total: int) -> None:
+    """
+    функция обновления прогресса progressbar.
+    """
+
+    if total > 0:
+        progress = int((current / total) * 100)
+        self.progress_bar.setValue(progress)
+        QApplication.processEvents()
+
 def get_pdf(self) -> None:
     """
     Функция, собирающая PDF по таблицу, которую выбирает пользователь
@@ -177,6 +188,10 @@ def get_pdf(self) -> None:
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
+    self.stop_button.setVisible(True)
+    self.run_button.setVisible(False)
+    self.stop_button.setEnabled(True)
+
     EXCEL_FILE = self.excel_file_path
     print_big_separator()
 
@@ -184,8 +199,9 @@ def get_pdf(self) -> None:
     print_out_string(count_peoples_in_work)
 
     # прогресс бар
-    # self.progress_bar.setValue(0)
-    # self.progress_bar.setMaximum(100)
+    self.progress_bar.setVisible(True)
+    self.progress_bar.setValue(0)
+    self.progress_bar.setMaximum(100)
 
     print_big_separator()
 
@@ -193,7 +209,15 @@ def get_pdf(self) -> None:
 
     os.makedirs(f"{output_pdf_name}", exist_ok=True)
 
-    # processed_count = 0
+    processed_count = 0
+
+    if self.stop_building_pdf:
+        self.progress_bar.setVisible(False)
+        self.stop_button.setVisible(False)
+        self.run_button.setVisible(True)
+        self.stop_building_pdf = False
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
 
     for string_number in range(len(df)):
         surname_datelnyi_p = str(df.iloc[string_number, 0]).strip()
@@ -201,13 +225,29 @@ def get_pdf(self) -> None:
         direction = str(df.iloc[string_number, 10]).strip()
         discipline = str(df.iloc[string_number, 1]).strip()
 
-        # processed_count += 1
-        # self.update_progress(processed_count, len(df))
+        if self.stop_building_pdf:
+            self.progress_bar.setVisible(False)
+            self.stop_button.setVisible(False)
+            self.run_button.setVisible(True)
+            self.stop_building_pdf = False
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            return
+
+        processed_count += 1
+        update_progress(self, processed_count, len(df))
 
         if surname_datelnyi_p == "nan" or surname_name_p == "nan" or surname_name_p =="":
             continue
 
         code = direction.split()[0] if direction and direction != "nan" else "unknown"
+
+        if self.stop_building_pdf:
+            self.progress_bar.setVisible(False)
+            self.stop_button.setVisible(False)
+            self.run_button.setVisible(True)
+            self.stop_building_pdf = False
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            return
 
         msg = f"[I] Делаю PDF для: {surname_name_p}"
         print_out_string(msg)
@@ -220,6 +260,15 @@ def get_pdf(self) -> None:
         strings_with_data = [29, 39, 23, 14, 42, 17, 45, 19, 47]
 
         for row_num in range(1, 60):
+
+            if self.stop_building_pdf:
+                self.progress_bar.setVisible(False)
+                self.stop_button.setVisible(False)
+                self.run_button.setVisible(True)
+                self.stop_building_pdf = False
+                QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+                return
+
             if row_num in strings_with_data:
                 ws.row_dimensions[row_num].height = 15
             else:
@@ -228,6 +277,14 @@ def get_pdf(self) -> None:
         ws.row_dimensions[14].height = 35
         ws.row_dimensions[17].height = 35
         ws.row_dimensions[19].height = 35
+
+        if self.stop_building_pdf:
+            self.progress_bar.setVisible(False)
+            self.stop_button.setVisible(False)
+            self.run_button.setVisible(True)
+            self.stop_building_pdf = False
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            return
 
         thin_border = Border(
             bottom=Side(border_style='thin', color='000000'))
@@ -367,6 +424,14 @@ def get_pdf(self) -> None:
         ws.row_dimensions[2].height = 20
         ws.row_dimensions[7].height = 5
 
+        if self.stop_building_pdf:
+            self.progress_bar.setVisible(False)
+            self.stop_button.setVisible(False)
+            self.run_button.setVisible(True)
+            self.stop_building_pdf = False
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            return
+
         cell = ws['A32']
         cell.value = ""
         cell.border = thin_border
@@ -428,6 +493,14 @@ def get_pdf(self) -> None:
             ws.cell(row=39, column=4).font = Font(name='Times New Roman',
                                                   size=12, italic=True)
 
+        if self.stop_building_pdf:
+            self.progress_bar.setVisible(False)
+            self.stop_button.setVisible(False)
+            self.run_button.setVisible(True)
+            self.stop_building_pdf = False
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            return
+
         file_name = f"{code} {surname_name_p}.xlsx"
         file_name = file_name.replace("/", "_").replace(
             "\\", "_").replace(":", "_").replace("*", "_")
@@ -461,6 +534,22 @@ def get_pdf(self) -> None:
 
         print_separator()
 
+        if self.stop_building_pdf:
+            self.progress_bar.setVisible(False)
+            self.stop_button.setVisible(False)
+            self.run_button.setVisible(True)
+            self.stop_building_pdf = False
+            QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+            return
+
+    if self.stop_building_pdf:
+        self.progress_bar.setVisible(False)
+        self.stop_button.setVisible(False)
+        self.run_button.setVisible(True)
+        self.stop_building_pdf = False
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
+
     msg = (f"[S] Программа завершила работу. "
            f"Документы PDF сохранены в папке '{output_pdf_name}'")
     print_big_separator()
@@ -468,7 +557,15 @@ def get_pdf(self) -> None:
     print_big_separator()
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
-    # self.progress_bar.setValue(100)
+    self.progress_bar.setValue(100)
+
+    if self.stop_building_pdf:
+        self.progress_bar.setVisible(False)
+        self.stop_button.setVisible(False)
+        self.run_button.setVisible(True)
+        self.stop_building_pdf = False
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        return
 
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
     QMessageBox.information(
@@ -480,3 +577,10 @@ def get_pdf(self) -> None:
     )
     print(f"[S] Готово! Создано PDF документов: {len(df)}. "
           f"Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
+
+    self.progress_bar.setVisible(False)
+    self.stop_button.setVisible(False)
+    self.run_button.setVisible(True)
+    self.stop_building_pdf = False
+    self.stop_button.setEnabled(True)
+    QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
