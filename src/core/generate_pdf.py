@@ -23,6 +23,7 @@ def wrap_text(text: str, width: int = 50) -> str:
 
     :return: str - Возвращает отредактированную строку с переносами по ширине
     """
+
     return "\n".join(textwrap.wrap(text, width=width))
 
 def choose_file(self) -> None:
@@ -68,7 +69,8 @@ def update_progress(self, current: int, total: int) -> None:
 
 def get_pdf(self) -> None:
     """
-    Функция, собирающая PDF по таблицу, которую выбирает пользователь
+    Функция, собирающая PDF по таблице, которую выбирает пользователь
+    (таблица должна быть уже заполнена).
 
     :return: None
     """

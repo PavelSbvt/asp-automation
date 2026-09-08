@@ -8,14 +8,20 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from utils.basic_functions import (print_separator,
-                                   print_big_separator, print_separator_points, remove_trailing_dot)
+from utils.basic_functions import (remove_trailing_dot)
+from utils.output_rich import debug_log, success_log, simple_log, log_error
 
 
 def extract_science_from_brackets(text: str) -> str:
     """
     Убирает скобки из строки и заменяет их на запятую.
     Например: "название (технические науки)" -> "название, технические науки"
+
+    :param text: Str - Принимает текст, в котором нужно найти скобки () и заменить
+    их на запятые (последняя запятая не ставится).
+
+    :return: Str - возвращает текст, в котором первая скобка ( -
+    заменилась на запятую, а вторая скобка удалена
     """
     if text is None or pd.isna(text):
         return ""
@@ -35,15 +41,17 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
     Генерация PDF-протоколов на основе сгенерированного Excel-файла,
     содержащего листы «БД» и «Протокол».
     Для конвертации используется Microsoft Excel (через VBScript ExportAsFixedFormat).
+
+    :param excel_file_path: Str - принимает путь к таблице с данными, по которым
+    можно собрать ПДФ
+
     :return: None
     """
 
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
     if not excel_file_path:
-        print_big_separator()
-        print("[E] ОШИБКА: Не указан путь к файлу с данными!")
-        print_big_separator()
+        log_error("ОШИБКА: Не указан путь к файлу с данными!")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
@@ -51,15 +59,11 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         # Читаем лист «БД», все поля как строки
         df = pd.read_excel(excel_file_path, sheet_name="БД", dtype=str)
     except Exception as e:
-        print_big_separator()
-        print(f"[E] ОШИБКА при чтении файла: {e}")
-        print_big_separator()
+        log_error(f"ОШИБКА при чтении файла: {e}")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
-    print_big_separator()
-    print(f"[I] Найдено {len(df)} человек")
-    print_big_separator()
+    debug_log(f"Найдено {len(df)} человек")
 
     output_pdf_name = self.parsing_save_folder_path
     os.makedirs(output_pdf_name, exist_ok=True)
@@ -70,7 +74,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
     for string_number in range(len(df)):
         # проверка остановки процесса пользователем
         if hasattr(self, 'stop_generation') and self.stop_generation:
-            print(f"[I] ОСТАНОВКА генерации. Обработано {processed_count} из {len(df)}")
+            simple_log(f"ОСТАНОВКА генерации. Обработано {processed_count} из {len(df)}")
             # Удаляем временные файлы, если есть
             if os.path.exists("temp_convert.vbs"):
                 try:
@@ -104,6 +108,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         # 9  = ПОСТАНОВИЛИ (ФИО в именительном падеже)
         # 10 = НАПРАВЛЕНИЕ (шифр + профиль)
         # ------------------------------------------------------------
+
         surname_genitive = str(df.iloc[string_number, 0]).strip()  # родительный
         discipline = str(df.iloc[string_number, 1]).strip()
         commission_text = str(df.iloc[string_number, 2]).strip()  # текст приказа
@@ -134,8 +139,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         code = direction_raw.split()[0] if direction_raw and direction_raw != "nan" \
             else "unknown"
 
-        print(f"[I] Делаю PDF для: {surname_nominative}")
-        print_separator_points()
+        debug_log(f"Делаю PDF для: {surname_nominative}")
 
         # Загружаем шаблон (лист «Протокол») из того же файла
         wb = load_workbook(EXCEL_FILE)
@@ -282,6 +286,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
             cell.border = thin_border
             cell.alignment = Alignment(horizontal='left', vertical='center')
             cell.font = Font(name='Times New Roman', size=12)
+
         for col in ['E42', 'E45', 'E47']:
             ws[col].value = ""
             ws[col].border = thin_border
@@ -324,12 +329,13 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
             subprocess.run(["cscript", "//Nologo", "temp_convert.vbs"],
                            shell=True, check=True, timeout=30)
         except subprocess.CalledProcessError as e:
-            print(f"[E] Ошибка конвертации Excel: {e}")
+            log_error(f"Ошибка конвертации Excel: {e}")
             os.remove("temp_convert.vbs")
             os.remove(file_name)
             continue
+
         except FileNotFoundError:
-            print("[E] Не удалось запустить cscript (Windows Script Host). "
+            log_error("Не удалось запустить cscript (Windows Script Host). "
                   "Проверьте установку.")
             os.remove("temp_convert.vbs")
             os.remove(file_name)
@@ -340,13 +346,10 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         os.remove("temp_convert.vbs")
         os.remove(file_name)
 
-        print(f"[S] Готов: {code} {surname_nominative}.pdf")
-        print_separator()
+        success_log(f"Готов: {code} {surname_nominative}.pdf")
 
-    print(f"[S] Программа завершила работу. Документы PDF сохранены в папке "
-          f"'{output_pdf_name}'")
+    debug_log(f"Функция завершила работу.")
 
-    print_big_separator()
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
     QMessageBox.information(
@@ -357,5 +360,5 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         QMessageBox.StandardButton.Ok
     )
     self.progress_bar_parsing.setValue(100)
-    print(f"[S] Готово! Создано PDF документов: {len(df)}. Папка сохранения: "
+    success_log(f"Протоколы готовы! Создано PDF документов: {len(df)}. Папка сохранения: "
           f"{output_pdf_name}")
