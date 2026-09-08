@@ -21,7 +21,7 @@ class SettingsManager:
         self.app_version = "1.4"
         self.loading_window_timer_duration = 5000
         self.flag_show_loading_window = True
-        self.theme = "Standard"
+        self.theme = "standard"
 
         self.get_settings()
 

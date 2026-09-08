@@ -86,14 +86,14 @@ def get_pdf(self) -> None:
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
     if not self.excel_file_path:
-        log_error("[E] ОШИБКА: Сначала выберите файл с данными!")
+        log_error("ОШИБКА: Сначала выберите файл с данными!")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
     try:
         df = pd.read_excel(self.excel_file_path, sheet_name="БД", dtype=str)
     except Exception as e:
-        log_error(f"[E] ОШИБКА при чтении файла: {e}")
+        log_error(f"ОШИБКА при чтении файла: {e}")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
@@ -105,7 +105,7 @@ def get_pdf(self) -> None:
 
     print_spacer()
 
-    success_log(f"[I] Найдено {len(df)} человек")
+    success_log(f"Найдено {len(df)} человек")
 
     # прогресс бар
     self.progress_bar.setVisible(True)
