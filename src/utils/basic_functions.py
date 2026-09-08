@@ -5,10 +5,14 @@ from typing import Dict
 import pandas as pd
 
 
-def remove_trailing_dot(text) -> str:
+def remove_trailing_dot(text: str) -> str:
     """
     Убирает точку в конце строки, если она там есть.
     Также обрабатывает None, nan и пустые строки.
+
+    :param text: Принимает текст, в котором нужно ужалить точку в конце
+
+    :return: Str - возвращает строку без точки в конце.
     """
     if text is None or pd.isna(text):
         return ""
@@ -17,53 +21,12 @@ def remove_trailing_dot(text) -> str:
         return text[:-1]
     return text
 
-def print_out_string(text: str) -> None:
-    """
-    Функция для красивого вывода строки логгирования в консоль
-    :param text: str
-    :return: None
-    """
-    out_string_size = 150
-    if len(text) % 2 != 0:
-        text += " "
-
-    output_string = ("|" + " " * int((out_string_size - len(text) - 2) / 2) +
-                     text + " " * int((out_string_size - len(text) - 2) / 2) + "|")
-    print(output_string)
-
-def print_separator() -> None:
-    """
-    Функция для вывода разделителя - для читаемости консоли.
-    Строка из нижних подчёркиваний.
-    :return: None
-    """
-
-    print("|" + "_" * 148 + "|")
-
-def print_separator_points() -> None:
-    """
-    Функция для вывода разделителя - для читаемости консоли.
-    Строка из точек.
-    :return: None
-    """
-
-    print("|" + "." * 148 + "|")
-
-def print_big_separator() -> None:
-    """
-    Функция для вывода разделителя - для читаемости консоли.
-    Строка из нижних знаков равно.
-    :return: None
-    """
-
-    print("|" + "=" * 148 + "|")
-
 def normalize_initials(name: str) -> str:
     """
     Нормализует инициалы: приводит к формату с пробелом между инициалами.
 
-    :param name: строка с ФИО
-    :return: нормализованная строка с пробелом между инициалами
+    :param name: Принимает строку с ФИО
+    :return: str - нормализованная строка с пробелом между инициалами
     """
     if not name or name == "nan":
         return name
@@ -80,6 +43,12 @@ def extract_code_from_row(row, code_col) -> str:
     Извлекает шифр из строки таблицы комиссий.
     Если написано "Все" — возвращает "ALL".
     Если есть шифр формата 2.2.12. — возвращает его.
+
+    :param row:
+
+    :param code_col:
+
+    :return: str - если находит подходящий шифр, возвращает содержимое ячейки
     """
     if code_col is None:
         return "UNKNOWN"

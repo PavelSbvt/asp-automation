@@ -7,6 +7,8 @@ from PyQt6.QtWidgets import QMessageBox
 from parser.parsing_functions import parsing_commissions
 from core.generate_pdf_from_db import generate_pdf_from_db
 from core.fill_db_sheet import fill_database_sheet
+from utils.output_rich import (debug_log, success_log,
+    simple_log, log_error, warning_log, print_spacer_points, print_spacer)
 
 
 def parsing(self) -> None:
@@ -16,7 +18,7 @@ def parsing(self) -> None:
     :return: None
     """
 
-    print("[I] НАЧАЛО ПАРСИНГА")
+    simple_log("[I] НАЧАЛО ПАРСИНГА")
 
     self.stop_generation = False
     self.stop_parsing_button.setVisible(True)
@@ -215,7 +217,7 @@ def parsing(self) -> None:
         QMessageBox.critical(self, "Ошибка", f"Произошла ошибка:\n{str(e)}")
 
     finally:
-        print("[I] Восстановление состояния кнопок...")
+        debug_log("[I] Восстановление состояния кнопок...")
         self.stop_generation = False
         self.stop_parsing_button.setVisible(False)
         self.stop_parsing_button.setEnabled(False)

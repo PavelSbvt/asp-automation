@@ -2,7 +2,7 @@ import os
 
 from PyQt6.QtWidgets import QFileDialog, QMessageBox
 
-from utils.output_rich import success_log, debug_log, warning_log
+from utils.output_rich import success_log, log_error
 
 
 def choose_parsing_save_folder(self) -> None:
@@ -53,7 +53,7 @@ def open_parsing_pdf_folder(self) -> None:
                 f"Сначала создайте PDF файлы, нажав кнопку "
                 f"запуска процесса на первой вкладке."
         )
-        print("[E] ошибка с открытием папки с пдф")
+        log_error("[E] ошибка с открытием папки с пдф")
         return
     os.startfile(folder_path)
 
@@ -73,7 +73,7 @@ def open_pdf_folder(self) -> None:
             f"Сначала создайте PDF файлы, нажав кнопку "
             f"запуска процесса на первой вкладке."
         )
-        print("[E] ошибка с открытием папки с пдф")
+        log_error("[E] ошибка с открытием папки с пдф")
         return
     os.startfile(folder_path)
 
@@ -117,7 +117,7 @@ def choose_history_excel(self) -> None:
 
         self.history_xl_choused_label.setText(file_path)
 
-        print(f"[I] Выбран файл комиссии по истории: {file_path}")
+        success_log(f"Выбран файл комиссии по истории: {file_path}")
 
 def choose_foreign_excel(self) -> None:
     """
@@ -137,7 +137,7 @@ def choose_foreign_excel(self) -> None:
 
         self.foreign_xl_choosed_label.setText(file_path)
 
-        print(f"[I] Выбран файл комиссии по иностранному: {file_path}")
+        success_log(f"Выбран файл комиссии по иностранному: {file_path}")
 
 def choose_specialization_excel(self) -> None:
     """
@@ -157,7 +157,7 @@ def choose_specialization_excel(self) -> None:
 
         self.specialization_xl_choosed_lb.setText(file_path)
 
-        print(f"[I] Выбран файл комиссии по специальности: {file_path}")
+        success_log(f"Выбран файл комиссии по специальности: {file_path}")
 
 def choose_save_folder_path(self) -> None:
     """
@@ -181,4 +181,4 @@ def choose_save_folder_path(self) -> None:
             self.lb_choosing_way_save_parsing_pdf.setText(short_name)
             self.lb_choosing_way_save_parsing_pdf.setStyleSheet(
                 "font-size: 13px; color: white; background-color: rgb(105,208,73);")
-        print(f"[I] Выбран файл комиссии по специальности: {file_path}")
+        success_log(f"Выбран файл комиссии по специальности: {file_path}")

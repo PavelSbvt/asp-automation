@@ -131,3 +131,22 @@ def exit_log(message: str) -> None:
     :return: None
     """
     console.log(f"[magenta][EXIT] ◀ ВЫХОД: {message}[/magenta]",  _stack_offset=2)
+
+def print_spacer() -> None:
+    """
+    Разделитель для более наглядного показа лога процессов в консоли
+
+    :return: None
+    """
+
+    console.log(f"[grey46][Debug] {"-" * 50}[/grey46]", _stack_offset=2)
+
+def print_spacer_points() -> None:
+    """
+    Разделитель для более наглядного показа лога процессов в консоли -
+    разделитель в виде точек
+
+    :return: None
+    """
+
+    console.log(f"[grey46][Debug] {"." * 50}[/grey46]", _stack_offset=2)

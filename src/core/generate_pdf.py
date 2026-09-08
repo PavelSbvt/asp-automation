@@ -1,6 +1,7 @@
 import os
 import subprocess
-from pathlib import Path
+import warnings
+import textwrap
 
 import pandas as pd
 from openpyxl import load_workbook
@@ -8,128 +9,21 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.text import Text
-
-from utils.basic_functions import (print_separator, print_big_separator,
-print_separator_points, print_out_string, get_time)
-from utils.output_rich import log_error
+from utils.output_rich import (debug_log, success_log,
+    log_error, simple_log, print_spacer, print_spacer_points)
 
 
-console = Console()
-
-def open_pdf_folder(self) -> None:
+def wrap_text(text: str, width: int = 50) -> str:
     """
-    Функция для открытия папки сохранения пдф.
+    Переносит длинный текст по словам с заданной шириной
 
-    :return: None
+    :param text: Принимает текст, который нужно обработать и вернуть с переносами
+
+    :param width: Принимает желаемую ширину строки (для переноса лишнего)
+
+    :return: str - Возвращает отредактированную строку с переносами по ширине
     """
-
-    folder_path = self.save_folder_path
-    if not Path(folder_path).exists():
-        message_box = QMessageBox(self)
-        message_box.setIcon(QMessageBox.Icon.Warning)
-        message_box.setWindowTitle("Папка не найдена")
-        message_box.setText(
-            f"Папка '{folder_path}' не существует.\n\n"
-            f"Сначала создайте PDF файлы, нажав кнопку "
-            f"'Запустить' на первой вкладке."
-        )
-        message_box.setStyleSheet("""
-            QMessageBox {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 rgb(26, 0, 0),
-                    stop: 0.5 rgb(45, 0, 0),
-                    stop: 1 rgb(26, 0, 0));
-                border: 2px solid rgb(255, 23, 68);
-                border-radius: 12px;
-                padding: 5px;
-            }
-
-            QMessageBox QLabel {
-                color: rgb(255, 255, 255);
-                font-size: 13px;
-                font-family: 'Segoe UI', Arial, sans-serif;
-                padding: 15px 20px;
-                background: transparent;
-            }
-
-            QMessageBox QPushButton {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 rgb(255, 23, 68),
-                    stop: 1 rgb(213, 0, 0));
-                color: rgb(255, 255, 255);
-                border: none;
-                border-radius: 8px;
-                padding: 10px 30px;
-                font-weight: bold;
-                font-size: 12px;
-                font-family: 'Segoe UI', Arial, sans-serif;
-                min-width: 80px;
-                margin: 10px 20px 15px 0px;
-            }
-
-            QMessageBox QPushButton:hover {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 rgb(200, 40, 50),
-                    stop: 1 rgb(160, 20, 30));
-            }
-
-            QMessageBox QPushButton:pressed {
-                background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                    stop: 0 rgb(90, 5, 15),
-                    stop: 1 rgb(60, 0, 10));
-            }
-
-            QMessageBox QLabel#qt_msgbox_label {
-                color: rgb(255, 255, 255);
-                font-size: 13px;
-            }
-        """)
-        message_box.exec()
-
-        error_message = Panel(
-            Text.from_markup(
-                "[bold white on red]⚠️ ПАПКА НЕ НАЙДЕНА ⚠️[/bold white on red]\n\n"
-                f"[bold]Путь:[/bold] [yellow]{folder_path}[/yellow]\n\n"
-                f"[dim]Решение:[/dim] Сначала создайте PDF файлы, нажав кнопку "
-                f"[bold green]'Запустить'[/bold green] на первой вкладке.\n\n"
-                f"[dim]Время: {get_time()}[/dim]"
-            ),
-            title="[red]Ошибка[/red]",
-            border_style="red",
-            padding=(1, 2),
-            width=80
-        )
-        console.print(error_message)
-
-        return
-    os.startfile(folder_path)
-
-def choose_save_folder(self) -> None:
-    """
-    Функция для выбора папки сохранения для пдф
-    :param self:
-    :return: None
-    """
-
-    folder_path = QFileDialog.getExistingDirectory(
-        self,
-        "Выберите папку для сохранения PDF",
-        self.save_folder_path
-    )
-    if folder_path:
-        self.save_folder_path = folder_path
-        short_path = self.save_folder_path
-        if len(short_path) > 15:
-            short_path = "..." + short_path[-12:]
-        self.path_value_label.setText(short_path)
-        self.path_value_label.setToolTip(self.save_folder_path)
-        console.log(f"[green]✓ Папка для сохранения изменена:[/green] [yellow]{folder_path}[/yellow]")
-        string_save_way = f"[I] Папка для сохранения изменена: {folder_path}"
-        self.output_text.append(string_save_way)
-        QApplication.processEvents()
+    return "\n".join(textwrap.wrap(text, width=width))
 
 def choose_file(self) -> None:
     """
@@ -138,7 +32,7 @@ def choose_file(self) -> None:
     :return: None
     """
 
-    file_path, _ = QFileDialog.getOpenFileName( #
+    file_path, _ = QFileDialog.getOpenFileName(
         self,
         "Выберите файл Excel с данными",
         "",
@@ -148,17 +42,29 @@ def choose_file(self) -> None:
     if file_path:
         self.excel_file_path = file_path
         self.label_current_tabel.setText(self.excel_file_path)
-        console.log(f"[green]✓ Выбран файл (таблица с данными):[/green] [yellow]{file_path}[/yellow]")
+        success_log(f"Выбрана таблица  с данными для сборки ПДФ: {file_path}")
 
 def update_progress(self, current: int, total: int) -> None:
     """
-    функция обновления прогресса progressbar.
+    функция обновления прогресса progressbar на вкладке со сборкой (без парсинга).
+    Переводит текущий индекс в процент от максимального индекса и
+    устанавливает значение прогрессбару.
+
+    :param current: Принимает int - индекс текущей операции. Например, 4 из 8.
+
+    :param total: Принимает максимальный индекс операций
+    (сколько всего будет шагов до заполнения)
+
+    :return: None
     """
 
     if total > 0:
         progress = int((current / total) * 100)
         self.progress_bar.setValue(progress)
         QApplication.processEvents()
+        print_spacer_points()
+        debug_log(f"Прогресс сборки ПДФ: {progress}%")
+        print_spacer_points()
 
 def get_pdf(self) -> None:
     """
@@ -167,24 +73,25 @@ def get_pdf(self) -> None:
     :return: None
     """
 
+    print_spacer()
+    simple_log("Запущен процесс сборки ПДФ.")
+
+    # Игнорирование предупреждения (openpyxl ругался на проверку данных в ячейках
+    # - валидацию данных, так как он не может их обрабатывать и пропускает)
+    warnings.filterwarnings("ignore", category=UserWarning,
+                            module="openpyxl.worksheet._reader")
+
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+
     if not self.excel_file_path:
-        string_1 = "[E] ОШИБКА: Сначала выберите файл с данными!"
-        log_error(
-            "ОШИБКА: Сначала выберите файл с данными!",
-            f""
-        )
-        self.output_text.append(string_1)
-        QApplication.processEvents()
+        log_error("[E] ОШИБКА: Сначала выберите файл с данными!")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
     try:
         df = pd.read_excel(self.excel_file_path, sheet_name="БД", dtype=str)
     except Exception as e:
-        print_big_separator()
-        print_out_string(f"[E] ОШИБКА при чтении файла: {e}")
-        print_big_separator()
+        log_error(f"[E] ОШИБКА при чтении файла: {e}")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
@@ -193,17 +100,17 @@ def get_pdf(self) -> None:
     self.stop_button.setEnabled(True)
 
     EXCEL_FILE = self.excel_file_path
-    print_big_separator()
 
-    count_peoples_in_work = f"[I] Найдено {len(df)} человек"
-    print_out_string(count_peoples_in_work)
+    print_spacer()
+
+    success_log(f"[I] Найдено {len(df)} человек")
 
     # прогресс бар
     self.progress_bar.setVisible(True)
     self.progress_bar.setValue(0)
     self.progress_bar.setMaximum(100)
 
-    print_big_separator()
+    print_spacer()
 
     output_pdf_name = self.save_folder_path
 
@@ -249,10 +156,9 @@ def get_pdf(self) -> None:
             QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
             return
 
-        msg = f"[I] Делаю PDF для: {surname_name_p}"
-        print_out_string(msg)
+        debug_log(f"Подготовка ПДФ для '{surname_name_p}'")
 
-        print_separator_points()
+        print_spacer_points()
 
         wb = load_workbook(EXCEL_FILE)
         ws = wb["Протокол"]
@@ -528,11 +434,9 @@ def get_pdf(self) -> None:
         os.remove("temp_convert.vbs")
         os.remove(file_name)
 
-        msg = f"[S] Готов: {code} {surname_name_p}.pdf"
+        success_log(f"Собран ПДФ: {code} {surname_name_p}.pdf")
 
-        print_out_string(msg)
-
-        print_separator()
+        print_spacer()
 
         if self.stop_building_pdf:
             self.progress_bar.setVisible(False)
@@ -550,11 +454,10 @@ def get_pdf(self) -> None:
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
-    msg = (f"[S] Программа завершила работу. "
-           f"Документы PDF сохранены в папке '{output_pdf_name}'")
-    print_big_separator()
-    print_out_string(msg)
-    print_big_separator()
+    print_spacer()
+    success_log(f"[S] Программа завершила работу.")
+    simple_log(f"Документы PDF сохранены в папке '{output_pdf_name}'")
+    print_spacer()
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
     self.progress_bar.setValue(100)
@@ -568,15 +471,16 @@ def get_pdf(self) -> None:
         return
 
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
+    wrapped_path = wrap_text(output_pdf_name, width=50)
+
     QMessageBox.information(
         self,
-        "Готово!",
-        f"Создано PDF документов: {len(df)}\n\n"
-        f"Папка сохранения: {output_pdf_name}",
+        "Сборка ПДФ завершена!",
+        f"Создано PDF протоколов: {len(df)}\n\n"
+        f"Документы сохранены в папке: \n{wrapped_path}",
         QMessageBox.StandardButton.Ok
     )
-    print(f"[S] Готово! Создано PDF документов: {len(df)}. "
-          f"Создано PDF документов: {len(df)}. Папка сохранения: {output_pdf_name}")
 
     self.progress_bar.setVisible(False)
     self.stop_button.setVisible(False)
