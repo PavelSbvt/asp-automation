@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Optional, List, Dict, Any
 import webbrowser
 
-from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtCore import QPoint, Qt, qWarning
 from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton,
     QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit,
@@ -921,6 +921,7 @@ class MainWindow(QMainWindow):
         loading_window_param_widget.setStyleSheet(
             f"background-color: {style.background_color}; border-radius: 10px;")
         loading_window_param_widget.setMaximumWidth(720)
+        loading_window_param_widget.setFixedHeight(70)
 
         loading_param_h_layout = QHBoxLayout()
         loading_window_param_widget.setLayout(loading_param_h_layout)
@@ -932,7 +933,7 @@ class MainWindow(QMainWindow):
 
         self.button_show_loading_window = QPushButton()
         self.button_show_loading_window.setText("Показывать")
-        self.button_show_loading_window.setFixedHeight(35)
+        self.button_show_loading_window.setFixedHeight(50)
         self.button_show_loading_window.setFixedWidth(200)
         self.button_show_loading_window.setFont(fonts.get_qfont("JetBrains_Light", 8))
         self.button_show_loading_window.clicked.connect(self.set_true_show_loading_window)
@@ -943,7 +944,7 @@ class MainWindow(QMainWindow):
 
         self.button_hide_loading_window = QPushButton()
         self.button_hide_loading_window.setText("Скрывать")
-        self.button_hide_loading_window.setFixedHeight(35)
+        self.button_hide_loading_window.setFixedHeight(50)
         self.button_hide_loading_window.setFixedWidth(200)
         self.button_hide_loading_window.setFont(fonts.get_qfont("JetBrains_Light", 8))
         self.button_hide_loading_window.clicked.connect(self.set_false_show_loading_window)
@@ -952,14 +953,16 @@ class MainWindow(QMainWindow):
         else:
             self.button_hide_loading_window.setStyleSheet(style.button_hide_style)
 
-        loading_param_h_layout.addWidget( self.param_show_loading_window)
-        loading_param_h_layout.addWidget( self.button_show_loading_window)
-        loading_param_h_layout.addWidget( self.button_hide_loading_window)
+        loading_param_h_layout.addWidget(self.param_show_loading_window)
+        loading_param_h_layout.addStretch()
+        loading_param_h_layout.addWidget(self.button_show_loading_window)
+        loading_param_h_layout.addWidget(self.button_hide_loading_window)
 
         loading_window_timer_duration_param_widget = QWidget()
         loading_window_timer_duration_param_widget.setStyleSheet(
             f"background-color: {style.background_color}; border-radius: 10px;")
         loading_window_timer_duration_param_widget.setMaximumWidth(720)
+        loading_window_timer_duration_param_widget.setFixedHeight(70)
 
         loading_timer_duration_param_h_layout = QHBoxLayout()
         loading_window_timer_duration_param_widget.setLayout(loading_timer_duration_param_h_layout)
@@ -985,7 +988,6 @@ class MainWindow(QMainWindow):
         self.indicate_loading_window_timer_duration.setStyleSheet(f"color: {style.dark_font_color};")
         self.indicate_loading_window_timer_duration.setText(
             f"{str(settings.get_loading_window_timer_duration())} мс")
-        self.indicate_loading_window_timer_duration.setAlignment(Qt.AlignmentFlag.AlignRight)
 
         loading_timer_duration_param_h_layout.addWidget(self.param_timer_duration_loading_window)
         loading_timer_duration_param_h_layout.addStretch()
@@ -993,12 +995,104 @@ class MainWindow(QMainWindow):
         loading_timer_duration_param_h_layout.addStretch()
         loading_timer_duration_param_h_layout.addWidget(self.indicate_loading_window_timer_duration)
 
+        # Виджет для выбора цветовой темы приложения
+        widget_for_choose_theme = QWidget()
+        widget_for_choose_theme.setFixedHeight(70)
+        widget_for_choose_theme.setFixedWidth(720)
+        widget_for_choose_theme.setStyleSheet(
+            f"background-color: {style.background_color}; border-radius: 10px;")
+
+        # Заголовок для виджета выбора тем
+        label_title_choose_theme = QLabel()
+        label_title_choose_theme.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        label_title_choose_theme.setText("Тема приложения")
+        label_title_choose_theme.setStyleSheet(f"color: {style.light_font_color};"
+            f"font: bold;")
+
+        # Кнопки для выбора тем
+        self.choose_standard_theme_button = QPushButton()
+        self.choose_standard_theme_button.setText("Стандартная")
+        self.choose_standard_theme_button.setFixedWidth(150)
+        self.choose_standard_theme_button.setStyleSheet(style.button_hide_style)
+        self.choose_standard_theme_button.setFixedHeight(50)
+        self.choose_standard_theme_button.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.choose_standard_theme_button.clicked.connect(lambda: self.on_button_choose_theme("standard"))
+
+        self.choose_violet_theme_button = QPushButton()
+        self.choose_violet_theme_button.setText("Фиолетовая")
+        self.choose_violet_theme_button.setStyleSheet(style.button_hide_style)
+        self.choose_violet_theme_button.setFixedWidth(150)
+        self.choose_violet_theme_button.setFixedHeight(50)
+        self.choose_violet_theme_button.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.choose_violet_theme_button.clicked.connect(lambda: self.on_button_choose_theme("violet"))
+
+        self.choose_dark_theme_button = QPushButton()
+        self.choose_dark_theme_button.setText("Тёмная")
+        self.choose_dark_theme_button.setStyleSheet(style.button_hide_style)
+        self.choose_dark_theme_button.setFixedWidth(150)
+        self.choose_dark_theme_button.setFixedHeight(50)
+        self.choose_dark_theme_button.setFont(fonts.get_qfont("JetBrains_Regular", 10))
+        self.choose_dark_theme_button.clicked.connect(lambda: self.on_button_choose_theme("dark"))
+
+        self.change_active_button_styles()
+
+        layout_for_theme_widget = QHBoxLayout()
+        widget_for_choose_theme.setLayout(layout_for_theme_widget)
+        layout_for_theme_widget.addWidget(label_title_choose_theme)
+        layout_for_theme_widget.addWidget(self.choose_standard_theme_button)
+        layout_for_theme_widget.addWidget(self.choose_violet_theme_button)
+        layout_for_theme_widget.addWidget(self.choose_dark_theme_button)
+
         layout_for_settings.addWidget(loading_window_param_widget)
         layout_for_settings.addWidget(loading_window_timer_duration_param_widget)
 
-        tab_settings_layout.addWidget(self.settings_main_widget, alignment=Qt.AlignmentFlag.AlignCenter)
+        layout_for_settings.addWidget(widget_for_choose_theme,
+            alignment=Qt.AlignmentFlag.AlignCenter)
+
+        tab_settings_layout.addWidget(self.settings_main_widget,
+            alignment = Qt.AlignmentFlag.AlignCenter)
 
         tab_settings_layout.addStretch()
+
+    def change_active_button_styles(self) -> None:
+        """
+        Функция для смены стиля кнопок (одна кнопка должна быть "активной",
+        остальные - "неактивные").
+
+        :return: None. Устанавливает стили для кнопок в соответствии
+        с выбранной темой приложения (активна та кнопка, имя темы за
+        которую она отвечает установлено в параметрах на данных момент).
+        """
+
+        current_theme = settings.get_theme_name()
+
+        if current_theme == "standard":
+            self.choose_dark_theme_button.setStyleSheet(style.button_hide_style)
+            self.choose_violet_theme_button.setStyleSheet(style.button_hide_style)
+            self.choose_standard_theme_button.setStyleSheet(style.button_blue_style)
+        elif current_theme == "violet":
+            self.choose_dark_theme_button.setStyleSheet(style.button_hide_style)
+            self.choose_violet_theme_button.setStyleSheet(style.button_blue_style)
+            self.choose_standard_theme_button.setStyleSheet(style.button_hide_style)
+        elif current_theme == "dark":
+            self.choose_dark_theme_button.setStyleSheet(style.button_blue_style)
+            self.choose_violet_theme_button.setStyleSheet(style.button_hide_style)
+            self.choose_standard_theme_button.setStyleSheet(style.button_hide_style)
+
+    def on_button_choose_theme(self, theme_name: str) -> None:
+        """
+        Функция для смены темы приложения по кнопке
+
+        :param theme_name: Принимает имя темы (для передачи этого имени
+         в настройки приложения)
+
+        :return: None. Меняет параметр имени темы в настройках приложения.
+        """
+
+        settings.set_theme(theme_name)
+        debug_log(f"Выбрана тема: {theme_name}")
+
+        self.change_active_button_styles()
 
     def on_slider_changed(self, value):
         """
