@@ -21,6 +21,7 @@ class SettingsManager:
         self.app_version = "1.4"
         self.loading_window_timer_duration = 5000
         self.flag_show_loading_window = True
+        self.theme = "Standard"
 
         self.get_settings()
 
@@ -38,7 +39,8 @@ class SettingsManager:
                 "app_name": self.app_name,
                 "version": self.app_version,
                 "loading_window_timer": self.loading_window_timer_duration,
-                "flag_show_loading_window": self.flag_show_loading_window
+                "flag_show_loading_window": self.flag_show_loading_window,
+                "theme": self.theme
             }
             json.dump(data, json_file, ensure_ascii=False, indent=4)
             debug_log("Применены стандартные настройки")
@@ -151,6 +153,14 @@ class SettingsManager:
             else:
                 self.flag_show_loading_window = flag_show_loading_window
 
+            theme = settings_data.get("theme", "Неизвестно")
+
+            if theme == "Неизвестно" or not isinstance(
+                    theme, str):
+                broken_settings_parameters.append("theme")
+            else:
+                self.theme = theme
+
             if broken_settings_parameters:
                 warning_log(f"Данные настроек не содержат информацию "
                     f"о {broken_settings_parameters}")
@@ -187,7 +197,8 @@ class SettingsManager:
         simple_log(f"Версия: {self.app_version}")
         simple_log(f"Время работы таймера показа загрузочного окна: "
             f"{self.loading_window_timer_duration}")
-        simple_log(f"Показ окна загрузки: {self.flag_show_loading_window}")
+        simple_log(f"Время показа окна загрузки: {self.flag_show_loading_window}")
+        simple_log(f"Цветовая тема: {self.theme}")
 
     def update_settings_param(self, param_name: str, new_value) -> None:
         """
@@ -219,7 +230,33 @@ class SettingsManager:
 
         debug_log(f"Обновлено поле '{param_name}' = {new_value}")
 
-    def set_app_name_settings(self, app_name: str):
+    def set_theme(self, theme_name: str) -> None:
+        """
+        Функция для задания цветовой темы приложения.
+        Перепишет настройки на новое значение.
+
+        Атрибут класса настроек (self.theme) получает новое значение.
+
+        :param theme_name: Принимается новое имя темы приложения
+
+        :return: None.
+        """
+        self.theme = theme_name
+        self.update_settings_param("theme", theme_name)
+
+    def get_theme_name(self) -> str:
+        """
+        Функция для получения имени темы приложения.
+
+        Вернёт значение атрибута класса настроек (имени темы приложения - self.theme).
+
+        :return: Str(self.theme).
+        """
+        theme_name = self.theme
+
+        return theme_name
+
+    def set_app_name_settings(self, app_name: str) -> None:
         """
         Функция для задания нового имени приложения.
         Перепишет настройки на новое значение.
