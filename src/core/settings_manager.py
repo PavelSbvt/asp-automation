@@ -97,6 +97,25 @@ class SettingsManager:
             param_value = settings_data.get(f"{param_name}", "Неизвестно")
             return param_value
 
+    def read_one_param_hide_log(self, param_name: str):
+        """
+        Функция для чтения из файла настроек только одного параметра.
+        Минимальный вывод логов в консоль
+
+        :param param_name: принимает имя параметра из настроек, по которому будет искать значение
+
+        :return: param_value
+        """
+
+        if not self.config_path.exists():
+            warning_log(f"Файл с настройками не найден: {self.config_path}")
+            return "Неизвестно"
+
+        with open(self.config_path, 'r', encoding='utf-8') as file:
+            settings_data = json.load(file)
+            param_value = settings_data.get(f"{param_name}", "Неизвестно")
+            return param_value
+
     def rewrite_settings(self) -> None:
         """
         Функция для перезаписи файла с настройками.
@@ -386,10 +405,24 @@ class SettingsManager:
         """
 
         flag_show = self.read_one_param("flag_show_loading_window")
+
         if flag_show:
             debug_log("Показ загрузочного окна разрешён")
         else:
-            debug_log("Показ загрузочного она запрещен")
+            debug_log("Показ загрузочного окна запрещен")
+
+        return flag_show
+
+    def get_flag_show_loading_window_hide_log(self) -> bool:
+        """
+        Функция для проверки разрешения приложения на показ загрузочного окна.
+        Минимальный вывод информации в лог
+
+        :return: flag_show - Текущее значение флага, разрешающего или
+        запрещающего показ загрузочного окна
+        """
+
+        flag_show = self.read_one_param_hide_log("flag_show_loading_window")
 
         return flag_show
 
