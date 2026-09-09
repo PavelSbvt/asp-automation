@@ -1,4 +1,5 @@
 from core.settings_manager import settings
+from utils.output_rich import debug_log
 
 
 class Styles:
@@ -65,14 +66,27 @@ class Styles:
             "#DDDDDD", "#888888", "#BBBBBB", "#555555"
         ]
 
+    def update_styles_for_choose_theme(self):
+        """
+        Функция для явного обновления стилей в соответствии с выбранной темой.
+
+        Вызывает функции установки стилей в соответствие
+        с тем стилем приложения, который указан в параметрах приложения.
+
+        :return: None.
+        """
+
         current_theme = settings.get_theme_name()
 
         if current_theme == "standard":
             self.set_standard_theme()
+            debug_log("Применена стандартная тема")
         elif current_theme == "violet":
             self.set_violet_theme()
+            debug_log("Применена фиолетовая тема")
         else:
             self.set_dark_theme()
+            debug_log("Применена тёмная тема")
 
     def set_theme(self, list_args: list[str]) -> None:
         """
