@@ -74,6 +74,9 @@ class MainWindow(QMainWindow):
         # атрибут для хранения позиции мыши(x,y), объект класса qpoint
         self.drag_position: QPoint = QPoint()
 
+        # Главный цвет случайного изображения
+        self.main_color_str: str = ""
+
         # Главный виджет
         self.main_back_widget = QWidget(self)
         self.setCentralWidget(self.main_back_widget)
@@ -186,7 +189,6 @@ class MainWindow(QMainWindow):
         # Скролл виджет для всех виджетов и кнопок в основной вкладке
         self.main_tab_scroll_area = QScrollArea()
         self.main_tab_scroll_area.setWidgetResizable(True)
-        self.main_tab_scroll_area.setStyleSheet(Style.q_scroll_bar_style)
 
         horizontal_windget_for_position = QHBoxLayout()
         self.container_widget_main_tab = QWidget()
@@ -903,6 +905,37 @@ class MainWindow(QMainWindow):
 
         Style.update_styles_for_choose_theme()
 
+        self.tab_widget.setStyleSheet(f"""
+           QTabWidget::pane {{
+               background-color: #2B2B2B;
+               border: none;
+               top: -1px;
+           }}
+           QTabBar {{
+               background-color: {Style.background_color};
+           }}
+           QTabBar::tab {{
+               background: transparent;
+               color: {Style.dark_font_color};
+               padding: 10px 20px;
+               margin-right: 0px;
+               border: none;
+               border-bottom: 2px solid transparent;
+           }}
+           QTabBar::tab:selected {{
+               background: transparent;
+               color: {Style.light_font_color};
+               border-bottom: 2px solid rgb({self.main_color_str});
+               font-weight: bold;
+           }}            
+           QTabBar::tab:hover:!selected {{
+               color: {Style.light_font_color};
+               border-bottom: 2px solid #4D4E51;
+           }}
+       """)
+
+        self.main_tab_scroll_area.setStyleSheet(Style.q_scroll_bar_style)
+
         self.main_back_widget.setStyleSheet(
             f"background-color: {Style.background_color}; border-radius: 0px;")
 
@@ -1347,53 +1380,24 @@ class MainWindow(QMainWindow):
 
             main_color_img = get_main_color_image(photo_path)
 
-            main_color_str = f"{main_color_img[0]}, {main_color_img[1]}, {main_color_img[2]}"
+            self.main_color_str = f"{main_color_img[0]}, {main_color_img[1]}, {main_color_img[2]}"
 
             self.cap_widget.setStyleSheet(
                 f"""
                     background: qlineargradient(
                     x1: 0, y1: 0, 
                     x2: 1, y2: 0,    
-                    stop: 0 rgba({main_color_str}, 0.02),
-                    stop: 0.025 rgba({main_color_str}, 0.1),
-                    stop: 0.05 rgba({main_color_str}, 0.18),
-                    stop: 0.15 rgba({main_color_str}, 0.13),
-                    stop: 0.2 rgba({main_color_str}, 0.02),
-                    stop: 0.25 rgba({main_color_str}, 0.01),
+                    stop: 0 rgba({self.main_color_str}, 0.02),
+                    stop: 0.025 rgba({self.main_color_str}, 0.1),
+                    stop: 0.05 rgba({self.main_color_str}, 0.18),
+                    stop: 0.15 rgba({self.main_color_str}, 0.13),
+                    stop: 0.2 rgba({self.main_color_str}, 0.02),
+                    stop: 0.25 rgba({self.main_color_str}, 0.01),
                     stop: 0.3 rgba(1, 1, 1, 0),
                     stop: 1 rgba(1, 1, 1, 0)
                     );
                 """
             )
-
-            self.tab_widget.setStyleSheet(f"""
-                QTabWidget::pane {{
-                    background-color: #2B2B2B;
-                    border: none;
-                    top: -1px;
-                }}
-                QTabBar {{
-                    background-color: {Style.background_color};
-                }}
-                QTabBar::tab {{
-                    background: transparent;
-                    color: {Style.dark_font_color};
-                    padding: 10px 20px;
-                    margin-right: 0px;
-                    border: none;
-                    border-bottom: 2px solid transparent;
-                }}
-                QTabBar::tab:selected {{
-                    background: transparent;
-                    color: {Style.light_font_color};
-                    border-bottom: 2px solid rgb({main_color_str});
-                    font-weight: bold;
-                }}            
-                QTabBar::tab:hover:!selected {{
-                    color: {Style.light_font_color};
-                    border-bottom: 2px solid #4D4E51;
-                }}
-            """)
 
             self.bg_path_check = f"{photo_path}"
 

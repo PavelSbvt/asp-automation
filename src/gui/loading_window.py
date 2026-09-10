@@ -10,6 +10,7 @@ from utils.functions_for_window_gui import (center_window,
     background_window_by_time_of_day, update_animation_gradient)
 from utils.citations import get_citation_with_author
 from core.settings_manager import Settings
+from gui.main_window.for_main_window.styles import Style
 from utils.update_gui import update_progress_bar_animation
 from utils.fonts import Fonts
 
@@ -39,10 +40,13 @@ class MyLoadingWindow(QWidget):
 
         Rich.enter_log("Показ загрузочного окна.")
 
+        Style.update_styles_for_choose_theme()
+
         # Виджет для фона (большой тёмный)
         self.widget_background_fill = QWidget(self)
-        self.widget_background_fill.setStyleSheet("background-color: rgb(43, 43, 43);"
-            " border-radius: 10px;")
+        self.widget_background_fill.setStyleSheet(
+            f"background-color: {Style.background_dark_color};"
+            f" border-radius: 10px;")
         self.widget_background_fill.setFixedSize(780, 520)
         self.widget_background_fill.move(0, 0)
 
