@@ -9,8 +9,7 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QFileDialog, QMessageBox
 
-from utils.output_rich import (debug_log, success_log,
-    log_error, simple_log, print_spacer, print_spacer_points)
+from utils.output_rich import Rich
 
 
 def wrap_text(text: str, width: int = 50) -> str:
@@ -43,7 +42,7 @@ def choose_file(self) -> None:
     if file_path:
         self.excel_file_path = file_path
         self.label_current_tabel.setText(self.excel_file_path)
-        success_log(f"Выбрана таблица  с данными для сборки ПДФ: {file_path}")
+        Rich.success_log(f"Выбрана таблица  с данными для сборки ПДФ: {file_path}")
 
 def update_progress(self, current: int, total: int) -> None:
     """
@@ -63,9 +62,9 @@ def update_progress(self, current: int, total: int) -> None:
         progress = int((current / total) * 100)
         self.progress_bar.setValue(progress)
         QApplication.processEvents()
-        print_spacer_points()
-        debug_log(f"Прогресс сборки ПДФ: {progress}%")
-        print_spacer_points()
+        Rich.print_spacer_points()
+        Rich.debug_log(f"Прогресс сборки ПДФ: {progress}%")
+        Rich.print_spacer_points()
 
 def get_pdf(self) -> None:
     """
@@ -75,8 +74,8 @@ def get_pdf(self) -> None:
     :return: None
     """
 
-    print_spacer()
-    simple_log("Запущен процесс сборки ПДФ.")
+    Rich.print_spacer()
+    Rich.simple_log("Запущен процесс сборки ПДФ.")
 
     # Игнорирование предупреждения (openpyxl ругался на проверку данных в ячейках
     # - валидацию данных, так как он не может их обрабатывать и пропускает)
@@ -86,14 +85,14 @@ def get_pdf(self) -> None:
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
     if not self.excel_file_path:
-        log_error("ОШИБКА: Сначала выберите файл с данными!")
+        Rich.log_error("ОШИБКА: Сначала выберите файл с данными!")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
     try:
         df = pd.read_excel(self.excel_file_path, sheet_name="БД", dtype=str)
     except Exception as e:
-        log_error(f"ОШИБКА при чтении файла: {e}")
+        Rich.log_error(f"ОШИБКА при чтении файла: {e}")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
@@ -103,16 +102,16 @@ def get_pdf(self) -> None:
 
     EXCEL_FILE = self.excel_file_path
 
-    print_spacer()
+    Rich.print_spacer()
 
-    success_log(f"Найдено {len(df)} человек")
+    Rich.success_log(f"Найдено {len(df)} человек")
 
     # прогресс бар
     self.progress_bar.setVisible(True)
     self.progress_bar.setValue(0)
     self.progress_bar.setMaximum(100)
 
-    print_spacer()
+    Rich.print_spacer()
 
     output_pdf_name = self.save_folder_path
 
@@ -158,9 +157,9 @@ def get_pdf(self) -> None:
             QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
             return
 
-        debug_log(f"Подготовка ПДФ для '{surname_name_p}'")
+        Rich.debug_log(f"Подготовка ПДФ для '{surname_name_p}'")
 
-        print_spacer_points()
+        Rich.print_spacer_points()
 
         wb = load_workbook(EXCEL_FILE)
         ws = wb["Протокол"]
@@ -436,9 +435,9 @@ def get_pdf(self) -> None:
         os.remove("temp_convert.vbs")
         os.remove(file_name)
 
-        success_log(f"Собран ПДФ: {code} {surname_name_p}.pdf")
+        Rich.success_log(f"Собран ПДФ: {code} {surname_name_p}.pdf")
 
-        print_spacer()
+        Rich.print_spacer()
 
         if self.stop_building_pdf:
             self.progress_bar.setVisible(False)
@@ -456,10 +455,10 @@ def get_pdf(self) -> None:
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
-    print_spacer()
-    success_log(f"[S] Программа завершила работу.")
-    simple_log(f"Документы PDF сохранены в папке '{output_pdf_name}'")
-    print_spacer()
+    Rich.print_spacer()
+    Rich.success_log(f"[S] Программа завершила работу.")
+    Rich.simple_log(f"Документы PDF сохранены в папке '{output_pdf_name}'")
+    Rich.print_spacer()
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
     self.progress_bar.setValue(100)

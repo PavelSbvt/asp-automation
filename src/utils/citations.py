@@ -1,6 +1,6 @@
 import random
 
-from utils.output_rich import debug_log
+from utils.output_rich import Rich
 
 
 QUOTES = {
@@ -36,7 +36,7 @@ def get_citation_with_author() -> tuple[str, str]:
 
     citation = random.choice(list(QUOTES.keys()))
     author = QUOTES[citation]
-    debug_log(f"Цитата: {citation}")
-    debug_log(f"Автор цитаты: {author}")
+    Rich.debug_log(f"Цитата: {citation}")
+    Rich.debug_log(f"Автор цитаты: {author}")
 
     return citation, author

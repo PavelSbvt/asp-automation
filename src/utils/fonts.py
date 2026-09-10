@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PyQt6.QtGui import QFontDatabase, QFont
 
-from utils.output_rich import warning_log, debug_log
+from utils.output_rich import Rich
 
 
 class FontManager:
@@ -27,7 +27,7 @@ class FontManager:
             return
 
         else:
-            debug_log("Инициализация шрифтов...")
+            Rich.debug_log("Инициализация шрифтов...")
 
             # Добавляю новые семейства шрифтов из ресурсов проекта.
 
@@ -101,7 +101,7 @@ class FontManager:
 
             self.initialized = True
 
-            debug_log("Шрифты успешно загружены")
+            Rich.debug_log("Шрифты успешно загружены")
 
     def get_font(self, font_name: str) -> str:
         """
@@ -125,8 +125,8 @@ class FontManager:
         elif font_name == "JetBrains_LightItalic":
             return self.font_JetBrainsMono_LightItalic
         else:
-            warning_log(f"Передано неправильное имя шрифта: {font_name}")
-            debug_log("Применён стандартный шрифт 'Inter'")
+            Rich.warning_log(f"Передано неправильное имя шрифта: {font_name}")
+            Rich.debug_log("Применён стандартный шрифт 'Inter'")
             return self.font_family_Inter
 
     def get_qfont(self, font_name: str, size: int = 10) -> QFont:
@@ -146,4 +146,6 @@ class FontManager:
 
         return QFont(family, size)
 
-fonts = FontManager()
+
+
+Fonts = FontManager()

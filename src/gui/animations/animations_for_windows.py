@@ -1,7 +1,7 @@
 from PyQt6.QtCore import (QPropertyAnimation,QEasingCurve)
 from PyQt6.QtWidgets import QGraphicsOpacityEffect, QWidget
 
-from utils.output_rich import debug_log
+from utils.output_rich import Rich
 
 
 def animation_appearance_window(widget: QWidget, duration: int = 700,
@@ -36,7 +36,8 @@ def animation_appearance_window(widget: QWidget, duration: int = 700,
 
     widget.appearance_animation = animation_appearance
 
-    debug_log(f"Запуск анимации появления окна ({widget.objectName() or widget.__class__.__name__})")
+    Rich.debug_log(f"Запуск анимации появления окна "
+        f"({widget.objectName() or widget.__class__.__name__})")
 
     return animation_appearance
 
@@ -77,7 +78,8 @@ def animation_disappearance_window(widget: QWidget, duration: int = 450,
 
     animation_disappearance.start()
 
-    debug_log(f"Запуск анимации исчезания окна ({widget.objectName() or widget.__class__.__name__})")
+    Rich.debug_log(f"Запуск анимации исчезания окна "
+        f"({widget.objectName() or widget.__class__.__name__})")
 
     return animation_disappearance
 
@@ -100,7 +102,8 @@ def animation_disappearance_and_closing(widget: QWidget, duration: int = 450) ->
         """
 
         widget.close()
-        debug_log(f"Закрытие окна ({widget.objectName() or widget.__class__.__name__})")
+        Rich.debug_log(
+            f"Закрытие окна ({widget.objectName() or widget.__class__.__name__})")
 
         if hasattr(widget, 'closed'):
             widget.closed.emit()

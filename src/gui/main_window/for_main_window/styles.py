@@ -1,8 +1,8 @@
-from core.settings_manager import settings
-from utils.output_rich import debug_log
+from core.settings_manager import Settings
+from utils.output_rich import Rich
 
 
-class Styles:
+class StylesManager:
     """
     класс для стилей кнопок, виджетов
     """
@@ -76,17 +76,17 @@ class Styles:
         :return: None.
         """
 
-        current_theme = settings.get_theme_name()
+        current_theme = Settings.get_theme_name()
 
         if current_theme == "standard":
             self.set_standard_theme()
-            debug_log("Применена стандартная тема")
+            Rich.debug_log("Применена стандартная тема")
         elif current_theme == "violet":
             self.set_violet_theme()
-            debug_log("Применена фиолетовая тема")
+            Rich.debug_log("Применена фиолетовая тема")
         else:
             self.set_dark_theme()
-            debug_log("Применена тёмная тема")
+            Rich.debug_log("Применена тёмная тема")
 
     def set_theme(self, list_args: list[str]) -> None:
         """
@@ -324,4 +324,4 @@ class Styles:
         self.set_theme(self.dark_theme)
 
 
-style = Styles()
+Style = StylesManager()

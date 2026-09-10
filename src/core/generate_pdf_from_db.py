@@ -8,8 +8,8 @@ from openpyxl.styles import Alignment, Border, Font, Side
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from utils.basic_functions import (remove_trailing_dot)
-from utils.output_rich import debug_log, success_log, simple_log, log_error
+from utils.basic_functions import remove_trailing_dot
+from utils.output_rich import Rich
 
 
 def extract_science_from_brackets(text: str) -> str:
@@ -51,7 +51,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
     QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
 
     if not excel_file_path:
-        log_error("ОШИБКА: Не указан путь к файлу с данными!")
+        Rich.log_error("ОШИБКА: Не указан путь к файлу с данными!")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
@@ -59,11 +59,11 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         # Читаем лист «БД», все поля как строки
         df = pd.read_excel(excel_file_path, sheet_name="БД", dtype=str)
     except Exception as e:
-        log_error(f"ОШИБКА при чтении файла: {e}")
+        Rich.log_error(f"ОШИБКА при чтении файла: {e}")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
         return
 
-    debug_log(f"Найдено {len(df)} человек")
+    Rich.debug_log(f"Найдено {len(df)} человек")
 
     output_pdf_name = self.parsing_save_folder_path
     os.makedirs(output_pdf_name, exist_ok=True)
@@ -74,7 +74,8 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
     for string_number in range(len(df)):
         # проверка остановки процесса пользователем
         if hasattr(self, 'stop_generation') and self.stop_generation:
-            simple_log(f"ОСТАНОВКА генерации. Обработано {processed_count} из {len(df)}")
+            Rich.simple_log(f"ОСТАНОВКА генерации. "
+                f"Обработано {processed_count} из {len(df)}")
             # Удаляем временные файлы, если есть
             if os.path.exists("temp_convert.vbs"):
                 try:
@@ -139,7 +140,7 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         code = direction_raw.split()[0] if direction_raw and direction_raw != "nan" \
             else "unknown"
 
-        debug_log(f"Делаю PDF для: {surname_nominative}")
+        Rich.debug_log(f"Делаю PDF для: {surname_nominative}")
 
         # Загружаем шаблон (лист «Протокол») из того же файла
         wb = load_workbook(EXCEL_FILE)
@@ -329,13 +330,13 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
             subprocess.run(["cscript", "//Nologo", "temp_convert.vbs"],
                            shell=True, check=True, timeout=30)
         except subprocess.CalledProcessError as e:
-            log_error(f"Ошибка конвертации Excel: {e}")
+            Rich.log_error(f"Ошибка конвертации Excel: {e}")
             os.remove("temp_convert.vbs")
             os.remove(file_name)
             continue
 
         except FileNotFoundError:
-            log_error("Не удалось запустить cscript (Windows Script Host). "
+            Rich.log_error("Не удалось запустить cscript (Windows Script Host). "
                   "Проверьте установку.")
             os.remove("temp_convert.vbs")
             os.remove(file_name)
@@ -346,9 +347,9 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         os.remove("temp_convert.vbs")
         os.remove(file_name)
 
-        success_log(f"Готов: {code} {surname_nominative}.pdf")
+        Rich.success_log(f"Готов: {code} {surname_nominative}.pdf")
 
-    debug_log(f"Функция завершила работу.")
+    Rich.debug_log(f"Функция завершила работу.")
 
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
@@ -360,5 +361,5 @@ def generate_pdf_from_db(self, excel_file_path: str) -> None:
         QMessageBox.StandardButton.Ok
     )
     self.progress_bar_parsing.setValue(100)
-    success_log(f"Протоколы готовы! Создано PDF документов: {len(df)}. Папка сохранения: "
+    Rich.success_log(f"Протоколы готовы! Создано PDF документов: {len(df)}. Папка сохранения: "
           f"{output_pdf_name}")

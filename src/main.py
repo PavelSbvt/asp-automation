@@ -6,9 +6,9 @@ from PyQt6.QtGui import QIcon
 
 from gui.loading_window import MyLoadingWindow
 from gui.main_window.main_window import MainWindow
-from utils.output_rich import enter_log, exit_log, debug_log
+from utils.output_rich import Rich
 from utils.functions_for_window_gui import load_cached_data
-from core.settings_manager import settings
+from core.settings_manager import Settings
 
 
 def start_with_loading_window() -> None:
@@ -20,14 +20,15 @@ def start_with_loading_window() -> None:
     :return: None
     """
 
-    debug_log("Запуск приложения с загрузочным окном")
-    loading_win = MyLoadingWindow()
+    Rich.debug_log("Запуск приложения с загрузочным окном")
 
-    loading_win.show()
+    LoadingWindow = MyLoadingWindow()
 
-    main_win = MainWindow()
+    LoadingWindow.show()
 
-    load_cached_data(main_win)
+    MainWin = MainWindow()
+
+    load_cached_data(MainWin)
 
     def on_loading_closed() -> None:
         """
@@ -37,12 +38,12 @@ def start_with_loading_window() -> None:
         :return: None
         """
 
-        loading_win.hide()
-        exit_log("Загрузочное окно скрыто")
-        main_win.show()
-        enter_log("Показ главного окна")
+        LoadingWindow.hide()
+        Rich.exit_log("Загрузочное окно скрыто")
+        MainWin.show()
+        Rich.enter_log("Показ главного окна")
 
-    loading_win.closed.connect(on_loading_closed)
+    LoadingWindow.closed.connect(on_loading_closed)
 
 def start_without_loading_window() -> None:
     """
@@ -51,24 +52,24 @@ def start_without_loading_window() -> None:
     :return: None
     """
 
-    debug_log("Запуск приложения без загрузочного окна")
+    Rich.debug_log("Запуск приложения без загрузочного окна")
     main_win = MainWindow()
 
     load_cached_data(main_win)
 
-    enter_log("Показ главного окна")
+    Rich.enter_log("Показ главного окна")
     main_win.show()
 
 if __name__ == "__main__":
-    settings.print_settings()
+    Settings.print_settings()
 
-    app = QApplication(sys.argv)
+    App = QApplication(sys.argv)
     icon_path = Path('resources/images/icons/icon_pdf_maker_255_size.ico')
-    app.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
+    App.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
 
-    if settings.get_flag_show_loading_window():
+    if Settings.get_flag_show_loading_window():
         start_with_loading_window()
     else:
         start_without_loading_window()
 
-    sys.exit(app.exec())
+    sys.exit(App.exec())

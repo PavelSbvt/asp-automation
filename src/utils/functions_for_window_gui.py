@@ -4,8 +4,9 @@ from pathlib import Path
 import random
 
 from PIL import Image
+from PyQt6.QtWidgets import QLabel, QWidget
 
-from utils.output_rich import debug_log, log_error, warning_log, simple_log, success_log
+from utils.output_rich import Rich
 from parser.sait_parsing import PARSING_DIR
 
 
@@ -24,7 +25,8 @@ def center_window(self) -> None:
 
 def get_main_color_image(image_path: str) -> tuple[int, int, int]:
     """
-    Функция нужна для определения главного цвета изображения на фоне виджета. Пока для загрузочного окна
+    Функция нужна для определения главного цвета изображения на фоне виджета.
+    Пока для загрузочного окна
 
     :param image_path: Принимает путь к изображению, средний цвет которого нужно найти
 
@@ -45,7 +47,7 @@ def get_main_color_image(image_path: str) -> tuple[int, int, int]:
         max_diff = max(abs(r - g), abs(r - b), abs(g - b))
 
         if brightness < 100 or max_diff < 50:
-            debug_log(f"Цвет недостаточно яркий")
+            Rich.debug_log(f"Цвет недостаточно яркий")
 
             h, s, v = colorsys.rgb_to_hsv(r / 255, g / 255, b / 255)
             s = max(0.8, min(1.0, s * 2.0))
@@ -57,18 +59,20 @@ def get_main_color_image(image_path: str) -> tuple[int, int, int]:
             max_diff2 = max(abs(r - g), abs(r - b), abs(g - b))
 
             if brightness2 < 80 or max_diff2 < 40:
-                debug_log(f"Не удалось извлечь главный цвет изображения - малая яркость (яркость: {brightness2:.0f})")
+                Rich.debug_log(
+                    f"Не удалось извлечь главный цвет изображения - "
+                    f"малая яркость (яркость: {brightness2:.0f})")
 
                 return (220, 220, 220)
 
-            debug_log(f"Усиленный цвет: rgb({r}, {g}, {b})")
+            Rich.debug_log(f"Усиленный цвет: rgb({r}, {g}, {b})")
             return (r, g, b)
 
-        debug_log(f"Главный цвет изображения: rgb({r}, {g}, {b})")
+        Rich.debug_log(f"Главный цвет изображения: rgb({r}, {g}, {b})")
         return (r, g, b)
 
     except Exception as e:
-        log_error(f"Ошибка: {e}")
+        Rich.log_error(f"Ошибка: {e}")
         return (220, 220, 220)
 
 def get_random_image_from_folder(folder_path: str) -> str:
@@ -82,29 +86,32 @@ def get_random_image_from_folder(folder_path: str) -> str:
     folder = Path(folder_path)
 
     if not folder.exists():
-        warning_log(f"Папка не найдена: {folder_path}")
+        Rich.warning_log(f"Папка не найдена: {folder_path}")
         return ""
 
     image_extensions = {'.jpg', '.jpeg', '.png', '.gif'}
     images = [f for f in folder.iterdir() if f.suffix.lower() in image_extensions]
 
     if not images:
-        warning_log(f"В папке нет изображений: {folder_path}")
+        Rich.warning_log(f"В папке нет изображений: {folder_path}")
         return ""
 
     random_image = random.choice(images)
-    debug_log(f"Выбрано случайное изображение: {random_image.name}")
+    Rich.debug_log(f"Выбрано случайное изображение: {random_image.name}")
 
     return str(random_image)
 
-def background_window_by_time_of_day(target_label, target_widget) -> tuple[int, int, int]:
+def background_window_by_time_of_day(target_label: QLabel,
+        target_widget: QWidget) -> tuple[int,int,int]:
     """
-    Функция для установления текста лейбл приветствия пользователя (в соответствии с временем) + передача
-    главного цвета атрибуту класса загрузочного окна (именно для атрибутов созданы параметры return_r, return_g и return_b)
+    Функция для установления текста лейбл приветствия пользователя (в соответствии
+    с временем) + передача главного цвета атрибуту класса загрузочного окна (именно
+    для атрибутов созданы параметры return_r, return_g и return_b)
 
     :param target_label: Принимает имя объекта QLabel, текст которого будет изменять.
 
-    :param target_widget: Принимает имя виджета, фон которого будет менять в соответствии с временем суток.
+    :param target_widget: Принимает имя виджета, фон которого будет менять
+     в соответствии с временем суток.
 
     :return: None
     """
@@ -114,7 +121,7 @@ def background_window_by_time_of_day(target_label, target_widget) -> tuple[int, 
 
     time_of_day = ""
 
-    debug_log("Вывод приветствия в соответствии с текущим времени")
+    Rich.debug_log("Вывод приветствия в соответствии с текущим времени")
 
     if 6 <= current_hour < 11:
         time_of_day = "утро"
@@ -137,7 +144,7 @@ def background_window_by_time_of_day(target_label, target_widget) -> tuple[int, 
         target_label.setText("Доброй ночи")
         folder_path = "resources/images/for_start_window/images/night"
 
-    debug_log(f"Текущее время {current_hour} часа ({time_of_day})")
+    Rich.debug_log(f"Текущее время {current_hour} часа ({time_of_day})")
 
     img_path = get_random_image_from_folder(folder_path)
     path_bg_loading = Path(f'{img_path}')
@@ -194,9 +201,13 @@ def update_animation_gradient(self) -> None:
                 background: qlineargradient(
                     x1: 0, y1: 0, x2: 1, y2: 0.5,
                     stop: 0 rgba({r}, {g}, {b}, 0.0),
-                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation:.2f}),
-                    stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
-                    stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
+                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, 
+                    {self.opacity_animation:.2f}),
+                    stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, 
+                    {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, 
+                    {self.opacity_animation * 1:.2f}),
+                    stop: 1 rgba({change_red}, {change_green}, {change_blue}, 
+                    {self.opacity_animation * 4:.2f})
                 );
                 border-radius: 10px;
             """)
@@ -205,9 +216,13 @@ def update_animation_gradient(self) -> None:
                 background: qlineargradient(
                     x1: 0, y1: 0, x2: 1, y2: 0.5,
                     stop: 0 rgba({r}, {g}, {b}, 0.0),
-                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, {self.opacity_animation * 1:.2f}),
-                    stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, {self.opacity_animation * 1:.2f}),
-                    stop: 1 rgba({change_red}, {change_green}, {change_blue}, {self.opacity_animation * 4:.2f})
+                    stop: {self.gradient_1_pos + pos * 0.3} rgba({r}, {g}, {b}, 
+                    {self.opacity_animation * 1:.2f}),
+                    stop: {self.gradient_2_pos + pos * 0.3} rgba({change_red * 0.5:.0f}, 
+                    {change_green * 0.5:.0f}, {change_blue * 0.5:.0f}, 
+                    {self.opacity_animation * 1:.2f}),
+                    stop: 1 rgba({change_red}, {change_green}, {change_blue}, 
+                    {self.opacity_animation * 4:.2f})
                 );
                 border-radius: 10px;
             """)
@@ -241,7 +256,8 @@ def load_cached_data(self) -> None:
                 "Последнее обновление данных (парсинг сайтов):"
             )
 
-        success_log(f"Загружен файл с информацией о специальностях аспирантов: {filename}")
+        Rich.success_log(
+            f"Загружен файл с информацией о специальностях аспирантов: {filename}")
 
     else:
         if hasattr(self, 'time_update_label'):
@@ -252,4 +268,4 @@ def load_cached_data(self) -> None:
                 "Данные не загружены (нажмите 'Обновить данные'):"
             )
 
-        warning_log("Файл кэша не найден")
+        Rich.warning_log("Файл кэша не найден")

@@ -7,8 +7,7 @@ from PyQt6.QtWidgets import QMessageBox
 from parser.parsing_functions import parsing_commissions
 from core.generate_pdf_from_db import generate_pdf_from_db
 from core.fill_db_sheet import fill_database_sheet
-from utils.output_rich import (debug_log, success_log,
-    simple_log, log_error, warning_log)
+from utils.output_rich import Rich
 
 
 def parsing(self) -> None:
@@ -18,7 +17,7 @@ def parsing(self) -> None:
     :return: None
     """
 
-    simple_log("НАЧАЛО ПАРСИНГА")
+    Rich.simple_log("НАЧАЛО ПАРСИНГА")
 
     self.stop_generation = False
     self.stop_parsing_button.setVisible(True)
@@ -28,34 +27,34 @@ def parsing(self) -> None:
     self.progress_bar_parsing.setVisible(True)
 
     try:
-        debug_log("Проверяю наличие файлов...")
+        Rich.debug_log("Проверяю наличие файлов...")
         if (not hasattr(self, 'universal_file_path')
                 or not self.universal_file_path):
             QMessageBox.warning(self, "Ошибка", "Сначала выберите универсальную таблицу!")
-            warning_log("Не выбрана универсальная таблица")
+            Rich.warning_log("Не выбрана универсальная таблица")
             return
 
-        debug_log("Универсальный файл есть")
+        Rich.debug_log("Универсальный файл есть")
 
         if (not self.radio_button_1.isChecked() and not self.radio_button_2.isChecked()
                 and not self.radio_button_3.isChecked()):
             QMessageBox.warning(self, "Ошибка", "Выберите семестр!")
-            warning_log("Не выбран семестр")
+            Rich.warning_log("Не выбран семестр")
             return
 
-        debug_log("Семестр выбран")
+        Rich.debug_log("Семестр выбран")
 
         if self.stop_generation:
-            simple_log("Генерация отменена пользователем")
+            Rich.simple_log("Генерация отменена пользователем")
             return
 
         # Сохраняем текст приказа
-        debug_log("Сохранение текста приказа")
+        Rich.debug_log("Сохранение текста приказа")
         self.commission_text = self.input_commission.text().strip()
-        simple_log(f"Текст приказа: {self.commission_text[:30]}...")
+        Rich.simple_log(f"Текст приказа: {self.commission_text[:30]}...")
 
         # Определяем семестр
-        debug_log("Определение семестра.")
+        Rich.debug_log("Определение семестра.")
         if self.radio_button_1.isChecked():
             self.selected_semester = 1
             self.semester_name = "Первый семестр"
@@ -66,22 +65,22 @@ def parsing(self) -> None:
             self.selected_semester = 3
             self.semester_name = "Третий семестр"
 
-        simple_log(f"Семестр: {self.semester_name}")
+        Rich.simple_log(f"Семестр: {self.semester_name}")
 
         if self.stop_generation:
-            simple_log("Генерация отменена пользователем")
+            Rich.simple_log("Генерация отменена пользователем")
             return
 
-        debug_log("Чтение универсальной таблицы.")
+        Rich.debug_log("Чтение универсальной таблицы.")
         df = pd.read_excel(
             self.universal_file_path,
             dtype=str,
             engine='openpyxl'
         )
-        simple_log(f"Загружено {len(df)} строк")
+        Rich.simple_log(f"Загружено {len(df)} строк")
 
         columns = list(df.columns)
-        debug_log(f"Колонки: {columns[:5]}...")
+        Rich.debug_log(f"Колонки: {columns[:5]}...")
 
         fio_idx = None
         profile_idx = None
@@ -103,13 +102,13 @@ def parsing(self) -> None:
         if citizenship_idx is None:
             citizenship_idx = 40
 
-        debug_log(f"Индексы: ФИО={fio_idx}, Профиль={profile_idx}, "
+        Rich.debug_log(f"Индексы: ФИО={fio_idx}, Профиль={profile_idx}, "
               f"Гражданство={citizenship_idx}")
 
         students_data = []
         for index, row in df.iterrows():
             if self.stop_generation:
-                debug_log(f"Остановка на строке {index}")
+                Rich.debug_log(f"Остановка на строке {index}")
                 return
             try:
                 fio = str(row.iloc[fio_idx]).strip() if len(row) > fio_idx else ""
@@ -130,28 +129,28 @@ def parsing(self) -> None:
                         'citizenship': citizenship
                     })
             except Exception as e:
-                log_error(f"Ошибка строки {index}: {e}")
+                Rich.log_error(f"Ошибка строки {index}: {e}")
                 continue
 
         self.students_data = students_data
-        simple_log(f"Всего студентов: {len(students_data)}")
+        Rich.simple_log(f"Всего студентов: {len(students_data)}")
 
         if self.stop_generation:
-            simple_log("Генерация отменена пользователем")
+            Rich.simple_log("Генерация отменена пользователем")
             return
 
-        debug_log("Начало парсинга doc-ов комиссии")
+        Rich.debug_log("Начало парсинга doc-ов комиссии")
         commission_members = parsing_commissions(self)
 
         if self.stop_generation:
-            simple_log("Генерация отменена пользователем")
+            Rich.simple_log("Генерация отменена пользователем")
             return
 
         if commission_members:
             self.commission_members = commission_members
-            simple_log(f"Найдено комиссий: {len(commission_members)}")
+            Rich.simple_log(f"Найдено комиссий: {len(commission_members)}")
         else:
-            warning_log("Члены комиссии не найдены!")
+            Rich.warning_log("Члены комиссии не найдены!")
             QMessageBox.critical(
                 self,
                 "Ошибка",
@@ -159,46 +158,47 @@ def parsing(self) -> None:
             )
             return
 
-        success_log("Завершение парсинга doc-ов комиссии")
+        Rich.success_log("Завершение парсинга doc-ов комиссии")
 
         for i, student in enumerate(students_data, 1):
-            debug_log(f"    {i}. {student['fio']}")
+            Rich.debug_log(f"    {i}. {student['fio']}")
 
-        success_log("Парсинг таблицы завершён")
+        Rich.success_log("Парсинг таблицы завершён")
 
-        debug_log("Проверка данные студентов.")
+        Rich.debug_log("Проверка данные студентов.")
         if not hasattr(self, 'students_data') or not self.students_data:
-            QMessageBox.warning(self, "Ошибка", "Не удалось загрузить данные из универсальной таблицы!")
+            QMessageBox.warning(self, "Ошибка",
+                "Не удалось загрузить данные из универсальной таблицы!")
             return
-        simple_log(f"Загружено {len(self.students_data)} студентов")
+        Rich.simple_log(f"Загружено {len(self.students_data)} студентов")
 
         if self.stop_generation:
-            simple_log("Генерация отменена пользователем")
+            Rich.simple_log("Генерация отменена пользователем")
             return
 
-        simple_log("Заполнение БД.")
+        Rich.simple_log("Заполнение БД.")
         db_file = fill_database_sheet(self)
 
         if self.stop_generation:
-            simple_log("Генерация отменена пользователем")
+            Rich.simple_log("Генерация отменена пользователем")
             if db_file and os.path.exists(db_file):
                 try:
                     os.remove(db_file)
-                    debug_log(f"Удален временный файл БД: {db_file}")
+                    Rich.debug_log(f"Удален временный файл БД: {db_file}")
                 except:
                     pass
             return
 
         if db_file:
             self.generated_db_path = db_file
-            simple_log(f"БД сохранена: {db_file}")
+            Rich.simple_log(f"БД сохранена: {db_file}")
 
             if self.stop_generation:
-                simple_log("Генерация отменена пользователем")
+                Rich.simple_log("Генерация отменена пользователем")
                 if os.path.exists(db_file):
                     try:
                         os.remove(db_file)
-                        debug_log(f"Удален временный файл БД: {db_file}")
+                        Rich.debug_log(f"Удален временный файл БД: {db_file}")
                     except:
                         pass
                 return
@@ -206,22 +206,22 @@ def parsing(self) -> None:
             generate_pdf_from_db(self, self.generated_db_path)
         else:
             QMessageBox.critical(self, "Ошибка", "Не удалось сохранить файл БД!")
-            warning_log("Ошибка. Не удалось сохранить файл БД!")
+            Rich.warning_log("Ошибка. Не удалось сохранить файл БД!")
             return
 
-        success_log("КОНЕЦ ПАРСИНГА")
+        Rich.success_log("КОНЕЦ ПАРСИНГА")
 
     except Exception as e:
-        log_error(f"Критическая ошибка: {e}")
+        Rich.log_error(f"Критическая ошибка: {e}")
         traceback.print_exc()
         QMessageBox.critical(self, "Ошибка", f"Произошла ошибка:\n{str(e)}")
 
     finally:
-        debug_log("Восстановление состояния кнопок...")
+        Rich.debug_log("Восстановление состояния кнопок...")
         self.stop_generation = False
         self.stop_parsing_button.setVisible(False)
         self.stop_parsing_button.setEnabled(False)
         self.progress_bar_parsing.setVisible(False)
         self.run_button.setVisible(True)
         self.run_button.setEnabled(True)
-        debug_log("Состояние кнопок восстановлено")
+        Rich.debug_log("Состояние кнопок восстановлено")

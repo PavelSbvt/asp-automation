@@ -1,7 +1,8 @@
 import json
+from typing import Optional
 from pathlib import Path
 
-from utils.output_rich import simple_log, debug_log, warning_log, success_log
+from utils.output_rich import Rich
 
 
 class SettingsManager:
@@ -43,7 +44,7 @@ class SettingsManager:
                 "theme": self.theme
             }
             json.dump(data, json_file, ensure_ascii=False, indent=4)
-            debug_log("Применены стандартные настройки")
+            Rich.debug_log("Применены стандартные настройки")
 
     def write_settings(self) -> None:
         """
@@ -57,7 +58,7 @@ class SettingsManager:
 
         self.write_standard_settings()
 
-        success_log(f"Файл с настройками сохранён: {self.config_path}")
+        Rich.success_log(f"Файл с настройками сохранён: {self.config_path}")
 
     def read_settings(self) -> dict:
         """
@@ -67,7 +68,7 @@ class SettingsManager:
         """
 
         if not self.config_path.exists():
-            warning_log(f"Файл с настройками не найден: {self.config_path}")
+            Rich.warning_log(f"Файл с настройками не найден: {self.config_path}")
             return {}
 
         with open(self.config_path, 'r', encoding='utf-8') as file:
@@ -75,7 +76,7 @@ class SettingsManager:
             self.settings = settings_data
             # print(settings_data)
 
-            success_log("Настройки получены")
+            Rich.success_log("Настройки получены")
             return settings_data
 
     def read_one_param(self, param_name: str):
@@ -87,9 +88,9 @@ class SettingsManager:
         :return: param_value
         """
 
-        debug_log(f"Получение '{param_name}' из настроек.")
+        Rich.debug_log(f"Получение '{param_name}' из настроек.")
         if not self.config_path.exists():
-            warning_log(f"Файл с настройками не найден: {self.config_path}")
+            Rich.warning_log(f"Файл с настройками не найден: {self.config_path}")
             return "Неизвестно"
 
         with open(self.config_path, 'r', encoding='utf-8') as file:
@@ -102,13 +103,14 @@ class SettingsManager:
         Функция для чтения из файла настроек только одного параметра.
         Минимальный вывод логов в консоль
 
-        :param param_name: принимает имя параметра из настроек, по которому будет искать значение
+        :param param_name: принимает имя параметра из настроек, по которому
+         будет искать значение
 
         :return: param_value
         """
 
         if not self.config_path.exists():
-            warning_log(f"Файл с настройками не найден: {self.config_path}")
+            Rich.warning_log(f"Файл с настройками не найден: {self.config_path}")
             return "Неизвестно"
 
         with open(self.config_path, 'r', encoding='utf-8') as file:
@@ -126,11 +128,11 @@ class SettingsManager:
         """
         # Очистка
         with open(self.config_path, "w", encoding="utf-8") as file:
-            debug_log("Очистка файла с настройками (перезапись).")
+            Rich.debug_log("Очистка файла с настройками (перезапись).")
             file.write("")
         # Запись
         self.write_standard_settings()
-        debug_log("Настройки обновлены.")
+        Rich.debug_log("Настройки обновлены.")
 
     def get_settings(self) -> None:
         """
@@ -145,9 +147,9 @@ class SettingsManager:
         """
 
         if not self.config_path.exists():
-            warning_log(f"Файл с настройками не найден: {self.config_path}")
+            Rich.warning_log(f"Файл с настройками не найден: {self.config_path}")
             self.write_settings()
-            debug_log("Принудительно записаны стандартные настройки")
+            Rich.debug_log("Принудительно записаны стандартные настройки")
 
         try:
             settings_data = self.read_settings()
@@ -181,22 +183,22 @@ class SettingsManager:
                 self.theme = theme
 
             if broken_settings_parameters:
-                warning_log(f"Данные настроек не содержат информацию "
+                Rich.warning_log(f"Данные настроек не содержат информацию "
                     f"о {broken_settings_parameters}")
-                debug_log("Перезапись настроек")
+                Rich.debug_log("Перезапись настроек")
                 self.rewrite_settings()
-                debug_log("Повторное получение настроек")
+                Rich.debug_log("Повторное получение настроек")
                 return
 
         except json.JSONDecodeError as e:
-            warning_log(f"Ошибка открытия json файла с настройками. "
+            Rich.warning_log(f"Ошибка открытия json файла с настройками. "
                 f"Текст ошибки: {e}")
 
             with open(self.config_path, 'r', encoding='utf-8') as file:
                 content = file.read().strip()
                 if not content:
                     # Если файл с настройками пуст, то записать стандартные настройки.
-                    warning_log("Файл с настройками пуст")
+                    Rich.warning_log("Файл с настройками пуст")
 
                     self.write_standard_settings()
                 else:
@@ -212,14 +214,14 @@ class SettingsManager:
         :return: None.
         """
 
-        simple_log(f"Название приложения: {self.app_name}")
-        simple_log(f"Версия: {self.app_version}")
-        simple_log(f"Время работы таймера показа загрузочного окна: "
+        Rich.simple_log(f"Название приложения: {self.app_name}")
+        Rich.simple_log(f"Версия: {self.app_version}")
+        Rich.simple_log(f"Время работы таймера показа загрузочного окна: "
             f"{self.loading_window_timer_duration}")
-        simple_log(f"Время показа окна загрузки: {self.flag_show_loading_window}")
-        simple_log(f"Цветовая тема: {self.theme}")
+        Rich.simple_log(f"Время показа окна загрузки: {self.flag_show_loading_window}")
+        Rich.simple_log(f"Цветовая тема: {self.theme}")
 
-    def update_settings_param(self, param_name: str, new_value) -> None:
+    def update_settings_param(self, param_name: str, new_value: Optional) -> None:
         """
         Обновляет конкретное поле в файле настроек, не трогая остальные.
 
@@ -238,7 +240,7 @@ class SettingsManager:
                     settings_data = json.load(file)
 
             except (json.JSONDecodeError, IOError):
-                warning_log(f"Не удалось прочитать файл настроек")
+                Rich.warning_log(f"Не удалось прочитать файл настроек")
 
         settings_data[param_name] = new_value
 
@@ -247,7 +249,7 @@ class SettingsManager:
 
         self.settings = settings_data
 
-        debug_log(f"Обновлено поле '{param_name}' = {new_value}")
+        Rich.debug_log(f"Обновлено поле '{param_name}' = {new_value}")
 
     def set_theme(self, theme_name: str) -> None:
         """
@@ -384,16 +386,16 @@ class SettingsManager:
         app_name = settings_data.get("app_name", "Неизвестно")
         app_version = settings_data.get("version", "Неизвестно")
 
-        debug_log("Проверка имени и версии приложения")
+        Rich.debug_log("Проверка имени и версии приложения")
 
         if app_name != standard_app_name:
             self.update_settings_param("app_name", standard_app_name)
-            debug_log(f"Имя приложения в файле настроек изменено "
+            Rich.debug_log(f"Имя приложения в файле настроек изменено "
                 f"с {app_name} на {standard_app_name}")
 
         if app_version != standard_app_version:
             self.update_settings_param("version", standard_app_version)
-            debug_log(f"Версия приложения в "
+            Rich.debug_log(f"Версия приложения в "
                 f"файле настроек изменено с {app_version} на {standard_app_version}")
 
     def get_flag_show_loading_window(self) -> bool:
@@ -407,9 +409,9 @@ class SettingsManager:
         flag_show = self.read_one_param("flag_show_loading_window")
 
         if flag_show:
-            debug_log("Показ загрузочного окна разрешён")
+            Rich.debug_log("Показ загрузочного окна разрешён")
         else:
-            debug_log("Показ загрузочного окна запрещен")
+            Rich.debug_log("Показ загрузочного окна запрещен")
 
         return flag_show
 
@@ -443,8 +445,4 @@ class SettingsManager:
 
 
 
-settings = SettingsManager()
-
-if __name__ == "__main__":
-    settings_test = SettingsManager()
-    settings_test.get_settings()
+Settings = SettingsManager()

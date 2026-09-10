@@ -14,6 +14,7 @@ def remove_trailing_dot(text: str) -> str:
 
     :return: Str - возвращает строку без точки в конце.
     """
+
     if text is None or pd.isna(text):
         return ""
     text = str(text).strip()
@@ -26,8 +27,10 @@ def normalize_initials(name: str) -> str:
     Нормализует инициалы: приводит к формату с пробелом между инициалами.
 
     :param name: Принимает строку с ФИО
+
     :return: str - нормализованная строка с пробелом между инициалами
     """
+
     if not name or name == "nan":
         return name
 
@@ -36,7 +39,6 @@ def normalize_initials(name: str) -> str:
     result = re.sub(pattern, r'\1 \2', name)
 
     return result
-
 
 def extract_code_from_row(row, code_col) -> str:
     """
@@ -50,6 +52,7 @@ def extract_code_from_row(row, code_col) -> str:
 
     :return: str - если находит подходящий шифр, возвращает содержимое ячейки
     """
+
     if code_col is None:
         return "UNKNOWN"
 
@@ -67,7 +70,15 @@ def extract_code_from_row(row, code_col) -> str:
     return code
 
 def extract_fio_from_text(text: str) -> str:
-    """Извлекает ФИО из текста (фамилия + инициалы)"""
+    """
+    Извлекает ФИО из текста (фамилия + инициалы)
+
+    :param text: Str - принимает текст, в котором нужно найти ФИО.
+
+    :return: Str - возвращает строку с найденным ФИО (если не найдёт ФИО,
+    вернёт пустую строку)
+    """
+
     if not text:
         return ""
     # Ищем фамилию с инициалами в начале строки
@@ -81,13 +92,31 @@ def extract_fio_from_text(text: str) -> str:
     return text[:30].strip()
 
 def extract_initials_from_text(text: str) -> str:
-    """Извлекает инициалы из текста"""
+    """
+    Извлекает инициалы из текста
+
+    :param text: Str - принимает текст и передаёт его функции поиска ФИО в тексте.
+
+    :return: Str - строку с найденным ФИО
+    """
+
     return extract_fio_from_text(text)
 
-def _extract_commission_members(text: str, commissions_dict: Dict, row, code_col: str) -> None:
+def _extract_commission_members(text: str,
+    commissions_dict: Dict, row, code_col: str) -> None:
     """
     Извлекает членов комиссии из текста и сохраняет в словарь commissions_dict
     по ключу-шифру.
+
+    :param row:
+
+    :param text:
+
+    :param commissions_dict:
+
+    :param code_col:
+
+    :return: None
     """
 
     if not text or len(text) < 10:
@@ -214,6 +243,10 @@ def extract_code_number(raw_code: str) -> str:
     """
     Извлекает код специальности из строки.
     Пример: "2.2.12." -> "2.2.12."
+
+    :param raw_code:
+
+    :return:
     """
     if not raw_code:
         return ""
@@ -221,9 +254,3 @@ def extract_code_number(raw_code: str) -> str:
     if match:
         return match.group(1)
     return raw_code.strip()
-
-def get_time() -> str:
-    now = datetime.now().time()
-    result_time = now.strftime("%H:%M")
-
-    return result_time
