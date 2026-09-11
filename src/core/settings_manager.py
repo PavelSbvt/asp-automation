@@ -249,6 +249,7 @@ class SettingsManager:
 
         self.settings = settings_data
 
+        Rich.print_spacer()
         Rich.debug_log(f"Обновлено поле '{param_name}' = {new_value}")
 
     def set_theme(self, theme_name: str) -> None:
