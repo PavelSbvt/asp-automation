@@ -97,12 +97,11 @@ def get_random_image_from_folder(folder_path: str) -> str:
         return ""
 
     random_image = random.choice(images)
-    Rich.debug_log(f"Выбрано случайное изображение: {random_image.name}")
 
     return str(random_image)
 
 def background_window_by_time_of_day(target_label: QLabel,
-        target_widget: QWidget) -> tuple[int,int,int]:
+        target_widget: QWidget, check_bg_path: str) -> tuple[int,int,int, str]:
     """
     Функция для установления текста лейбл приветствия пользователя (в соответствии
     с временем) + передача главного цвета атрибуту класса загрузочного окна (именно
@@ -113,7 +112,13 @@ def background_window_by_time_of_day(target_label: QLabel,
     :param target_widget: Принимает имя виджета, фон которого будет менять
      в соответствии с временем суток.
 
-    :return: None
+     :param check_bg_path: Принимает имя атрибута класса, в котором сохраняется путь к
+      последнему выбранному фоновому изображению - чтобы избежать повторного выбора
+       фонового изображения при поиске случайного изображения.
+
+    :return: tuple[int,int,int, str] - возвращает кортеж, содержащий
+     главные (усреднённые цвета случайного изображения для фона) цвета rgb и строку
+     с путём случайно выбранного для фона изображения.
     """
 
     current_hour = datetime.now().hour
@@ -121,6 +126,7 @@ def background_window_by_time_of_day(target_label: QLabel,
 
     time_of_day = ""
 
+    Rich.print_spacer()
     Rich.debug_log("Вывод приветствия в соответствии с текущим времени")
 
     if 6 <= current_hour < 11:
@@ -146,17 +152,32 @@ def background_window_by_time_of_day(target_label: QLabel,
 
     Rich.debug_log(f"Текущее время {current_hour} часа ({time_of_day})")
 
-    img_path = get_random_image_from_folder(folder_path)
-    path_bg_loading = Path(f'{img_path}')
+    img_path = Path(get_random_image_from_folder(folder_path)).as_posix()
+
+    path_bg_loading = ""
+    if check_bg_path == "":
+        check_bg_path = img_path
+        path_bg_loading = img_path
+    else:
+        if img_path != check_bg_path:
+            check_bg_path = img_path
+            path_bg_loading = img_path
+        elif img_path == check_bg_path:
+            while img_path == check_bg_path:
+                img_path = Path(get_random_image_from_folder(folder_path)).as_posix()
+            check_bg_path = img_path
+            path_bg_loading = img_path
+
+    Rich.debug_log(f"Выбрано случайное изображение: {img_path}")
+
     target_widget.setStyleSheet(
-            f"background-image: url({path_bg_loading.as_posix()}); border-radius: 10px;")
+            f"background-image: url({path_bg_loading}); border-radius: 10px;")
 
     # главный цвет изображения
     main_color = get_main_color_image(img_path)
     target_label.setStyleSheet(f"font-weight: bold; color: rgb{main_color}")
 
-    return main_color
-
+    return main_color[0], main_color[1], main_color[2], check_bg_path
 
 def update_animation_gradient(self) -> None:
     """

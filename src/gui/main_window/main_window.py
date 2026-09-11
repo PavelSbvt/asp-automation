@@ -107,7 +107,7 @@ class MainWindow(QMainWindow):
         self.cap = QHBoxLayout()
         self.cap_widget.setLayout(self.cap)
         self.cap_widget.setFixedHeight(48)
-        self.cap.setContentsMargins(12,0,12,0)
+        # self.cap.setContentsMargins(12,0,12,0)
 
         # Кнопка с именем приложения - ссылка на репозиторий проекта
         self.app_name_button = QPushButton()
@@ -965,6 +965,7 @@ class MainWindow(QMainWindow):
         self.run_button.setStyleSheet(f"""
                     QPushButton {{
                         background-image: url({self.run_button_path.as_posix()});
+                        border-radius: 5px;
                     }}
                     QPushButton:hover {{
                         background-image: url({self.run_button_hover_path.as_posix()});
@@ -1387,20 +1388,48 @@ class MainWindow(QMainWindow):
                     background: qlineargradient(
                     x1: 0, y1: 0, 
                     x2: 1, y2: 0,    
-                    stop: 0 rgba({self.main_color_str}, 0.02),
-                    stop: 0.025 rgba({self.main_color_str}, 0.1),
-                    stop: 0.05 rgba({self.main_color_str}, 0.18),
-                    stop: 0.15 rgba({self.main_color_str}, 0.13),
-                    stop: 0.2 rgba({self.main_color_str}, 0.02),
-                    stop: 0.25 rgba({self.main_color_str}, 0.01),
-                    stop: 0.3 rgba(1, 1, 1, 0),
+                    stop: 0 rgba({self.main_color_str}, 0.01),
+                    stop: 0.1 rgba({self.main_color_str}, 0.35),
+                    stop: 0.2 rgba({self.main_color_str}, 0.35),
+                    stop: 0.3 rgba({self.main_color_str}, 0.01),
+                    stop: 0.41 rgba(1, 1, 1, 0),
                     stop: 1 rgba(1, 1, 1, 0)
                     );
                 """
             )
 
+            self.tab_widget.setStyleSheet(f"""
+                   QTabWidget::pane {{
+                       background-color: #2B2B2B;
+                       border: none;
+                       top: -1px;
+                   }}
+                   QTabBar {{
+                       background-color: {Style.background_color};
+                   }}
+                   QTabBar::tab {{
+                       background: transparent;
+                       color: {Style.dark_font_color};
+                       padding: 10px 20px;
+                       margin-right: 0px;
+                       border: none;
+                       border-bottom: 2px solid transparent;
+                   }}
+                   QTabBar::tab:selected {{
+                       background: transparent;
+                       color: {Style.light_font_color};
+                       border-bottom: 2px solid rgb({self.main_color_str});
+                       font-weight: bold;
+                   }}            
+                   QTabBar::tab:hover:!selected {{
+                       color: {Style.light_font_color};
+                       border-bottom: 2px solid #4D4E51;
+                   }}
+               """)
+
             self.bg_path_check = f"{photo_path}"
 
+            Rich.print_spacer()
             Rich.simple_log(f"Для фона главного окна выбрано изображение: {photo_path}")
 
         if self.bg_path_check == "":
@@ -1446,6 +1475,7 @@ class MainWindow(QMainWindow):
             tab_name = "неизвестно"
             self.choose_tab = -1
 
+        Rich.print_spacer()
         Rich.debug_log(f"Открыта вкладка: {current_index} ({tab_name})")
 
         return current_index
