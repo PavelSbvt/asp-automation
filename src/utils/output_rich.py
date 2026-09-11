@@ -147,7 +147,7 @@ class RichLog:
         :return: None
         """
 
-        console.log(f"[grey46][Debug] {"-" * 150}[/grey46]", _stack_offset=2)
+        console.log(f"[grey46 dim][Spacer] {"-" * 130}[/grey46 dim]", _stack_offset=2)
 
     def print_spacer_points(self) -> None:
         """
@@ -157,7 +157,7 @@ class RichLog:
         :return: None
         """
 
-        console.log(f"[grey46][Debug] {"." * 150}[/grey46]", _stack_offset=2)
+        console.log(f"[grey46 dim][Spacer] {"." * 130}[/grey46 dim]", _stack_offset=2)
 
 
 

@@ -78,6 +78,8 @@ class StylesManager:
 
         current_theme = Settings.get_theme_name()
 
+        Rich.print_spacer()
+
         if current_theme == "standard":
             self.set_standard_theme()
             Rich.debug_log("Применена стандартная тема")

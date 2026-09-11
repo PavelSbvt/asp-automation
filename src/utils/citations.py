@@ -36,6 +36,7 @@ def get_citation_with_author() -> tuple[str, str]:
 
     citation = random.choice(list(QUOTES.keys()))
     author = QUOTES[citation]
+    Rich.print_spacer_points()
     Rich.debug_log(f"Цитата: {citation}")
     Rich.debug_log(f"Автор цитаты: {author}")
 
