@@ -934,6 +934,13 @@ class MainWindow(QMainWindow):
                 event.accept()
                 return
 
+        # Запуск процессов с комбинации шифт + ф9
+        if (event.key() == Qt.Key.Key_F9 and
+                event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
+            self.run()
+            event.accept()
+            return
+
         # Передаем событие дальше
         super().keyPressEvent(event)
 
