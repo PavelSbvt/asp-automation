@@ -87,6 +87,12 @@ def get_pdf(self) -> None:
     if not self.excel_file_path:
         Rich.log_error("ОШИБКА: Сначала выберите файл с данными!")
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+        QMessageBox.warning(
+            self,
+            "Предупреждение",
+            "Сначала выберите файл с данными!",
+            QMessageBox.StandardButton.Ok
+        )
         return
 
     try:
