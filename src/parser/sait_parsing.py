@@ -7,6 +7,8 @@ import requests
 from bs4 import BeautifulSoup
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
+from utils.output_rich import Rich
+
 
 PARSING_DIR = Path("resources/parsing_data")
 FILE_PATTENR = "*.txt"
@@ -45,11 +47,13 @@ def load_specialties_from_cache() -> Optional[List[Tuple[str, str]]]:
     (если появится ошибка или не найдётся файл с кешем).
     """
 
+    Rich.print_spacer()
+
     try:
         current_file = get_current_cache_file()
 
         if current_file is None:
-            print("[I] Файл кэша не найден")
+            Rich.warning_log("Файл кэша не найден")
             return None
 
         # Имя файла = время обновления
@@ -64,41 +68,43 @@ def load_specialties_from_cache() -> Optional[List[Tuple[str, str]]]:
                     if len(parts) == 2:
                         specialties.append((parts[0], parts[1]))
 
-        print(f"[I] Загружено {len(specialties)} специальностей")
-        print(f"[I] Файл: {current_file.name}")
-        print(f"[I] Время обновления: {update_time}")
+        Rich.success_log(f"Загружено {len(specialties)} специальностей")
+        Rich.simple_log(f"Файл: {current_file.name}")
+        Rich.debug_log(f"Время обновления: {update_time}")
 
         return specialties
 
     except Exception as e:
-        print(f"[E] Ошибка загрузки кэша: {e}")
+        Rich.log_error(f"Ошибка загрузки кэша: {e}")
         return None
 
 def save_specialties_to_cache(specialties: List[Tuple[str, str]]) -> None:
     """
     Сохраняет данные в файл с текущей датой и временем в имени.
     Старый файл удаляется - перезаписывается (остаётся только один свежий).
-    Формат: 2026-07-17_14-30-25.txt
+    Формат: 2026-07-17-14-30-25.txt
 
     :param specialties: Принимает массив из кортежей, содержащих код и профиль аспиранта
 
     :return: None
     """
 
+    Rich.print_spacer()
+
     try:
         # Создаём папку, если её нет
         if not PARSING_DIR.exists():
             PARSING_DIR.mkdir(parents=True)
-            print(f"[I] Создана папка: {PARSING_DIR}")
+            Rich.debug_log(f"Создана папка: {PARSING_DIR}")
 
         # Удаляем старый файл (если есть)
         old_file = get_current_cache_file()
         if old_file:
             old_file.unlink()
-            print(f"[I] Удалён старый файл: {old_file.name}")
+            Rich.debug_log(f"Удалён старый файл: {old_file.name}")
 
         # Имя файла = текущая дата и время
-        now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
         filepath = PARSING_DIR / f"{now}.txt"
 
         # Сохраняем данные
@@ -106,11 +112,11 @@ def save_specialties_to_cache(specialties: List[Tuple[str, str]]) -> None:
             for code, name in specialties:
                 f.write(f"{code}|{name}\n")
 
-        print(f"[I] Сохранено {len(specialties)} специальностей")
-        print(f"[I] Новый файл: {filepath}")
+        Rich.success_log(f"Сохранено {len(specialties)} специальностей в кеш.")
+        Rich.simple_log(f"Новый файл кеша: {filepath}")
 
     except Exception as e:
-        print(f"[E] Ошибка сохранения кэша: {e}")
+        Rich.log_error(f"Ошибка сохранения кэша: {e}")
 
 def get_last_update_time() -> str:
     """
@@ -123,7 +129,7 @@ def get_last_update_time() -> str:
     current_file = get_current_cache_file()
 
     if current_file:
-        return current_file.stem  # убираем расширение .txt
+        return current_file.stem
 
     return "данные не загружены"
 
@@ -143,7 +149,8 @@ def get_specialty_code(profile: str) -> str:
 
         if specialties is None:
             # Если кэша нет - парсим сайты
-            print("[I] Кэш пуст, выполняем парсинг сайтов...")
+            Rich.print_spacer()
+            Rich.simple_log("Кэш пуст, выполнение парсинга сайтов")
             specialties = site_parce_main()
             if not specialties:
                 specialties = site_parce_dn()
@@ -151,7 +158,8 @@ def get_specialty_code(profile: str) -> str:
             if specialties:
                 save_specialties_to_cache(specialties)
             else:
-                print("[E] Не удалось получить данные с сайтов")
+                Rich.print_spacer()
+                Rich.warning_log("Не удалось получить данные с сайтов")
                 return ""
 
         # Ищем совпадение
@@ -162,7 +170,7 @@ def get_specialty_code(profile: str) -> str:
         return ""
 
     except Exception as e:
-        print(f"[E] Ошибка в get_specialty_code: {e}")
+        Rich.log_error(f"Ошибка в get_specialty_code: {e}")
         return ""
 
 def update_data(self) -> None:
@@ -173,7 +181,8 @@ def update_data(self) -> None:
     :return: None
     """
 
-    print("[I] обновление данных кодов и шифров аспирантов")
+    Rich.print_spacer()
+    Rich.simple_log("Обновление данных кодов и шифров аспирантов")
 
     try:
         # Обновляем текст в интерфейсе
@@ -182,12 +191,12 @@ def update_data(self) -> None:
             QApplication.processEvents()
 
         # Парсим основной сайт
-        print("[I] Парсинг основного сайта (tstu.ru)...")
+        Rich.debug_log("Парсинг основного сайта (tstu.ru)...")
         specialties = site_parce_main()
 
         # Если основной сайт не дал данных - пробуем резервный
         if not specialties:
-            print("[I] Парсинг резервного сайта (dn.tstu.ru)...")
+            Rich.debug_log("Парсинг резервного сайта (dn.tstu.ru)...")
             specialties = site_parce_dn()
 
         if specialties:
@@ -212,7 +221,7 @@ def update_data(self) -> None:
                 f"Загружено специальностей: {len(specialties)}\n"
                 f"Время обновления: {update_time}"
             )
-            print(f"[S] Данные обновлены! Загружено {len(specialties)} специальностей")
+            Rich.success_log(f"Данные обновлены! Загружено {len(specialties)} специальностей")
 
         else:
             QMessageBox.warning(
@@ -221,7 +230,7 @@ def update_data(self) -> None:
                 "Не удалось получить данные с сайтов.\n\n"
                 "Проверьте подключение к интернету."
             )
-            print("[E] Не удалось получить данные с сайтов")
+            Rich.log_error("Не удалось получить данные с сайтов")
 
             if hasattr(self, 'label_for_info_update_site_paring'):
                 self.label_for_info_update_site_paring.setText(
@@ -229,7 +238,7 @@ def update_data(self) -> None:
                 )
 
     except Exception as e:
-        print(f"[E] Ошибка при обновлении данных: {e}")
+        Rich.log_error(f"Ошибка при обновлении данных: {e}")
         traceback.print_exc()
 
         QMessageBox.critical(
@@ -252,36 +261,51 @@ def site_parce_dn() -> List[Tuple[str, str]]:
     """
 
     url = 'http://dn.tstu.ru/index.php/specialties'
-    response = requests.get(url, timeout=60)
-    response.raise_for_status()
+
+    response = None
+    for attempt in range(1, 4):  # 3 попытки
+        try:
+            response = requests.get(url, timeout=15)
+            response.raise_for_status()
+            break
+        except requests.RequestException as e:
+            Rich.print_spacer()
+            Rich.warning_log(f"dn.tstu.ru: попытка {attempt}/3 не удалась: {e}")
+            if attempt == 3:
+                Rich.print_spacer()
+                Rich.log_error("dn.tstu.ru: не удалось получить страницу")
+                return []
 
     soup = BeautifulSoup(response.text, 'html.parser')
+
     target_table = None
-    for table in soup.find_all('table'):  # Цикл по всем таблицам на сайте
+    for table in soup.find_all('table'):
         headers = [th.get_text(strip=True) for th in table.find_all('th')]
-        if 'Шифр и наименование научной специальности' in headers: # Поиск нужной таблицы
+        if 'Шифр и наименование научной специальности' in headers:
             target_table = table
             break
+
     if target_table is None:
+        Rich.warning_log("dn.tstu.ru: таблица не найдена на странице")
         return []
 
     specialties = []
-    for row in target_table.find_all('tr'):# Добавление кода, профиль в список как кортеж
+    for row in target_table.find_all('tr'):
         cols = row.find_all('td')
         if not cols:
             continue
 
-        # Проверяем сколько яйчеек в строке
-        if len(cols) == 3:  # Если 3, то берём код и специальность из 2 и 3
+        if len(cols) == 3:
             code = cols[1].get_text(strip=True)
             name = cols[2].get_text(strip=True)
             if code and code.endswith('.') and ' ' not in code:
                 specialties.append((code, name))
-        elif len(cols) == 2:  # Если 2, то код и специальность из 1 и 2
+        elif len(cols) == 2:
             code = cols[0].get_text(strip=True)
             name = cols[1].get_text(strip=True)
             if code and code.endswith('.') and ' ' not in code:
                 specialties.append((code, name))
+
     return specialties
 
 def site_parce_main() -> List[Tuple[str, str]]:
@@ -300,9 +324,20 @@ def site_parce_main() -> List[Tuple[str, str]]:
                   'application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
     }  # Имитируем браузер
-    response = requests.get(url, headers=headers, timeout=60)
-    # Пытаемся получить ответ от сайта
-    response.raise_for_status()
+
+    Rich.print_spacer()
+
+    response = None
+    for attempt in range(1, 4):  # 3 попытки
+        try:
+            response = requests.get(url, headers=headers, timeout=15)
+            response.raise_for_status()
+            break
+        except requests.RequestException as e:
+            Rich.warning_log(f"tstu.ru: попытка {attempt}/3 не удалась: {e}")
+            if attempt == 3:
+                Rich.log_error("tstu.ru: не удалось получить страницу")
+                return []
 
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -321,13 +356,17 @@ def site_parce_main() -> List[Tuple[str, str]]:
                 next_tag = next_tag.find_next()
             target_table = next_tag
 
+    if target_table is None:
+        Rich.warning_log("tstu.ru: таблица не найдена на странице")
+        return []
+
     specialties = []
     for row in target_table.find_all('tr'):
         # Добавляем каждый код и каждый профиль в список как кортеж
         cols = row.find_all('td')
         if not cols:
             continue
-        if len(cols) >= 2:  # Проверяем сколько яйчеек в строке
+        if len(cols) >= 2:  # Проверяем сколько ячеек в строке
             code = cols[-2].get_text(strip=True)  # Код профиля из предпоследней ячейки
             name = cols[-1].get_text(strip=True)  # Название профиля из последней ячейки
             if code and '.' in code and ' ' not in code:
