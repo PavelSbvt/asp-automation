@@ -8,12 +8,15 @@ import pandas as pd
 from openpyxl import load_workbook
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
-from utils.basic_functions import _extract_commission_members, normalize_initials
+from utils.basic_functions import extract_commission_members, normalize_initials
+from utils.output_rich import Rich
 
 
 def normalize_name_for_comparison(name: str) -> str:
     """
     Нормализует имя для сравнения (удаляет лишние пробелы)
+
+    :param name: Str - Принимает фио, которое нужно нормализовать
     """
     if not name or name == "nan":
         return ""
@@ -27,40 +30,42 @@ def normalize_name_for_comparison(name: str) -> str:
 def parsing_universal_excel(self) -> None:
     """
     Парсит универсальную таблицу Excel
+
     :return: None
     """
 
     try:
-        print("[I] НАЧАЛО parsing_universal_excel")
+        Rich.print_spacer()
+        Rich.simple_log("НАЧАЛО parsing_universal_excel")
 
-        print(f"[I] Путь к файлу: {self.universal_file_path}")
+        Rich.debug_log(f"Путь к файлу: {self.universal_file_path}")
 
         # Проверяем существование файла
         if not os.path.exists(self.universal_file_path):
-            print(f"[E] Файл не существует: {self.universal_file_path}")
+            Rich.success_log(f"Файл не существует: {self.universal_file_path}")
             QMessageBox.critical(self, "Ошибка",
                                  f"Файл не существует:\n{self.universal_file_path}")
 
             return
 
-        print("[I] Файл существует")
+        Rich.debug_log("Файл существует")
 
         # Проверяем размер файла
         file_size = os.path.getsize(self.universal_file_path)
-        print(f"[I] Размер файла: {file_size} байт")
+        Rich.debug_log(f"Размер файла: {file_size} байт")
 
         if file_size == 0:
-            print("[E] Файл пустой!")
+            Rich.warning_log("Файл пустой!")
             QMessageBox.critical(self, "Ошибка", "Файл пустой!")
             return
 
-        print("[I] Начало чтения файла")
+        Rich.debug_log("Начало чтения файла")
 
         try:
-            print("[I] Через openpyxl...")
+            Rich.debug_log("Через openpyxl.")
             wb = load_workbook(self.universal_file_path, read_only=True, data_only=True)
             ws = wb.active
-            print(f"[I] Активный лист: {ws.title}")
+            Rich.debug_log(f"Активный лист: {ws.title}")
             QApplication.processEvents()
 
             data = []
@@ -73,7 +78,7 @@ def parsing_universal_excel(self) -> None:
                     break
 
             wb.close()
-            print(f"[I] Прочитано строк: {len(data)} ")
+            Rich.debug_log(f"Прочитано строк: {len(data)} ")
 
             if len(data) > 1:
                 df = pd.DataFrame(data[1:], columns=data[0])
@@ -81,28 +86,28 @@ def parsing_universal_excel(self) -> None:
                 df = pd.DataFrame()
 
         except Exception as e:
-            print(f"[E] openpyxl не сработал: {e}")
+            Rich.warning_log(f"openpyxl не сработал: {e}")
 
             # Пробуем через pandas
             try:
-                print("[I] Через pandas...")
+                Rich.debug_log("Через pandas.")
                 df = pd.read_excel(
                     self.universal_file_path,
                     dtype=str,
                     engine='openpyxl'
                 )
-                print(f"[I] pandas прочитал {len(df)} строк")
+                Rich.debug_log(f"pandas прочитал {len(df)} строк")
             except Exception as e2:
-                print(f"[E] pandas не сработал: {e2}")
+                Rich.warning_log(f"pandas не сработал: {e2}")
                 raise
 
         if df is None or len(df) == 0:
-            print("[E] Нет данных в файле!")
+            Rich.log_error("Нет данных в файле!")
             QMessageBox.warning(self, "Ошибка", "Файл пуст или не содержит данных!")
-            print("[E] Ошибка. Файл пуст или не содержит данных!")
+            Rich.warning_log("Ошибка. Файл пуст или не содержит данных!")
             return
 
-        print(f"[I] Загружено {len(df)} строк, колонок: {len(df.columns)}")
+        Rich.success_log(f"Загружено {len(df)} строк, колонок: {len(df.columns)}")
 
         students_data = []
         for index, row in df.iterrows():
@@ -135,15 +140,15 @@ def parsing_universal_excel(self) -> None:
                         'citizenship': citizenship
                     })
             except Exception as e:
-                print(f"[E] Ошибка строки {index}: {e}")
+                Rich.log_error(f"Ошибка строки {index}: {e}")
                 continue
 
         self.students_data = students_data
-        print(f"[I] Всего студентов: {len(students_data)}")
+        Rich.simple_log(f"Всего студентов: {len(students_data)}")
         QApplication.processEvents()
 
         for i, student in enumerate(students_data[:5], 1):
-            print(f"[I]   {i}. {student['fio']}")
+            Rich.debug_log(f"   {i}. {student['fio']}")
 
         QMessageBox.information(
             self,
@@ -151,10 +156,10 @@ def parsing_universal_excel(self) -> None:
             f"Данные успешно загружены!\n\n"
             f"Найдено записей: {len(students_data)}"
         )
-        print(f"[S] Данные успешно загружены! Найдено записей: {len(students_data)}")
+        Rich.success_log(f"Данные успешно загружены! Найдено записей: {len(students_data)}")
 
     except Exception as e:
-        print(f"[E] КРИТИЧЕСКАЯ ОШИБКА: {e}")
+        Rich.log_error(f"КРИТИЧЕСКАЯ ОШИБКА: {e}")
         traceback.print_exc()
         QApplication.processEvents()
         QMessageBox.critical(
@@ -168,6 +173,10 @@ def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
     """
     Извлекает все таблицы из документа .doc и возвращает
     их как один DataFrame с текстом.
+
+    :param path: Принимает путь к файлу, из которого нужно извлечь данные комиссии
+
+    :return: Tuple[pd.DataFrame, str] - возвращает DataFrame с текстом комиссии
     """
 
     doc = aw.Document(path)
@@ -221,9 +230,12 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
     """
     Парсит файл комиссии и возвращает словарь:
     { "шифр": {"members": [...], "code": "шифр"} }
+
+    :return: Optional[Dict[str, Dict]] - возвращает словарь с данными комиссии
     """
 
-    print("[I] Парсинг комиссии...")
+    Rich.print_spacer()
+    Rich.simple_log("Парсинг комиссии.")
 
     # Определяем файл в зависимости от семестра
     if self.radio_button_1.isChecked():
@@ -242,29 +254,29 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
     if not path:
         QMessageBox.warning(self, "Ошибка",
                             f"Сначала выберите файл комиссии '{commission_name}'!")
-        print("[E] Ошибка. сначала выберите файл комиссии")
+        Rich.log_error("Ошибка. сначала выберите файл комиссии")
         return None
 
     if not os.path.exists(path):
         QMessageBox.warning(self, "Ошибка", f"Файл не существует: {path}")
-        print("[E] ошибка. файл не существует")
+        Rich.log_error("ошибка. файл не существует")
         return None
 
     try:
         tables_df, full_text = parse_doc_with_tables(path)
         commissions_by_code = {}
 
-        print("[I] данные таблицы")
+        Rich.debug_log("данные таблицы")
         for idx, row in tables_df.iterrows():
-            print(f"[I] Строка {idx}:")
+            Rich.debug_log(f"Строка {idx}:")
             for col in tables_df.columns:
                 val = str(row[col])[:100] if pd.notna(row[col]) else ""
-                print(f"    {col}: {val}")
-            print("-" * 40)
+                Rich.debug_log(f"    {col}: {val}")
+            Rich.print_spacer_points()
 
         if tables_df is not None and not tables_df.empty:
             cols = list(tables_df.columns)
-            print(f"[I] Колонки: {cols}")
+            Rich.debug_log(f"Колонки: {cols}")
 
             # Находим колонки
             fio_col = None
@@ -285,8 +297,8 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
             if fio_col is None and len(cols) >= 2:
                 fio_col = cols[0]
 
-            print(f"[I] Колонка ФИО: {fio_col}")
-            print(f"[I] Колонка шифра: {code_col}")
+            Rich.debug_log(f"Колонка ФИО: {fio_col}")
+            Rich.debug_log(f"Колонка шифра: {code_col}")
 
             # Проходим по строкам
             for idx, row in tables_df.iterrows():
@@ -297,30 +309,30 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
                                 if pd.notna(row[col]) else ""
                             if value and len(value) > 10:
                                 value = normalize_initials(value)
-                                _extract_commission_members(value,
+                                extract_commission_members(value,
                                             commissions_by_code, row, code_col)
                 else:
                     value = str(row[fio_col]).strip() \
                         if pd.notna(row[fio_col]) else ""
                     if value and len(value) > 10:
                         value = normalize_initials(value)
-                        _extract_commission_members(value,
+                        extract_commission_members(value,
                                             commissions_by_code, row, code_col)
 
         self.commissions_by_code = commissions_by_code
 
         if commissions_by_code:
-            print(f"[I] Найдено комиссий для шифров: {len(commissions_by_code)}")
+            Rich.simple_log(f"Найдено комиссий для шифров: {len(commissions_by_code)}")
             for code, comm in commissions_by_code.items():
                 members = comm.get('members', [])
-                print(f"[I]   Шифр: {code} -> {len(members)} членов")
+                Rich.debug_log(f"   Шифр: {code} -> {len(members)} членов")
                 for member in members:
-                    print(f"[I]  - {member.get('fio', '')} ({member.get('role', '')})")
+                    Rich.debug_log(f"  - {member.get('fio', '')} ({member.get('role', '')})")
 
-            print(f"[S] Готово. Комиссия успешно загружена. Найдено комиссий: "
+            Rich.success_log(f"Готово. Комиссия успешно загружена. Найдено комиссий: "
                   f"{len(commissions_by_code)}. Семестр: {semester_name}.")
         else:
-            print("[E] Члены комиссии не найдены!")
+            Rich.log_error("Члены комиссии не найдены!")
 
             # Вывод ошибки на пустоту данных о комиссии
             QMessageBox.critical(
@@ -334,7 +346,7 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
         return commissions_by_code
 
     except Exception as e:
-        print(f"[E] Ошибка при парсинге комиссии: {e}")
+        Rich.log_error(f"Ошибка при парсинге комиссии: {e}")
         traceback.print_exc()
         QMessageBox.critical(
             self,

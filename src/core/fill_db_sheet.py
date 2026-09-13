@@ -8,6 +8,7 @@ import pandas as pd
 
 from utils.basic_functions import extract_code_number, remove_trailing_dot
 from utils.declension_full_name import _get_fio_accusative, _get_fio_initials
+from utils.output_rich import Rich
 from parser.sait_parsing import load_specialties_from_cache
 
 
@@ -16,15 +17,20 @@ def get_specialty_code(profile: str) -> str:
     Возвращает код специальности по названию профиля.
     Данные берутся ТОЛЬКО из локального файла кэша.
     Интернет НЕ используется.
-    :return: str
+
+    :param profile: Str - Принимает текст профиля, по которому будет искаться
+     код специальности
+
+    :return: Str - возвращает код специальности по названию профиля
     """
+
     try:
         # Загружаем данные из кэша
         specialties = load_specialties_from_cache()
 
         # Если файла нет - возвращаем пустую строку
         if specialties is None:
-            print("[E] Файл кэша не найден! Данные не загружены.")
+            Rich.warning_log("Файл кэша не найден! Данные не загружены.")
             return ""
 
         # Ищем совпадение с профилем
@@ -36,7 +42,7 @@ def get_specialty_code(profile: str) -> str:
         return ""
 
     except Exception as e:
-        print(f"[E] Ошибка в get_specialty_code: {e}")
+        Rich.log_error(f"Ошибка в get_specialty_code: {e}")
         return ""
 
 def clean_excel_string(s: str) -> str:
@@ -54,7 +60,8 @@ def clean_excel_string(s: str) -> str:
 def fill_database_sheet(self) -> Optional[str]:
     """
     функция заполнения листа БД таблицы-шаблона
-    :return: None
+
+    :return: Optional[str] -
     """
 
     print("[I] fill_database_sheet через pandas")

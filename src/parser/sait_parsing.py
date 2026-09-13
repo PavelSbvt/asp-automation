@@ -68,10 +68,6 @@ def load_specialties_from_cache() -> Optional[List[Tuple[str, str]]]:
                     if len(parts) == 2:
                         specialties.append((parts[0], parts[1]))
 
-        Rich.success_log(f"Загружено {len(specialties)} специальностей")
-        Rich.simple_log(f"Файл: {current_file.name}")
-        Rich.debug_log(f"Время обновления: {update_time}")
-
         return specialties
 
     except Exception as e:
@@ -221,7 +217,8 @@ def update_data(self) -> None:
                 f"Загружено специальностей: {len(specialties)}\n"
                 f"Время обновления: {update_time}"
             )
-            Rich.success_log(f"Данные обновлены! Загружено {len(specialties)} специальностей")
+            Rich.success_log(
+                f"Данные обновлены! Загружено {len(specialties)} специальностей")
 
         else:
             QMessageBox.warning(

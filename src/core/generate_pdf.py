@@ -456,7 +456,7 @@ def get_pdf(self) -> None:
         return
 
     Rich.print_spacer()
-    Rich.success_log(f"[S] Программа завершила работу.")
+    Rich.success_log(f"Программа завершила работу.")
     Rich.simple_log(f"Документы PDF сохранены в папке '{output_pdf_name}'")
     Rich.print_spacer()
     QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)

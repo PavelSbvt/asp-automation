@@ -1,8 +1,9 @@
-from datetime import datetime
 import re
 from typing import Dict
 
 import pandas as pd
+
+from utils.output_rich import Rich
 
 
 def remove_trailing_dot(text: str) -> str:
@@ -102,19 +103,20 @@ def extract_initials_from_text(text: str) -> str:
 
     return extract_fio_from_text(text)
 
-def _extract_commission_members(text: str,
+def extract_commission_members(text: str,
     commissions_dict: Dict, row, code_col: str) -> None:
     """
     Извлекает членов комиссии из текста и сохраняет в словарь commissions_dict
     по ключу-шифру.
 
-    :param row:
+    :param row: Строка таблицы с данными о специальности
 
-    :param text:
+    :param text: Str - текст строки таблицы с ФИО и ролями членов комиссии.
 
-    :param commissions_dict:
+    :param commissions_dict: Dict - словарь, в который сохраняются
+        данные о комиссиях по шифрам
 
-    :param code_col:
+    :param code_col: Str - имя колонки с шифром специальности
 
     :return: None
     """
@@ -135,7 +137,7 @@ def _extract_commission_members(text: str,
         science_match = re.search(r'\(([^)]+)\)', code_value)
         if science_match:
             science_branch = science_match.group(1).strip()
-            print(f"[I] Найдена наука: '{science_branch}' для шифра {code}")
+            Rich.debug_log(f"Найдена наука: '{science_branch}' для шифра {code}")
 
     if not code:
         code_match = re.search(r'(\d+\.\d+\.\d+)', text)
@@ -143,7 +145,7 @@ def _extract_commission_members(text: str,
             code = code_match.group(1)
 
     if not code:
-        print(f"[W] Не удалось извлечь шифр из строки: {text[:50]}...")
+        Rich.warning_log(f"Не удалось извлечь шифр из строки: {text[:50]}...")
         return
 
     if code not in commissions_dict:
@@ -244,9 +246,9 @@ def extract_code_number(raw_code: str) -> str:
     Извлекает код специальности из строки.
     Пример: "2.2.12." -> "2.2.12."
 
-    :param raw_code:
+    :param raw_code: Str - строка, из которой нужно извлечь код
 
-    :return:
+    :return: Str - код специальности или исходная строка, если код не найден.
     """
     if not raw_code:
         return ""

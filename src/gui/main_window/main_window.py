@@ -896,6 +896,47 @@ class MainWindow(QMainWindow):
 
         self.change_active_button_styles()
 
+    def keyPressEvent(self, event) -> None:
+        """
+        Обработка нажатий клавиш для остановки процесса
+
+        :return: None
+        """
+
+        # Пробел - обычная остановка
+        if event.key() == Qt.Key.Key_Space:
+            if (self.stop_parsing_button.isVisible() and
+                    self.stop_parsing_button.isEnabled()):
+                self.stop_generation_process()
+                event.accept()
+                return
+
+            elif (self.stop_button.isVisible() and
+                    self.stop_button.isEnabled()):
+                self.stop_generation_second_tab()
+                event.accept()
+                return
+
+        # ESC - аварийная остановка (работает даже если кнопка скрыта)
+        if event.key() == Qt.Key.Key_Escape:
+            if self.stop_parsing_button.isVisible():
+                Rich.warning_log("Аварийная остановка парсинга по ESC")
+                self.stop_generation = True
+                QMessageBox.warning(self, "Аварийная остановка",
+                                    "Парсинг остановлен по клавише ESC")
+                event.accept()
+                return
+            elif self.stop_button.isVisible():
+                Rich.warning_log("Аварийная остановка сборки PDF по ESC")
+                self.stop_building_pdf = True
+                QMessageBox.warning(self, "Аварийная остановка",
+                                    "Сборка PDF остановлена по клавише ESC")
+                event.accept()
+                return
+
+        # Передаем событие дальше
+        super().keyPressEvent(event)
+
     def set_styles(self) -> None:
         """
         Функция для установки QSS стилей виджетов, кнопок, прогрессбаров и т.д.
