@@ -131,7 +131,7 @@ def fill_database_sheet(self) -> Optional[str]:
                 all_commission = commission_dict[key]
                 break
 
-    Rich.debug_log("Ключи словаря комиссий:", list(commission_dict.keys()))
+    Rich.debug_log(f"Ключи словаря комиссий: {list(commission_dict.keys())}")
 
     def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
         """
