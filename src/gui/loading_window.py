@@ -1,18 +1,20 @@
 from pathlib import Path
 
 from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
-from PyQt6.QtWidgets import (QLabel, QWidget, QVBoxLayout, QProgressBar, QFrame, QPushButton)
+from PyQt6.QtWidgets import (QLabel,
+    QWidget, QVBoxLayout, QProgressBar, QFrame, QPushButton)
 
 from utils.output_rich import Rich
-from gui.animations.animations_for_windows import AnimateManager
-from utils.functions_for_window_gui import (center_window,
-    background_window_by_time_of_day, update_animation_gradient)
-from utils.citations import get_citation_with_author
-from core.settings_manager import Settings
-from gui.main_window.for_main_window.styles import Style
-from utils.update_gui import update_progress_bar_animation
-from utils.fonts import Fonts
+from gui.utils.windows_animations import AnimateManager
+from gui.utils.windows_functions import (center_window,
+    background_window_by_time_of_day)
 
+from core.settings_manager import Settings
+from gui.utils.styles import Style
+from gui.utils.update_gui import (update_progress_bar_animation,
+    loading_window_img_click, update_animation_gradient)
+from gui.utils.fonts import Fonts
+from utils.citations import get_citation_with_author
 
 
 class MyLoadingWindow(QWidget):
@@ -63,7 +65,7 @@ class MyLoadingWindow(QWidget):
         self.loading_window.move(380,10)
         self.loading_window.setCursor(Qt.CursorShape.PointingHandCursor)
 
-        self.loading_window.clicked.connect(self.loading_window_img_click)
+        self.loading_window.clicked.connect(lambda: loading_window_img_click(self))
 
         Rich.debug_log("Вывод сообщения о загрузке приложения ('Приложение загружается...')")
 
@@ -171,7 +173,7 @@ class MyLoadingWindow(QWidget):
         self.citation_author_label = QLabel()
         self.citation_author_label.setText(author_text)
         self.citation_author_label.setWordWrap(True)
-        self.citation_author_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.citation_author_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         if len(author_text) < 40:
             self.citation_author_label.setFont(Fonts.get_qfont("Inter", 12))
@@ -189,7 +191,7 @@ class MyLoadingWindow(QWidget):
             opacity: 0.9;
             padding: 7px;
         """)
-        self.citation_author_label.setMinimumHeight(20)
+        self.citation_author_label.setMinimumHeight(30)
         self.citation_author_label.setMaximumHeight(50)
 
         self.citation_layout.addWidget(self.citation_label)
@@ -262,26 +264,6 @@ class MyLoadingWindow(QWidget):
         self.change_color_direction = 1
 
         self.gradient_timer.timeout.connect(lambda: update_animation_gradient(self))
-
-    def loading_window_img_click(self) -> None:
-        """
-        Функция для смены фонового изображения загрузочного окна по кнопке (изображение
-        является кнопкой). Ещё раз запускает функцию выбора случайного изображения на
-        фон загрузочного окна и обновляет главные цвета изображения, которые передадутся
-        функции обновления градиента.
-
-        :return: None
-        """
-
-        Rich.print_spacer()
-        Rich.debug_log("нажата кнопка изменения фонового изображения загрузочного окна")
-
-        self.current_r, self.current_g, self.current_b, self.bg_path_check \
-            = background_window_by_time_of_day(self.lb_hi_prog,
-                self.loading_window, self.bg_path_check)
-
-        Rich.debug_log("Фоновое изображение загрузочного окна изменено, "
-            "цвета фонового градиента изменены.")
 
     def start_closing(self) -> None:
         """
