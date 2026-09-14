@@ -1,27 +1,27 @@
-import sys
 from pathlib import Path
 from typing import Optional, List, Dict, Any
-import webbrowser
 
-from PyQt6.QtCore import QPoint, Qt, qWarning
-from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QPoint, Qt
 from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton,
-    QProgressBar, QApplication, QRadioButton, QButtonGroup, QLineEdit,
+    QProgressBar, QRadioButton, QButtonGroup, QLineEdit,
     QMessageBox, QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea, QSlider)
 
 from core.settings_manager import Settings
 from utils.output_rich import Rich
-from utils.functions_for_window_gui import (get_random_image_from_folder,
-    get_main_color_image)
-from gui.functions.choose_files import (choose_universal_excel,
+from gui.utils.choose_files import (
+    choose_universal_excel, choose_save_folder_second_tab,
     choose_parsing_save_folder, open_parsing_pdf_folder,
     choose_history_excel, choose_foreign_excel, choose_specialization_excel,
-    open_pdf_folder, choose_save_folder_second_tab
-    )
-from core.generate_pdf import choose_file, get_pdf
-from utils.fonts import Fonts
-from gui.functions.pyqt_functions import parsing
-from gui.main_window.for_main_window.styles import Style
+    open_pdf_folder)
+from gui.utils.update_gui import set_styles
+from gui.utils.main_window_logic import (run, app_name_clicked, open_settings_tab,
+    stop_generation_process, stop_generation_second_tab, what_tab_is_show_now,
+    on_bg_clicked, on_semester_changed, set_true_show_loading_window,
+    set_false_show_loading_window, on_slider_changed, on_button_choose_theme,
+    get_bg_for_main_tab_widget)
+from core.generate_pdf import choose_file
+from gui.utils.fonts import Fonts
+from gui.utils.styles import Style
 from parser.sait_parsing import update_data
 
 
@@ -114,7 +114,7 @@ class MainWindow(QMainWindow):
         self.app_name_button.setText(Settings.get_app_name())
         self.app_name_button.setFont(Fonts.get_qfont("JetBrains_Regular", 14))
         self.app_name_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.app_name_button.clicked.connect(self.app_name_clicked)
+        self.app_name_button.clicked.connect(lambda: app_name_clicked(self))
 
         self.settings_path = Path("resources/images/icons/settings_pycharm_icon.png")
 
@@ -122,7 +122,7 @@ class MainWindow(QMainWindow):
         self.settings_button = QPushButton()
         self.settings_button.setFixedSize(30, 31)
         self.settings_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.settings_button.clicked.connect(self.open_settings_tab)
+        self.settings_button.clicked.connect(lambda: open_settings_tab(self))
 
         self.run_button_path = Path("resources/images/icons/run_button.png")
 
@@ -130,7 +130,7 @@ class MainWindow(QMainWindow):
         self.run_button = QPushButton()
         self.run_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.run_button.setFixedSize(30,31)
-        self.run_button.clicked.connect(self.run)
+        self.run_button.clicked.connect(lambda: run(self))
 
         self.stop_button_path = Path("resources/images/icons/stop_button.png")
 
@@ -138,18 +138,18 @@ class MainWindow(QMainWindow):
         # Появится только при запуске процесса
         self.stop_parsing_button = QPushButton()
         self.stop_parsing_button.setFixedSize(30,31)
-        self.stop_parsing_button.clicked.connect(self.stop_generation_process)
+        self.stop_parsing_button.clicked.connect(lambda: stop_generation_process(self))
         self.stop_parsing_button.setVisible(False)
 
         self.stop_button = QPushButton()
         self.stop_button.setFixedSize(30, 31)
-        self.stop_button.clicked.connect(self.stop_generation_second_tab)
+        self.stop_button.clicked.connect(lambda: stop_generation_second_tab(self))
         self.stop_button.setVisible(False)
 
         # Вызов функции для получения индекса текущей вкладки
-        self.what_tab_is_show_now()
+        what_tab_is_show_now(self)
         # И вызов её при открытии другой вкладки
-        self.tab_widget.currentChanged.connect(self.what_tab_is_show_now)
+        self.tab_widget.currentChanged.connect(lambda: what_tab_is_show_now(self))
 
         # Добавление виджетов в шапку
         self.cap.addWidget(self.app_name_button)
@@ -169,11 +169,8 @@ class MainWindow(QMainWindow):
         self.widget_bg_main_tab.setMinimumHeight(200)
         self.widget_bg_main_tab.setMaximumWidth(1900)
 
-        # ПУть к папке с изображениями для фона главного окна (основной вкладки)
-        self.get_bg_for_main_tab_widget("resources/images/for_main_window")
-
         # подключение функции изменения фона основной вкладки
-        self.widget_bg_main_tab.clicked.connect(self.on_bg_clicked)
+        self.widget_bg_main_tab.clicked.connect(lambda: on_bg_clicked(self))
 
         # Лейбл для отображения виджет с фоном (без текста)
         label = QLabel(self.widget_bg_main_tab)
@@ -467,11 +464,11 @@ class MainWindow(QMainWindow):
         # Подключение к радиокнопкам сигала для показа кнопки и лейбла выбора файла
         # комиссии в соответствии с выбранным семестром
         self.radio_button_1.toggled.connect(
-            lambda checked: self.on_semester_changed(checked, "history"))
+            lambda checked: on_semester_changed(self, checked, "history"))
         self.radio_button_2.toggled.connect(
-            lambda checked: self.on_semester_changed(checked, "foreign"))
+            lambda checked: on_semester_changed(self, checked, "foreign"))
         self.radio_button_3.toggled.connect(
-            lambda checked: self.on_semester_changed(checked, "specialization"))
+            lambda checked: on_semester_changed(self, checked, "specialization"))
 
         # Виджет для кеша
         self.widget_for_cache = QWidget()
@@ -531,10 +528,32 @@ class MainWindow(QMainWindow):
         horizontal_layout_for_change_save_path.addLayout(
             vertical_layout_for_show_save_path_and_button_change)
 
+        # Виджет для показа сообщения о возможности завершения операции по нажатии кнопки
+        self.widget_for_title_to_stop = QWidget()
+        self.widget_for_title_to_stop.setFixedWidth(730)
+        self.widget_for_title_to_stop.setMinimumHeight(50)
+        self.widget_for_title_to_stop.setVisible(False)
+
+        layout_for_title_to_stop = QVBoxLayout()
+        self.widget_for_title_to_stop.setLayout(layout_for_title_to_stop)
+
+        self.label_title_to_stop = QLabel()
+        self.label_title_to_stop.setFont(Fonts.get_qfont("JetBrains_Regular", 10))
+        self.label_title_to_stop.setText(
+            "Чтобы остановить процесс, нажмите 'Esc' или 'Space'")
+        self.label_title_to_stop.setMinimumWidth(300)
+        self.label_title_to_stop.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout_for_title_to_stop.addWidget(
+            self.label_title_to_stop, alignment=Qt.AlignmentFlag.AlignCenter)
+
         # Добавление в основной layout
         container_layout_main_tab.addWidget(self.widget_bg_main_tab)
 
         container_layout_main_tab.addStretch()
+
+        container_layout_main_tab.addWidget(self.widget_for_title_to_stop,
+            alignment=Qt.AlignmentFlag.AlignCenter)
 
         container_layout_main_tab.addWidget(
             self.progress_bar_parsing, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -707,6 +726,25 @@ class MainWindow(QMainWindow):
         self.widget_for_choose_table.setLayout(layout_for_choose_table)
         layout_for_choose_table.setSpacing(15)
 
+        # Виджет для показа сообщения о возможности завершения операции по нажатии кнопки
+        self.widget_title_stop_second = QWidget()
+        self.widget_title_stop_second.setFixedWidth(730)
+        self.widget_title_stop_second.setMinimumHeight(50)
+        self.widget_title_stop_second.setVisible(False)
+
+        layout_title_stop_second = QVBoxLayout()
+        self.widget_title_stop_second.setLayout(layout_title_stop_second)
+
+        self.label_title_stop_2 = QLabel()
+        self.label_title_stop_2.setFont(Fonts.get_qfont("JetBrains_Regular", 10))
+        self.label_title_stop_2.setText(
+            "Чтобы остановить процесс, нажмите 'Esc' или 'Space'")
+        self.label_title_stop_2.setMinimumWidth(300)
+        self.label_title_stop_2.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        layout_title_stop_second.addWidget(
+            self.label_title_stop_2, alignment=Qt.AlignmentFlag.AlignCenter)
+
         horizontal_pos_layout = QHBoxLayout()
 
         layout_for_choose_table.addLayout(horizontal_pos_layout)
@@ -721,6 +759,9 @@ class MainWindow(QMainWindow):
 
         layout_for_choose_table.addWidget(
             self.button_shouse_table, alignment=Qt.AlignmentFlag.AlignRight)
+
+        background_widget_for_second_tab_container.addWidget(
+            self.widget_title_stop_second, alignment=Qt.AlignmentFlag.AlignCenter)
 
         background_widget_for_second_tab_container.addWidget(
             self.progress_bar, alignment=Qt.AlignmentFlag.AlignCenter)
@@ -782,7 +823,7 @@ class MainWindow(QMainWindow):
         self.button_show_loading_window.setFixedHeight(50)
         self.button_show_loading_window.setFixedWidth(200)
         self.button_show_loading_window.setFont(Fonts.get_qfont("JetBrains_Light", 8))
-        self.button_show_loading_window.clicked.connect(self.set_true_show_loading_window)
+        self.button_show_loading_window.clicked.connect(lambda: set_true_show_loading_window(self))
 
         self.button_hide_loading_window = QPushButton()
         self.button_hide_loading_window.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -790,7 +831,7 @@ class MainWindow(QMainWindow):
         self.button_hide_loading_window.setFixedHeight(50)
         self.button_hide_loading_window.setFixedWidth(200)
         self.button_hide_loading_window.setFont(Fonts.get_qfont("JetBrains_Light", 8))
-        self.button_hide_loading_window.clicked.connect(self.set_false_show_loading_window)
+        self.button_hide_loading_window.clicked.connect(lambda: set_false_show_loading_window(self))
 
         loading_param_h_layout.addWidget(self.param_show_loading_window)
         loading_param_h_layout.addStretch()
@@ -816,7 +857,7 @@ class MainWindow(QMainWindow):
         self.slider_loading_window_timer_duration.setRange(1000, 15000)
         self.slider_loading_window_timer_duration.setValue(Settings.get_loading_window_timer_duration())
         self.slider_loading_window_timer_duration.setFixedWidth(350)
-        self.slider_loading_window_timer_duration.valueChanged.connect(self.on_slider_changed)
+        self.slider_loading_window_timer_duration.valueChanged.connect(lambda value: on_slider_changed(self, value))
 
         # Индикатор текущей длительности показа загрузочного окна
         self.indicate_loading_window_timer_duration = QLabel()
@@ -850,7 +891,7 @@ class MainWindow(QMainWindow):
         self.choose_standard_theme_button.setFont(Fonts.get_qfont(
             "JetBrains_Regular", 10))
         self.choose_standard_theme_button.clicked.connect(
-            lambda: self.on_button_choose_theme("standard"))
+            lambda: on_button_choose_theme(self, "standard"))
 
         self.choose_violet_theme_button = QPushButton()
         self.choose_violet_theme_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -859,7 +900,7 @@ class MainWindow(QMainWindow):
         self.choose_violet_theme_button.setFixedHeight(50)
         self.choose_violet_theme_button.setFont(Fonts.get_qfont("JetBrains_Regular", 10))
         self.choose_violet_theme_button.clicked.connect(
-            lambda: self.on_button_choose_theme("violet"))
+            lambda: on_button_choose_theme(self, "violet"))
 
         self.choose_dark_theme_button = QPushButton()
         self.choose_dark_theme_button.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -869,7 +910,7 @@ class MainWindow(QMainWindow):
         self.choose_dark_theme_button.setFont(Fonts.get_qfont(
             "JetBrains_Regular", 10))
         self.choose_dark_theme_button.clicked.connect(
-            lambda: self.on_button_choose_theme("dark"))
+            lambda: on_button_choose_theme(self, "dark"))
 
         layout_for_theme_widget = QHBoxLayout()
         self.widget_for_choose_theme.setLayout(layout_for_theme_widget)
@@ -889,9 +930,12 @@ class MainWindow(QMainWindow):
 
         tab_settings_layout.addStretch()
 
-        self.set_styles()
+        set_styles(self)
 
         self.change_active_button_styles()
+
+        # ПУть к папке с изображениями для фона главного окна (основной вкладки)
+        get_bg_for_main_tab_widget(self, "resources/images/for_main_window")
 
     def keyPressEvent(self, event) -> None:
         """
@@ -904,13 +948,13 @@ class MainWindow(QMainWindow):
         if event.key() == Qt.Key.Key_Space:
             if (self.stop_parsing_button.isVisible() and
                     self.stop_parsing_button.isEnabled()):
-                self.stop_generation_process()
+                stop_generation_process(self)
                 event.accept()
                 return
 
             elif (self.stop_button.isVisible() and
                     self.stop_button.isEnabled()):
-                self.stop_generation_second_tab()
+                stop_generation_second_tab(self)
                 event.accept()
                 return
 
@@ -934,249 +978,12 @@ class MainWindow(QMainWindow):
         # Запуск процессов с комбинации шифт + ф9
         if (event.key() == Qt.Key.Key_F9 and
                 event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
-            self.run()
+            run(self)
             event.accept()
             return
 
         # Передаем событие дальше
         super().keyPressEvent(event)
-
-    def set_styles(self) -> None:
-        """
-        Функция для установки QSS стилей виджетов, кнопок, прогрессбаров и т.д.
-
-        :return: None. Устанавливает стили
-        """
-
-        Style.update_styles_for_choose_theme()
-
-        self.tab_widget.setStyleSheet(f"""
-           QTabWidget::pane {{
-               background-color: #2B2B2B;
-               border: none;
-               top: -1px;
-           }}
-           QTabBar {{
-               background-color: {Style.background_color};
-           }}
-           QTabBar::tab {{
-               background: transparent;
-               color: {Style.dark_font_color};
-               padding: 10px 20px;
-               margin-right: 0px;
-               border: none;
-               border-bottom: 2px solid transparent;
-           }}
-           QTabBar::tab:selected {{
-               background: transparent;
-               color: {Style.light_font_color};
-               border-bottom: 2px solid rgb({self.main_color_str});
-               font-weight: bold;
-           }}            
-           QTabBar::tab:hover:!selected {{
-               color: {Style.light_font_color};
-               border-bottom: 2px solid #4D4E51;
-           }}
-       """)
-
-        self.main_tab_scroll_area.setStyleSheet(Style.q_scroll_bar_style)
-
-        self.main_back_widget.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 0px;")
-
-        # Стили с основной вкладки
-        self.progress_bar_parsing.setStyleSheet(Style.progress_bar_style_blue)
-        self.app_name_button.setStyleSheet(f"""
-                    QPushButton {{
-                        background: transparent;
-                        color: {Style.light_font_color};
-                        border: none;
-                        border-radius: 4px;
-                        padding: 6px 10px;
-                        margin-left: 30px;
-                    }}
-                """)
-        self.settings_button.setStyleSheet(f"""
-                    QPushButton {{
-                        background-image: url({self.settings_path.as_posix()});
-                        border: none;
-                        background-repeat: no-repeat;
-                        background-position: center;
-                        background-color: transparent;
-                        border-radius: 5px;
-                    }}
-                    QPushButton:hover {{
-                        background-color: rgba(255, 255, 255, 0.08);
-                    }}
-                    QPushButton:pressed {{
-                        background-color: rgba(255, 255, 255, 0.15);
-                    }}
-                """)
-        self.run_button.setStyleSheet(f"""
-                    QPushButton {{
-                        background-image: url({self.run_button_path.as_posix()});
-                        background-repeat: no-repeat;
-                        background-position: center;
-                        border: none;
-                        background-color: transparent;
-                        border-radius: 5px;
-                    }}
-                    QPushButton:hover {{
-                        background-color: rgba(255, 255, 255, 0.08);
-                    }}
-                    QPushButton:pressed {{
-                        background-color: rgba(255, 255, 255, 0.15);
-                    }}
-                """)
-
-        style_for_stop_button = f"""
-                QPushButton {{
-                    background-image: url({self.stop_button_path.as_posix()});
-                    background-repeat: no-repeat;
-                    background-position: center;
-                    border: none;
-                    background-color: #8A3535;
-                    border-radius: 5px;
-                }}
-                QPushButton:hover {{
-                    background-color: #B44747;
-                }}
-                QPushButton:pressed {{
-                    background-color: #7A2E2E;
-                }}
-            """
-
-        self.stop_parsing_button.setStyleSheet(style_for_stop_button)
-        self.stop_button.setStyleSheet(style_for_stop_button)
-
-        self.container_widget_main_tab.setStyleSheet(
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
-        self.open_folder_button.setStyleSheet(Style.button_blue_style)
-        self.radio_buttons_background.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-        )
-        self.label_for_radio_buttons.setStyleSheet(
-            f"color: {Style.light_font_color}; margin: 10px; font-weight: bold;")
-        self.radio_button_1.setStyleSheet(Style.radio_button_style)
-        self.radio_button_2.setStyleSheet(Style.radio_button_style)
-        self.radio_button_3.setStyleSheet(Style.radio_button_style)
-        self.input_commission.setStyleSheet(Style.q_line_edit_style)
-        self.widget_for_choose_files_commission.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-        )
-        self.btn_choose_universal_xl.setStyleSheet(Style.button_blue_style)
-        self.universal_excel_label.setStyleSheet(
-            f"color: {Style.dark_font_color};"
-            f"background-color: {Style.background_dark_color};"
-            f"padding: 10px;"
-        )
-        self.widget_for_choose_commission_file.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-        )
-        self.btn_choose_history_commission.setStyleSheet(Style.button_blue_style)
-        self.history_xl_choused_label.setStyleSheet(
-            f"color: {Style.dark_font_color};"
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
-        )
-        self.btn_choose_foreign_commission.setStyleSheet(Style.button_blue_style)
-        self.foreign_xl_choosed_label.setStyleSheet(
-            f"color: {Style.dark_font_color};"
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
-        )
-        self.btn_choose_specialization_commission.setStyleSheet(Style.button_blue_style)
-        self.specialization_xl_choosed_lb.setStyleSheet(
-            f"color: {Style.dark_font_color};"
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
-        )
-        self.time_update_label.setStyleSheet(
-            f"color: {Style.dark_font_color}; "
-            f"background-color: {Style.background_dark_color};"
-        )
-        self.button_to_update_date.setStyleSheet(Style.button_blue_style)
-        self.label_info_last_update_cache.setStyleSheet(
-            f"color: {Style.light_font_color};")
-        self.label_commission_title.setStyleSheet(
-            f"color: {Style.light_font_color}; padding: 10px;"
-            f"background-color: {Style.background_color}; border-radius: 10px;")
-        self.widget_for_cache.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-        )
-        self.button_change_save_path.setStyleSheet(Style.button_blue_style)
-        self.widget_for_change_save_path.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-            f"padding: 10px;")
-        self.change_path_label.setStyleSheet(f"color: {Style.light_font_color};")
-        self.save_path_label.setStyleSheet(f"color: {Style.dark_font_color};"
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
-            f"padding: 10px;")
-
-        # Стили с вкладки сборки по готовой таблице
-        self.tab_second_widget.setStyleSheet(
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
-        self.background_widget_for_second_tab.setStyleSheet(
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
-        self.second_tab_title.setStyleSheet(f"color: {Style.light_font_color}; font: bold;")
-        self.widget_for_pos_button_path_and_title_choose_save_path.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-            f"padding: 10px;")
-        self.title_change_save_path.setStyleSheet(f"color: {Style.light_font_color};"
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-            f"margin-top: 5px; font: bold;")
-        self.current_save_path_label.setStyleSheet(f"color: {Style.dark_font_color};"
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
-        self.button_shouse_save_path_for_second_tab.setStyleSheet(
-            Style.button_blue_style)
-        self.progress_bar.setStyleSheet(Style.progress_bar_style_blue)
-        self.widget_for_choose_table.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-            f"padding: 10px;")
-        self.title_choose_table_label.setStyleSheet(f"color: {Style.light_font_color};"
-            f"background-color: {Style.background_color}; border-radius: 10px;"
-            f"font: bold;")
-        self.label_current_tabel.setStyleSheet(f"color: {Style.dark_font_color};"
-            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
-            f"padding: 10px;")
-        self.button_shouse_table.setStyleSheet(
-            Style.button_blue_style)
-        self.button_open_folder_with_pdf.setStyleSheet(
-            Style.button_blue_style)
-
-        # Стили с вкладки настроек
-        self.choose_dark_theme_button.setStyleSheet(Style.button_hide_style)
-        self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
-        self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
-        self.label_title_choose_theme.setStyleSheet(
-            f"color: {Style.light_font_color}; font: bold;")
-        self.widget_for_choose_theme.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;")
-        self.indicate_loading_window_timer_duration.setStyleSheet(
-            f"color: {Style.dark_font_color};")
-        self.slider_loading_window_timer_duration.setStyleSheet(Style.q_slider_style)
-        self.loading_window_timer_duration_param_widget.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;")
-
-        if not Settings.get_flag_show_loading_window_hide_log():
-            self.button_hide_loading_window.setStyleSheet(Style.button_blue_style)
-        else:
-            self.button_hide_loading_window.setStyleSheet(Style.button_hide_style)
-
-        if Settings.get_flag_show_loading_window_hide_log():
-            self.button_show_loading_window.setStyleSheet(Style.button_blue_style)
-        else:
-            self.button_show_loading_window.setStyleSheet(Style.button_hide_style)
-
-        self.param_show_loading_window.setStyleSheet(f"color: {Style.light_font_color};")
-        self.loading_window_param_widget.setStyleSheet(
-            f"background-color: {Style.background_color}; border-radius: 10px;")
-        self.settings_main_widget.setStyleSheet(
-            f"background: {Style.background_dark_color}; border-radius: 10px;")
-        self.settings_label.setStyleSheet(
-            f"color: {Style.light_font_color}; font: bold;")
-        self.settings_cap.setStyleSheet(
-            f"background-color: {Style.background_dark_color};")
-        self.tab_settings_widget.setStyleSheet(
-            f"background-color: {Style.background_dark_color}; "
-            f"border-radius: 10px;")
 
     def change_active_button_styles(self) -> None:
         """
@@ -1203,163 +1010,6 @@ class MainWindow(QMainWindow):
             self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
             self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
 
-    def on_button_choose_theme(self, theme_name: str) -> None:
-        """
-        Функция для смены темы приложения по кнопке
-
-        :param theme_name: Принимает имя темы (для передачи этого имени
-         в настройки приложения)
-
-        :return: None. Меняет параметр имени темы в настройках приложения.
-        """
-
-        Settings.set_theme(theme_name)
-        Rich.debug_log(f"Выбрана тема: {theme_name}")
-
-        self.set_styles()
-
-        self.change_active_button_styles()
-
-    def on_slider_changed(self, value):
-        """
-        Функция для установления нового времени для таймера показа главного окна.
-        Принимает значение от слайдера (от 1 до 15 секунд (от 1000 до 15000 мс)).
-
-        :return: None
-        """
-
-        self.indicate_loading_window_timer_duration.setText(f"{str(value)} мс")
-        Settings.set_loading_window_timer_duration(value)
-
-    def set_true_show_loading_window(self) -> None:
-        """
-        Функция для разрешения показа загрузочного окна (передает True флагу
-        разрешения показа - в настойках). Установка стиля "скрытой" кнопки
-        для кнопки "Скрывать" и установка обычного стиля для кнопки "Показывать".
-
-        :return: None
-        """
-
-        Settings.set_flag_show_loading_window(True)
-        self.button_show_loading_window.setStyleSheet(Style.button_blue_style)
-        self.button_hide_loading_window.setStyleSheet(Style.button_hide_style)
-
-    def set_false_show_loading_window(self) -> None:
-        """
-        Функция для запрета показа загрузочного окна (передает False флагу
-        разрешения показа - в настойках). Установка стиля "скрытой" кнопки
-        для кнопки "Показывать" и установка обычного стиля для кнопки "Скрывать".
-
-        :return: None
-        """
-
-        Settings.set_flag_show_loading_window(False)
-        self.button_show_loading_window.setStyleSheet(Style.button_hide_style)
-        self.button_hide_loading_window.setStyleSheet(Style.button_blue_style)
-
-    def on_bg_clicked(self) -> None:
-        """
-        Функция для установления случайного изображения на фон
-        виджета для главной вкладки
-
-        :return: None
-        """
-
-        self.get_bg_for_main_tab_widget("resources/images/for_main_window")
-
-    def stop_generation_second_tab(self) -> None:
-        """
-        Останавливает процесс генерации пдф из второй вкладки главного окна
-
-        :return: None
-        """
-
-        Rich.simple_log("Остановка процесса по запросу пользователя")
-        self.stop_building_pdf= True
-        self.run_button.setVisible(False)
-        self.stop_button.setEnabled(False)
-        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
-
-        QMessageBox.information(
-            self,
-            "Остановка",
-            "Процесс остановки запущен...\n\n"
-            "Программа завершит текущую операцию и остановится."
-        )
-
-    def stop_generation_process(self) -> None:
-        """
-        Останавливает процесс генерации и парсинга из основной вкладки главного окна
-
-        :return: None
-        """
-
-        Rich.simple_log("Остановка процесса по запросу пользователя")
-        self.stop_generation = True
-        self.run_button.setVisible(False)
-        self.stop_parsing_button.setEnabled(False)
-
-        QMessageBox.information(
-            self,
-            "Остановка",
-            "Процесс остановки запущен...\n\n"
-            "Программа завершит текущую операцию и остановится."
-        )
-
-    def run(self) -> None:
-        """
-        Сигнал для кнопки запуска процессов для run_button
-
-        :return:None
-        """
-        if self.choose_tab == 0:
-            parsing(self)
-        elif self.choose_tab == 1:
-            get_pdf(self)
-        else:
-            return
-
-    def on_semester_changed(self, checked: bool, semester: str) -> None:
-        """
-        Показывает нужные кнопки в зависимости от выбранного семестра
-        (выбранной радиокнопки)
-
-        :return: None
-        """
-
-        if not checked:
-            return
-
-        self.btn_choose_history_commission.setVisible(False)
-        self.history_xl_choused_label.setVisible(False)
-        self.btn_choose_foreign_commission.setVisible(False)
-        self.foreign_xl_choosed_label.setVisible(False)
-        self.btn_choose_specialization_commission.setVisible(False)
-        self.specialization_xl_choosed_lb.setVisible(False)
-
-        if semester == "history":
-            self.btn_choose_history_commission.setVisible(True)
-            self.history_xl_choused_label.setVisible(True)
-            self.label_commission_title.setText("Таблица с комиссией по истории")
-        elif semester == "foreign":
-            self.btn_choose_foreign_commission.setVisible(True)
-            self.foreign_xl_choosed_label.setVisible(True)
-            self.label_commission_title.setText("Таблица с комиссией по иностранному")
-        elif semester == "specialization":
-            self.btn_choose_specialization_commission.setVisible(True)
-            self.specialization_xl_choosed_lb.setVisible(True)
-            self.label_commission_title.setText("Таблица с комиссией по специальности")
-
-    def app_name_clicked(self):
-        """
-        Функция для перехода по ссылке на Гит с репозиторием проекта. Просто попробовать.
-
-        :return: None
-        """
-
-        webbrowser.open("https://lab.vr-pro.ru:8514/SAPR/asp-automation/src/branch/"
-                        "development")
-
     def resizeEvent(self, event):
         """
         Вызывается при изменении размера окна. Используется для адаптации размера фона.
@@ -1381,172 +1031,6 @@ class MainWindow(QMainWindow):
             self.widget_bg_main_tab.setMinimumHeight(350)
 
         super().resizeEvent(event)
-
-    def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
-        """
-        Функция для смены фона виджета с фотографией в главной вкладке.
-        Выбирает случайный путь к изображению и передаёт его стилям qss, которые
-        устанавливают его на фон. Также по этому случайному изображению с помощью
-        функции get_main_color_image() вычисляется главный (средний по всему
-        изображению) цвет, который после также используется в стилях qss для
-        QTabWidget - вкладок главного окна и небольшого градиента в шапке
-        возле имени приложения.
-
-        Также функция включает проверку на повторение фона (актуально, потому что,
-        нажав на фон главного окна, снова его поменять - на другое случайное
-        изображение. Для этого есть проверка и в атрибут класса постоянно сохраняется
-         путь к последнему фоновому изображению и сличается с новым случайным путём -
-         чтобы не было повторов.).
-
-        :param folder_path: Принимает путь к папке, в которой можно брать случайное изображение
-
-        :return: None
-        """
-
-        old_bg_path = self.bg_path_check
-
-        def get_random_path() -> str:
-            """
-            Вложенная функция для получения случайного пути к изображению из папки
-            (путь к папке берётся из аргумента основной функции)
-
-            :return: Str - путь к случайному изображению.
-            """
-
-            img_path_new = get_random_image_from_folder(folder_path)
-            path_bg_widget_new = Path(f'{img_path_new}')
-
-            return path_bg_widget_new.as_posix()
-
-        new_image_path = get_random_path()
-
-        def use_random_photo(photo_path: str) -> None:
-            """
-            Вложенная функция для использования изображения по случайному пути -
-            для стилей qss и обновления пути в атрибуте класса - сохранение последнего
-             выбранного пути к случайному изображению.
-
-            :param photo_path: Принимает путь к случайному изображению.
-
-            :return: None
-            """
-
-            self.widget_bg_main_tab.setStyleSheet(
-                f"background-image: url({photo_path});"
-                f" background-position: center;"
-                f" background-repeat: no-repeat;"
-                f"border-radius: 10px;"
-            )
-
-            main_color_img = get_main_color_image(photo_path)
-
-            self.main_color_str = f"{main_color_img[0]}, {main_color_img[1]}, {main_color_img[2]}"
-
-            self.cap_widget.setStyleSheet(
-                f"""
-                    background: qlineargradient(
-                    x1: 0, y1: 0, 
-                    x2: 1, y2: 0,    
-                    stop: 0 rgba({self.main_color_str}, 0.01),
-                    stop: 0.1 rgba({self.main_color_str}, 0.35),
-                    stop: 0.2 rgba({self.main_color_str}, 0.35),
-                    stop: 0.3 rgba({self.main_color_str}, 0.01),
-                    stop: 0.41 rgba(1, 1, 1, 0),
-                    stop: 1 rgba(1, 1, 1, 0)
-                    );
-                """
-            )
-
-            self.tab_widget.setStyleSheet(f"""
-                   QTabWidget::pane {{
-                       background-color: #2B2B2B;
-                       border: none;
-                       top: -1px;
-                   }}
-                   QTabBar {{
-                       background-color: {Style.background_color};
-                   }}
-                   QTabBar::tab {{
-                       background: transparent;
-                       color: {Style.dark_font_color};
-                       padding: 10px 20px;
-                       margin-right: 0px;
-                       border: none;
-                       border-bottom: 2px solid transparent;
-                   }}
-                   QTabBar::tab:selected {{
-                       background: transparent;
-                       color: {Style.light_font_color};
-                       border-bottom: 2px solid rgb({self.main_color_str});
-                       font-weight: bold;
-                   }}            
-                   QTabBar::tab:hover:!selected {{
-                       color: {Style.light_font_color};
-                       border-bottom: 2px solid #4D4E51;
-                   }}
-               """)
-
-            self.bg_path_check = f"{photo_path}"
-
-            Rich.print_spacer()
-            Rich.simple_log(f"Для фона главного окна выбрано изображение: {photo_path}")
-
-        if self.bg_path_check == "":
-            use_random_photo(new_image_path)
-        elif old_bg_path != new_image_path:
-            use_random_photo(new_image_path)
-        else:
-            image_path = get_random_path()
-            while image_path == old_bg_path:
-                image_path = get_random_path()
-            else:
-                use_random_photo(image_path)
-
-    def what_tab_is_show_now(self) -> int:
-        """
-        Функция для получения индекса текущей вкладки.
-
-        :return: int - индекс открытой вкладки
-        """
-
-        tabs_name = ["Главная", "ЛР по формированию PDF", "Настройки"]
-
-        current_index = self.tab_widget.currentIndex()
-
-        tab_name = ""
-
-        if current_index == 0:
-            tab_name = tabs_name[0]
-            self.choose_tab = 0
-            self.run_button.setVisible(True)
-
-        elif current_index == 1:
-            tab_name = tabs_name[1]
-            self.choose_tab = 1
-            self.run_button.setVisible(True)
-
-        elif current_index == 2:
-            tab_name = tabs_name[2]
-            self.choose_tab = 2
-            self.run_button.setVisible(False)
-
-        else:
-            tab_name = "неизвестно"
-            self.choose_tab = -1
-
-        Rich.print_spacer()
-        Rich.debug_log(f"Открыта вкладка: {current_index} ({tab_name})")
-
-        return current_index
-
-    def open_settings_tab(self) -> None:
-        """
-        Функция для открытия вкладки с настройками
-
-        :return: None
-        """
-
-        self.tab_widget.setCurrentIndex(2)
 
     def mousePressEvent(self, event) -> None:
         """

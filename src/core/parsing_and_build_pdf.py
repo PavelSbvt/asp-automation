@@ -10,6 +10,41 @@ from core.fill_db_sheet import fill_database_sheet
 from utils.output_rich import Rich
 
 
+def set_widgets_visible(self) -> None:
+    """
+    Функция для показа тех виджетов, которые должны быть
+     видны в обычном состоянии.
+
+    :return: None. Разрешает показ виджетов, которые должны
+     показываться в стандартном режиме
+    """
+
+    Rich.debug_log("Восстановление состояния кнопок...")
+    self.stop_generation = False
+    self.stop_parsing_button.setVisible(False)
+    self.stop_parsing_button.setEnabled(False)
+    self.progress_bar_parsing.setVisible(False)
+    self.widget_for_title_to_stop.setVisible(False)
+    self.run_button.setVisible(True)
+    self.run_button.setEnabled(True)
+    Rich.debug_log("Состояние кнопок восстановлено")
+
+def set_widgets_hide(self) -> None:
+    """
+    Функция для сокрытия виджетов и показ тех, которые
+     должны быть видны во время процесса парсинга и сборки.
+
+    :return: None
+    """
+
+    self.stop_generation = False
+    self.widget_for_title_to_stop.setVisible(True)
+    self.stop_parsing_button.setVisible(True)
+    self.stop_parsing_button.setEnabled(True)
+    self.run_button.setVisible(False)
+    self.run_button.setEnabled(False)
+    self.progress_bar_parsing.setVisible(True)
+
 def parsing(self) -> None:
     """
     Функция парсинга данных и сбора ПДФ
@@ -19,12 +54,7 @@ def parsing(self) -> None:
 
     Rich.simple_log("НАЧАЛО ПАРСИНГА")
 
-    self.stop_generation = False
-    self.stop_parsing_button.setVisible(True)
-    self.stop_parsing_button.setEnabled(True)
-    self.run_button.setVisible(False)
-    self.run_button.setEnabled(False)
-    self.progress_bar_parsing.setVisible(True)
+    set_widgets_hide(self)
 
     try:
         Rich.debug_log("Проверяю наличие файлов...")
@@ -217,11 +247,4 @@ def parsing(self) -> None:
         QMessageBox.critical(self, "Ошибка", f"Произошла ошибка:\n{str(e)}")
 
     finally:
-        Rich.debug_log("Восстановление состояния кнопок...")
-        self.stop_generation = False
-        self.stop_parsing_button.setVisible(False)
-        self.stop_parsing_button.setEnabled(False)
-        self.progress_bar_parsing.setVisible(False)
-        self.run_button.setVisible(True)
-        self.run_button.setEnabled(True)
-        Rich.debug_log("Состояние кнопок восстановлено")
+        set_widgets_visible(self)
