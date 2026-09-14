@@ -117,7 +117,6 @@ class MainWindow(QMainWindow):
         self.app_name_button.clicked.connect(self.app_name_clicked)
 
         self.settings_path = Path("resources/images/icons/settings_pycharm_icon.png")
-        self.settings_hover_path = Path("resources/images/icons/settings_pycharm_icon_hover.png")
 
         # Кнопка для перехода во вкладку настоек
         self.settings_button = QPushButton()
@@ -126,7 +125,6 @@ class MainWindow(QMainWindow):
         self.settings_button.clicked.connect(self.open_settings_tab)
 
         self.run_button_path = Path("resources/images/icons/run_button.png")
-        self.run_button_hover_path = Path("resources/images/icons/run_button_hover.png")
 
         # Кнопка запуска процессов - одна на всё приложение
         self.run_button = QPushButton()
@@ -134,8 +132,7 @@ class MainWindow(QMainWindow):
         self.run_button.setFixedSize(30,31)
         self.run_button.clicked.connect(self.run)
 
-        self.stop_button_path = Path("resources/images/icons/stop_button_hover.png")
-        self.stop_button_hover_path = Path("resources/images/icons/stop_button_hover.png")
+        self.stop_button_path = Path("resources/images/icons/stop_button.png")
 
         # Кнопка остановки процесса парсинга и сборки - изначально скрыта.
         # Появится только при запуске процесса
@@ -1003,35 +1000,49 @@ class MainWindow(QMainWindow):
                     QPushButton {{
                         background-image: url({self.settings_path.as_posix()});
                         border: none;
-                        border-radius: 4px;
-                        padding: 6px 10px;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        background-color: transparent;
+                        border-radius: 5px;
                     }}
                     QPushButton:hover {{
-                        background-image: url({self.settings_hover_path.as_posix()});
+                        background-color: rgba(255, 255, 255, 0.08);
+                    }}
+                    QPushButton:pressed {{
+                        background-color: rgba(255, 255, 255, 0.15);
                     }}
                 """)
         self.run_button.setStyleSheet(f"""
                     QPushButton {{
                         background-image: url({self.run_button_path.as_posix()});
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        border: none;
+                        background-color: transparent;
                         border-radius: 5px;
                     }}
                     QPushButton:hover {{
-                        background-image: url({self.run_button_hover_path.as_posix()});
+                        background-color: rgba(255, 255, 255, 0.08);
                     }}
                     QPushButton:pressed {{
-                        background-image: url({self.run_button_hover_path.as_posix()});
+                        background-color: rgba(255, 255, 255, 0.15);
                     }}
                 """)
 
         style_for_stop_button = f"""
                 QPushButton {{
                     background-image: url({self.stop_button_path.as_posix()});
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    border: none;
+                    background-color: #8A3535;
+                    border-radius: 5px;
                 }}
                 QPushButton:hover {{
-                    background-image: url({self.stop_button_hover_path.as_posix()});
+                    background-color: #B44747;
                 }}
                 QPushButton:pressed {{
-                    background-image: url({self.stop_button_path.as_posix()});
+                    background-color: #7A2E2E;
                 }}
             """
 
