@@ -134,8 +134,10 @@ class FontManager:
         Возвращает объект QFont для указанного шрифта.
 
         :param font_name: Название шрифта
-        :param size: Размер шрифта
-        :return: QFont
+
+        :param size: Размер шрифта. Дефолтно равен 10
+
+        :return: объект QFont, который можно передавать PyQt для установки тексту шрифта
         """
 
         # Вызов функции для инициализации шрифтов
@@ -145,7 +147,5 @@ class FontManager:
         family = self.get_font(font_name)
 
         return QFont(family, size)
-
-
 
 Fonts = FontManager()

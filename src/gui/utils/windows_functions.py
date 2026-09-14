@@ -7,7 +7,7 @@ from PIL import Image
 from PyQt6.QtWidgets import QLabel, QWidget
 
 from utils.output_rich import Rich
-from parser.sait_parsing import PARSING_DIR
+from parser.sait_parsing import ParsingDir
 
 
 def center_window(self) -> None:
@@ -32,6 +32,7 @@ def get_main_color_image(image_path: str) -> tuple[int, int, int]:
 
     :return: tuple[int, int, int] - Возвращает кортеж цветов rgb
     """
+
     try:
         img = Image.open(image_path)
         img = img.resize((1, 1))
@@ -187,7 +188,7 @@ def load_cached_data(self) -> None:
     :return: None
     """
 
-    files = list(PARSING_DIR.glob("*.txt")) if PARSING_DIR.exists() else []
+    files = list(ParsingDir.glob("*.txt")) if ParsingDir.exists() else []
 
     if files:
         filename = files[0].stem

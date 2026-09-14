@@ -258,6 +258,7 @@ def extract_code_number(raw_code: str) -> str:
 
     :return: Str - код специальности или исходная строка, если код не найден.
     """
+
     if not raw_code:
         return ""
     match = re.search(r'(\d+\.\d+\.\d+\.?)', raw_code)

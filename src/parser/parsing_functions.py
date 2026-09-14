@@ -18,6 +18,7 @@ def normalize_name_for_comparison(name: str) -> str:
 
     :param name: Str - Принимает фио, которое нужно нормализовать
     """
+
     if not name or name == "nan":
         return ""
 

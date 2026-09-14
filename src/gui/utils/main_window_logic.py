@@ -13,6 +13,7 @@ from gui.utils.windows_functions import (
     get_random_image_from_folder, get_main_color_image)
 from gui.utils.update_gui import set_styles
 
+
 def open_settings_tab(self) -> None:
     """
     Функция для открытия вкладки с настройками
@@ -194,7 +195,13 @@ def on_semester_changed(self, checked: bool, semester: str) -> None:
     Показывает нужные кнопки в зависимости от выбранного семестра
     (выбранной радиокнопки)
 
-    :return: None
+    :param checked: принимает имя булевого флага для проверки выбрана ли
+     радиокнопка с семестрами
+
+     :param semester: принимает строку с названием семестра, на выбор
+      которого назначена радиокнопка
+
+    :return: None.
     """
 
     if not checked:

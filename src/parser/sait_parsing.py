@@ -10,8 +10,7 @@ from PyQt6.QtWidgets import QApplication, QMessageBox
 from utils.output_rich import Rich
 
 
-PARSING_DIR = Path("resources/parsing_data")
-FILE_PATTENR = "*.txt"
+ParsingDir = Path("resources/parsing_data")
 
 def get_current_cache_file() -> Optional[Path]:
     """
@@ -23,10 +22,10 @@ def get_current_cache_file() -> Optional[Path]:
     или не найдёт папку для парсинга.
     """
 
-    if not PARSING_DIR.exists():
+    if not ParsingDir.exists():
         return None
 
-    files = list(PARSING_DIR.glob("*.txt"))
+    files = list(ParsingDir.glob("*.txt"))
 
     if not files:
         return None
@@ -89,9 +88,9 @@ def save_specialties_to_cache(specialties: List[Tuple[str, str]]) -> None:
 
     try:
         # Создаём папку, если её нет
-        if not PARSING_DIR.exists():
-            PARSING_DIR.mkdir(parents=True)
-            Rich.debug_log(f"Создана папка: {PARSING_DIR}")
+        if not ParsingDir.exists():
+            ParsingDir.mkdir(parents=True)
+            Rich.debug_log(f"Создана папка: {ParsingDir}")
 
         # Удаляем старый файл (если есть)
         old_file = get_current_cache_file()
@@ -101,7 +100,7 @@ def save_specialties_to_cache(specialties: List[Tuple[str, str]]) -> None:
 
         # Имя файла = текущая дата и время
         now = datetime.now().strftime("%Y-%m-%d-%H-%M-%S")
-        filepath = PARSING_DIR / f"{now}.txt"
+        filepath = ParsingDir / f"{now}.txt"
 
         # Сохраняем данные
         with open(filepath, 'w', encoding='utf-8') as f:

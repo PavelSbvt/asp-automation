@@ -7,7 +7,7 @@ from typing import Dict, Optional
 import pandas as pd
 
 from utils.basic_functions import extract_code_number, remove_trailing_dot
-from utils.declension_full_name import _get_fio_accusative, _get_fio_initials
+from utils.declension_full_name import get_fio_accusative, get_fio_initials
 from utils.output_rich import Rich
 from parser.sait_parsing import load_specialties_from_cache
 
@@ -45,16 +45,19 @@ def get_specialty_code(profile: str) -> str:
         Rich.log_error(f"Ошибка в get_specialty_code: {e}")
         return ""
 
-def clean_excel_string(s: str) -> str:
+def clean_excel_string(string: str) -> str:
     """
     очистить строку от непечатаемых управляющих символов
-    :return: string
+
+    :param string: принимаемая строка, которую нужно очистить от лишних символов
+
+    :return: string - очищенная строка
     """
 
-    if not isinstance(s, str):
-        return s
+    if not isinstance(string, str):
+        return string
     # Удаляем все управляющие символы, кроме \t, \n, \r
-    cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', s)
+    cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', string)
     return cleaned
 
 def fill_database_sheet(self) -> Optional[str]:
@@ -64,10 +67,10 @@ def fill_database_sheet(self) -> Optional[str]:
     :return: Optional[str] -
     """
 
-    print("[I] fill_database_sheet через pandas")
+    Rich.debug_log("функция заполнения листа БД таблицы-шаблона через pandas")
 
     if not hasattr(self, 'students_data') or not self.students_data:
-        print("[E] Нет студентов!")
+        Rich.warning_log("Ошибка. Нет студентов!")
         return None
 
     # Столбцы итоговой таблицы
@@ -101,7 +104,7 @@ def fill_database_sheet(self) -> Optional[str]:
             if 'Все' in clean_key:
                 all_commission = comm
                 commission_dict["ALL"] = comm
-                print(f"[I] Найдена комиссия 'Все'")
+                Rich.debug_log(f"Найдена комиссия 'Все'")
             else:
                 raw_code = comm.get('code', '')
                 clean_code = extract_code_number(raw_code)
@@ -128,9 +131,18 @@ def fill_database_sheet(self) -> Optional[str]:
                 all_commission = commission_dict[key]
                 break
 
-    print("[I] Ключи словаря комиссий:", list(commission_dict.keys()))
+    Rich.debug_log("Ключи словаря комиссий:", list(commission_dict.keys()))
 
     def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
+        """
+        Функция для получения члена комиссии по указанной роли
+
+        :param comm: словарь с данными комиссии
+        :param role: роль члена комиссии
+        :return: Optional[Dict] - Словарь с данными члена комиссии
+         или None, если не найден.
+        """
+
         if not comm:
             return None
         for m in comm.get('members', []):
@@ -159,7 +171,7 @@ def fill_database_sheet(self) -> Optional[str]:
         # 1. Пробуем найти по точному коду
         if clean_code in commission_dict:
             student_comm = commission_dict[clean_code]
-            print(f"[I] Найдена комиссия по точному коду: {clean_code}")
+            Rich.simple_log(f"Найдена комиссия по точному коду: {clean_code}")
 
         # 2. Если не нашли - пробуем найти по части кода
         if not student_comm:
@@ -175,18 +187,18 @@ def fill_database_sheet(self) -> Optional[str]:
                 if len(key_parts) >= 2 and len(code_parts) >= 2:
                     if key_parts[0] == code_parts[0] and key_parts[1] == code_parts[1]:
                         student_comm = comm
-                        print(f"[I] Найдена комиссия по части кода: {clean_key}")
+                        Rich.simple_log(f"Найдена комиссия по части кода: {clean_key}")
                         break
 
         # 3. Если всё ещё не нашли - берём комиссию "Все"
         if not student_comm and all_commission:
             student_comm = all_commission
-            print(f"[I] Использую комиссию 'Все' для {student['fio']}")
+            Rich.debug_log(f"Использую комиссию 'Все' для {student['fio']}")
 
         # 4. Если и "Все" нет - берём первую попавшуюся
         if not student_comm and commission_dict:
             student_comm = list(commission_dict.values())[0]
-            print(f"[I] Использую первую попавшуюся комиссию для {student['fio']}")
+            Rich.debug_log(f"Использую первую попавшуюся комиссию для {student['fio']}")
 
         # Получаем членов комиссии
         pred = get_member_by_role(student_comm, 'председатель')
@@ -214,7 +226,7 @@ def fill_database_sheet(self) -> Optional[str]:
         # Добавляем науку в конец, если она есть
         if science_branch:
             full_direction += f", {science_branch}"
-            print(f"[I] Добавлена наука '{science_branch}' для {student['fio']}")
+            Rich.debug_log(f"Добавлена наука '{science_branch}' для {student['fio']}")
 
         # Определяем дисциплину в зависимости от семестра
         if hasattr(self, 'selected_semester'):
@@ -229,15 +241,15 @@ def fill_database_sheet(self) -> Optional[str]:
 
         # Формируем строку для БД
         row = [
-            _get_fio_accusative(student['fio'], student.get('citizenship', 'РФ')).upper(),
+            get_fio_accusative(student['fio'], student.get('citizenship', 'РФ')).upper(),
             discipline_text,
             self.commission_text,
             pred_text,
-            _get_fio_initials(pred_fio) if pred else '',
+            get_fio_initials(pred_fio) if pred else '',
             zam_text,
-            _get_fio_initials(zam_fio) if zam else '',
+            get_fio_initials(zam_fio) if zam else '',
             chlen_text,
-            _get_fio_initials(chlen_fio) if chlen else '',
+            get_fio_initials(chlen_fio) if chlen else '',
             fio_clean,
             full_direction
         ]
@@ -255,16 +267,16 @@ def fill_database_sheet(self) -> Optional[str]:
     template_file = str(template_file.absolute())
 
     if not os.path.exists(template_file):
-        print(f"[E] Файл шаблона не найден: {template_file}")
+        Rich.warning_log(f"Файл шаблона не найден: {template_file}")
         return None
 
     # Копируем шаблон в целевой файл
     try:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         shutil.copy(template_file, output_path)
-        print(f"[I] Шаблон скопирован в {output_path}")
+        Rich.simple_log(f"Шаблон скопирован в {output_path}")
     except Exception as e:
-        print(f"[E] Ошибка при копировании шаблона: {e}")
+        Rich.warning_log(f"Ошибка при копировании шаблона: {e}")
         return None
 
     # Добавляем лист «БД» в скопированный файл
@@ -275,25 +287,26 @@ def fill_database_sheet(self) -> Optional[str]:
                 mode='a',
                 if_sheet_exists='replace'
         ) as writer:
-            print("[I] [debag] ПРОВЕРКА ДАННЫХ БД ")
+            Rich.debug_log("ПРОВЕРКА ДАННЫХ БД ")
             for i, row in enumerate(data_rows[:3]):  # выводим первые 3 строки
-                print(f"  Строка {i + 1}:")
-                print(f"  СЛУШАЛИ: {row[0]}")
-                print(f"  Дисциплина: {row[1]}")
-                print(f"  Направление: {row[2]}")
-                print(f"  Председатель (full_text): {row[3]}")
-                print(f"  Председатель (ФИО): {row[4]}")
-                print(f"  Зам (full_text): {row[5]}")
-                print(f"  Зам (ФИО): {row[6]}")
-                print(f"  Член (full_text): {row[7]}")
-                print(f"  Член (ФИО): {row[8]}")
-                print(f"  ПОСТАНОВИЛИ: {row[9]}")
-                print(f"  НАПРАВЛЕНИЕ: {row[10]}")
-                print("-" * 40)
+                Rich.print_spacer()
+                Rich.debug_log(f"  Строка {i + 1}:")
+                Rich.debug_log(f"  СЛУШАЛИ: {row[0]}")
+                Rich.debug_log(f"  Дисциплина: {row[1]}")
+                Rich.debug_log(f"  Направление: {row[2]}")
+                Rich.debug_log(f"  Председатель (full_text): {row[3]}")
+                Rich.debug_log(f"  Председатель (ФИО): {row[4]}")
+                Rich.debug_log(f"  Зам (full_text): {row[5]}")
+                Rich.debug_log(f"  Зам (ФИО): {row[6]}")
+                Rich.debug_log(f"  Член (full_text): {row[7]}")
+                Rich.debug_log(f"  Член (ФИО): {row[8]}")
+                Rich.debug_log(f"  ПОСТАНОВИЛИ: {row[9]}")
+                Rich.debug_log(f"  НАПРАВЛЕНИЕ: {row[10]}")
+                Rich.print_spacer_points()
             df.to_excel(writer, sheet_name='БД', index=False)
-        print(f"[S] Лист 'БД' успешно добавлен в {output_path}")
+        Rich.success_log(f"Лист 'БД' успешно добавлен в {output_path}")
     except Exception as e:
-        print(f"[E] Ошибка при записи листа БД: {e}")
+        Rich.log_error(f"Ошибка при записи листа БД: {e}")
         return None
 
     return output_path

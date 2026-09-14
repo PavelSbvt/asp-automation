@@ -4,14 +4,20 @@ from pytrovich.detector import PetrovichGenderDetector
 
 
 # экземпляры
-_petrovich_maker = PetrovichDeclinationMaker()
-_petrovich_detector = PetrovichGenderDetector()
+petrovich_maker = PetrovichDeclinationMaker()
+petrovich_detector = PetrovichGenderDetector()
 
-def _get_fio_accusative(fio: str, citizenship: str = "РФ") -> str:
+def get_fio_accusative(fio: str, citizenship: str = "РФ") -> str:
     """
     Преобразует ФИО из именительного падежа в винительный.
     Используется для "СЛУШАЛИ" (слушали кого?)
     Для граждан РФ - склоняем, для иностранцев - не склоняем.
+
+    :param fio: Принимает исходное фио в И.П.
+
+    :param citizenship: дефолтное значение "РФ" - гражданство
+
+    :return: Str - склонённое фио (иностранные фио не склоняются)
     """
 
     # Проверяем гражданство
@@ -28,17 +34,21 @@ def _get_fio_accusative(fio: str, citizenship: str = "РФ") -> str:
     patronymic = parts[2]
 
     # пол с помощью pytrovich
-    gender = _petrovich_detector.detect(firstname=name, middlename=patronymic)
+    gender = petrovich_detector.detect(firstname=name, middlename=patronymic)
 
-    surname_acc = _petrovich_maker.make(NamePart.LASTNAME, gender, Case.ACCUSATIVE, surname)
-    name_acc = _petrovich_maker.make(NamePart.FIRSTNAME, gender, Case.ACCUSATIVE, name)
-    patronymic_acc = _petrovich_maker.make(NamePart.MIDDLENAME, gender, Case.ACCUSATIVE, patronymic)
+    surname_acc = petrovich_maker.make(NamePart.LASTNAME, gender, Case.ACCUSATIVE, surname)
+    name_acc = petrovich_maker.make(NamePart.FIRSTNAME, gender, Case.ACCUSATIVE, name)
+    patronymic_acc = petrovich_maker.make(NamePart.MIDDLENAME, gender, Case.ACCUSATIVE, patronymic)
 
     return f"{surname_acc} {name_acc} {patronymic_acc}"
 
-def _get_fio_initials(fio: str) -> str:
+def get_fio_initials(fio: str) -> str:
     """
     Преобразует ФИО в формат / И.О. Фамилия /
+
+    :param fio: Принимает фио, которое нужно преобразовать.
+
+    :return: Str - обработанное фио
     """
 
     parts = fio.split()
@@ -64,53 +74,28 @@ def _get_fio_initials(fio: str) -> str:
 
     return result
 
-# Тестовые примеры
-test_data = [
-    ("Пуха Анастасия Павловна", "РФ"),
-    ("Иванов Иван Иванович", "РФ"),
-    ("Петрова Анна Сергеевна", "РФ"),
-    ("Смирнов Николай Петрович", "РФ"),
-    ("Кузнецова Мария Алексеевна", "РФ"),
-    ("Павлов Павел Павлович", "РФ"),
-    ("Львов Лев Львович", "РФ"),
-    ("Высоцкий Владимир Семёнович", "РФ"),
-    ("Толстой Лев Николаевич", "РФ"),
-    ("Достоевский Фёдор Михайлович", "РФ"),
-    ("Ким Илья Ильич", "РФ"),  # корейская фамилия
-    ("Шмидт Иван Иванович", "РФ"),  # немецкая фамилия
-    ("Мюллер Анна Петровна", "РФ"),  # немецкая фамилия
-]
-
-def test_fio_declension() -> None:
-    """
-    Тестирование склонения ФИО в винительный падеж.
-    """
-
-    print("ТЕСТИРОВАНИЕ СКЛОНЕНИЯ ФИО (с pytrovich)")
-    print("-" * 60)
-
-    for fio, citizenship in test_data:
-        result = _get_fio_accusative(fio, citizenship)
-        print(f"{fio} ({citizenship}) = {result}")
-
-
 def get_fio_initials_for_user(fio: str) -> str:
     """
     Утилитарная функция для получения инициалов из ФИО.
     Используется в основном коде.
+
+    :param fio: Str - принимает фио, из которого нужно составить строку с инициалами
+
+    :return: Str - строка с инициалами
     """
 
-    return _get_fio_initials(fio)
-
+    return get_fio_initials(fio)
 
 def get_fio_in_accusative(fio: str, citizenship: str = "РФ") -> str:
     """
     Утилитарная функция для получения ФИО в винительном падеже.
     Используется в основном коде.
+
+    :param fio: Принимает исходное фио в И.П.
+
+    :param citizenship: дефолтное значение "РФ" - гражданство
+
+    :return: Str - склонённое фио (иностранные фио не склоняются)
     """
 
-    return _get_fio_accusative(fio, citizenship)
-
-
-if __name__ == "__main__":
-    test_fio_declension()
+    return get_fio_accusative(fio, citizenship)
