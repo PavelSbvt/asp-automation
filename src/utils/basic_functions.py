@@ -196,8 +196,10 @@ def extract_commission_members(text: str,
         elif 'член' in part_lower:
             role = 'член'
 
-        clean_part = re.sub(r',?\s*член\s+комиссии\s*', '', part, flags=re.IGNORECASE)
-        clean_part = re.sub(r',?\s*председатель\s+комиссии\s*', '', clean_part, flags=re.IGNORECASE)
+        clean_part = re.sub(
+            r',?\s*член\s+комиссии\s*', '', part, flags=re.IGNORECASE)
+        clean_part = re.sub(
+            r',?\s*председатель\s+комиссии\s*', '', clean_part, flags=re.IGNORECASE)
         clean_part = clean_part.rstrip(',').strip()
 
         if not clean_part:
@@ -211,7 +213,9 @@ def extract_commission_members(text: str,
         if fio:
             fio = normalize_initials(fio)
 
-            if re.search(r'[А-ЯЁ][а-яё]+', fio) and re.search(r'[А-ЯЁ]\.', fio):
+            if re.search(
+                    r'[А-ЯЁ][а-яё]+',
+                    fio) and re.search(r'[А-ЯЁ]\.', fio):
                 commissions_dict[code]['members'].append({
                     'fio': fio,
                     'role': role,
@@ -230,8 +234,12 @@ def extract_commission_members(text: str,
             if fio:
                 fio = normalize_initials(fio)
 
-                clean_part = re.sub(r',?\s*член\s+комиссии\s*', '', part, flags=re.IGNORECASE)
-                clean_part = re.sub(r',?\s*председатель\s+комиссии\s*', '', clean_part, flags=re.IGNORECASE)
+                clean_part = re.sub(
+                    r',?\s*член\s+комиссии\s*',
+                    '', part, flags=re.IGNORECASE)
+                clean_part = re.sub(
+                    r',?\s*председатель\s+комиссии\s*',
+                    '', clean_part, flags=re.IGNORECASE)
                 clean_part = clean_part.rstrip(',').strip()
 
                 commissions_dict[code]['members'].append({

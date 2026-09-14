@@ -103,6 +103,7 @@ def get_pdf(self) -> None:
         return
 
     self.stop_button.setVisible(True)
+    self.widget_title_stop_second.setVisible(True)
     self.run_button.setVisible(False)
     self.stop_button.setEnabled(True)
 
@@ -127,6 +128,7 @@ def get_pdf(self) -> None:
 
     if self.stop_building_pdf:
         self.progress_bar.setVisible(False)
+        self.widget_title_stop_second.setVisible(False)
         self.stop_button.setVisible(False)
         self.run_button.setVisible(True)
         self.stop_building_pdf = False
@@ -141,6 +143,7 @@ def get_pdf(self) -> None:
 
         if self.stop_building_pdf:
             self.progress_bar.setVisible(False)
+            self.widget_title_stop_second.setVisible(False)
             self.stop_button.setVisible(False)
             self.run_button.setVisible(True)
             self.stop_building_pdf = False
@@ -156,6 +159,7 @@ def get_pdf(self) -> None:
         code = direction.split()[0] if direction and direction != "nan" else "unknown"
 
         if self.stop_building_pdf:
+            self.widget_title_stop_second.setVisible(False)
             self.progress_bar.setVisible(False)
             self.stop_button.setVisible(False)
             self.run_button.setVisible(True)
@@ -175,6 +179,7 @@ def get_pdf(self) -> None:
         for row_num in range(1, 60):
 
             if self.stop_building_pdf:
+                self.widget_title_stop_second.setVisible(False)
                 self.progress_bar.setVisible(False)
                 self.stop_button.setVisible(False)
                 self.run_button.setVisible(True)
@@ -192,6 +197,7 @@ def get_pdf(self) -> None:
         ws.row_dimensions[19].height = 35
 
         if self.stop_building_pdf:
+            self.widget_title_stop_second.setVisible(False)
             self.progress_bar.setVisible(False)
             self.stop_button.setVisible(False)
             self.run_button.setVisible(True)
@@ -339,6 +345,7 @@ def get_pdf(self) -> None:
 
         if self.stop_building_pdf:
             self.progress_bar.setVisible(False)
+            self.widget_title_stop_second.setVisible(False)
             self.stop_button.setVisible(False)
             self.run_button.setVisible(True)
             self.stop_building_pdf = False
@@ -407,6 +414,7 @@ def get_pdf(self) -> None:
                                                   size=12, italic=True)
 
         if self.stop_building_pdf:
+            self.widget_title_stop_second.setVisible(False)
             self.progress_bar.setVisible(False)
             self.stop_button.setVisible(False)
             self.run_button.setVisible(True)
@@ -446,6 +454,7 @@ def get_pdf(self) -> None:
         Rich.print_spacer()
 
         if self.stop_building_pdf:
+            self.widget_title_stop_second.setVisible(False)
             self.progress_bar.setVisible(False)
             self.stop_button.setVisible(False)
             self.run_button.setVisible(True)
@@ -454,6 +463,7 @@ def get_pdf(self) -> None:
             return
 
     if self.stop_building_pdf:
+        self.widget_title_stop_second.setVisible(False)
         self.progress_bar.setVisible(False)
         self.stop_button.setVisible(False)
         self.run_button.setVisible(True)
@@ -470,6 +480,7 @@ def get_pdf(self) -> None:
     self.progress_bar.setValue(100)
 
     if self.stop_building_pdf:
+        self.widget_title_stop_second.setVisible(False)
         self.progress_bar.setVisible(False)
         self.stop_button.setVisible(False)
         self.run_button.setVisible(True)
@@ -490,6 +501,7 @@ def get_pdf(self) -> None:
     )
 
     self.progress_bar.setVisible(False)
+    self.widget_title_stop_second.setVisible(False)
     self.stop_button.setVisible(False)
     self.run_button.setVisible(True)
     self.stop_building_pdf = False

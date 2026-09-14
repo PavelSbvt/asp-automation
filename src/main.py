@@ -5,10 +5,10 @@ from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 
 from gui.loading_window import MyLoadingWindow
-from gui.main_window.main_window import MainWindow
-from gui.animations.animations_for_windows import AnimateManager
+from gui.main_window import MainWindow
+from gui.utils.windows_animations import AnimateManager
 from utils.output_rich import Rich
-from utils.functions_for_window_gui import load_cached_data
+from gui.utils.windows_functions import load_cached_data
 from core.settings_manager import Settings
 
 
