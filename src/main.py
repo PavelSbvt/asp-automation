@@ -4,12 +4,13 @@ from pathlib import Path
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
 
+from core.settings_manager import Settings
 from gui.loading_window import MyLoadingWindow
 from gui.main_window import MainWindow
+from gui.utils.windows_functions import load_cached_data
 from gui.utils.windows_animations import AnimateManager
 from utils.output_rich import Rich
-from gui.utils.windows_functions import load_cached_data
-from core.settings_manager import Settings
+from utils.create_shortcut import check_build
 
 
 def start_with_loading_window() -> None:
@@ -66,6 +67,9 @@ def start_without_loading_window() -> None:
     AnimateManager.animation_appearance_window(MainWin, duration=1000)
 
 if __name__ == "__main__":
+
+    check_build()
+
     Settings.print_settings()
     Rich.print_spacer()
 
