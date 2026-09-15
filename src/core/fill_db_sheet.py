@@ -138,7 +138,9 @@ def fill_database_sheet(self) -> Optional[str]:
         Функция для получения члена комиссии по указанной роли
 
         :param comm: словарь с данными комиссии
+
         :param role: роль члена комиссии
+
         :return: Optional[Dict] - Словарь с данными члена комиссии
          или None, если не найден.
         """
