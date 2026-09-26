@@ -124,6 +124,8 @@ def set_styles(self) -> None:
 
     Style.update_styles_for_choose_theme()
 
+    self.shortcut_button.setStyleSheet(Style.button_blue_style)
+
     self.tab_widget.setStyleSheet(f"""
        QTabWidget::pane {{
            background-color: #2B2B2B;

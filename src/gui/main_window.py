@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton,
 
 from core.settings_manager import Settings
 from utils.output_rich import Rich
+from utils.create_shortcut import check_build
 from gui.utils.choose_files import (
     choose_universal_excel, choose_save_folder_second_tab,
     choose_parsing_save_folder, open_parsing_pdf_folder,
@@ -919,6 +920,16 @@ class MainWindow(QMainWindow):
         layout_for_theme_widget.addWidget(self.choose_violet_theme_button)
         layout_for_theme_widget.addWidget(self.choose_dark_theme_button)
 
+        # Кнопка для создания ярлыка
+        self.shortcut_button = QPushButton()
+        self.shortcut_button.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.shortcut_button.setText("Создать ярлык на рабочем столе")
+        self.shortcut_button.setFixedWidth(300)
+        self.shortcut_button.setFixedHeight(50)
+        self.shortcut_button.setFont(Fonts.get_qfont(
+            "JetBrains_Regular", 10))
+        self.shortcut_button.clicked.connect(self.get_shortcut)
+
         layout_for_settings.addWidget(self.loading_window_param_widget)
         layout_for_settings.addWidget(self.loading_window_timer_duration_param_widget)
 
@@ -928,6 +939,9 @@ class MainWindow(QMainWindow):
         tab_settings_layout.addWidget(self.settings_main_widget,
             alignment = Qt.AlignmentFlag.AlignCenter)
 
+        tab_settings_layout.addWidget(self.shortcut_button,
+            alignment=Qt.AlignmentFlag.AlignCenter)
+
         tab_settings_layout.addStretch()
 
         set_styles(self)
@@ -936,6 +950,17 @@ class MainWindow(QMainWindow):
 
         # ПУть к папке с изображениями для фона главного окна (основной вкладки)
         get_bg_for_main_tab_widget(self, "resources/images/for_main_window")
+
+
+    def get_shortcut(self) -> None:
+        """
+        Функция для создания ярлыка на рабочий стол для быстрого запуска приложения
+        До создания ярлыка выполняются все проверки - на наличие сборки проекта и
+        на существование ярлыка (если уже есть)
+        :return: None
+        """
+
+        check_build()
 
     def keyPressEvent(self, event) -> None:
         """
