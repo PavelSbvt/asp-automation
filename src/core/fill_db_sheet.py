@@ -6,10 +6,10 @@ from typing import Dict, Optional
 
 import pandas as pd
 
+from parser.sait_parsing import load_specialties_from_cache
 from utils.basic_functions import extract_code_number, remove_trailing_dot
 from utils.declension_full_name import get_fio_accusative, get_fio_initials
 from utils.output_rich import Rich
-from parser.sait_parsing import load_specialties_from_cache
 
 
 def get_specialty_code(profile: str) -> str:
@@ -45,6 +45,7 @@ def get_specialty_code(profile: str) -> str:
         Rich.log_error(f"Ошибка в get_specialty_code: {e}")
         return ""
 
+
 def clean_excel_string(string: str) -> str:
     """
     очистить строку от непечатаемых управляющих символов
@@ -59,6 +60,27 @@ def clean_excel_string(string: str) -> str:
     # Удаляем все управляющие символы, кроме \t, \n, \r
     cleaned = re.sub(r'[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]', '', string)
     return cleaned
+
+
+def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
+    """
+    Функция для получения члена комиссии по указанной роли
+
+    :param comm: словарь с данными комиссии
+
+    :param role: роль члена комиссии
+
+    :return: Optional[Dict] - Словарь с данными члена комиссии
+     или None, если не найден.
+    """
+
+    if not comm:
+        return None
+    for m in comm.get('members', []):
+        if m.get('role', '').lower() == role:
+            return m
+    return None
+
 
 def fill_database_sheet(self) -> Optional[str]:
     """
@@ -132,25 +154,6 @@ def fill_database_sheet(self) -> Optional[str]:
                 break
 
     Rich.debug_log(f"Ключи словаря комиссий: {list(commission_dict.keys())}")
-
-    def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
-        """
-        Функция для получения члена комиссии по указанной роли
-
-        :param comm: словарь с данными комиссии
-
-        :param role: роль члена комиссии
-
-        :return: Optional[Dict] - Словарь с данными члена комиссии
-         или None, если не найден.
-        """
-
-        if not comm:
-            return None
-        for m in comm.get('members', []):
-            if m.get('role', '').lower() == role:
-                return m
-        return None
 
     data_rows = []
     for student in self.students_data:
@@ -277,6 +280,7 @@ def fill_database_sheet(self) -> Optional[str]:
         os.makedirs(os.path.dirname(output_path), exist_ok=True)
         shutil.copy(template_file, output_path)
         Rich.simple_log(f"Шаблон скопирован в {output_path}")
+
     except Exception as e:
         Rich.warning_log(f"Ошибка при копировании шаблона: {e}")
         return None
@@ -307,6 +311,7 @@ def fill_database_sheet(self) -> Optional[str]:
                 Rich.print_spacer_points()
             df.to_excel(writer, sheet_name='БД', index=False)
         Rich.success_log(f"Лист 'БД' успешно добавлен в {output_path}")
+
     except Exception as e:
         Rich.log_error(f"Ошибка при записи листа БД: {e}")
         return None
