@@ -48,7 +48,7 @@ class MainWindow(QMainWindow):
         # Текущая открытая вкладка. Для обработки ошибок установлено значение -1
         self.choose_tab: int = -1
 
-        self.stop_generation: bool = False  # булевый флаг остановки сборки пдф и парсинга
+        self.stop_generation: bool = False # булевый флаг остановки сборки пдф и парсинга
 
         self.stop_building_pdf: bool = False  # булевый флаг остановки сборки пдф
 
@@ -56,7 +56,7 @@ class MainWindow(QMainWindow):
         self.excel_file_path: Optional[str] = None  # путь к файлу - шаблон для ЛР
         self.universal_file_path: Optional[str] = None  # путь к универсальной таблице
         self.students_data: Optional[List[Dict[str, Any]]] = None  # данные студентов
-        self.commission_members: Optional[List[str]] = None  # члены комиссии
+        self.commission_members: Optional[List[Dict[str, Dict]]] = None  # члены комиссии
 
         # Пути к файлам комиссий
         self.history_commission_path: Optional[str] = None

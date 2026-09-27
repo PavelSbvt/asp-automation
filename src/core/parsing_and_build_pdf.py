@@ -207,7 +207,9 @@ def parsing(self) -> None:
             return
 
         Rich.simple_log("Заполнение БД.")
-        db_file = fill_database_sheet(self)
+        db_file = fill_database_sheet(
+            self.students_data, self.commission_text,
+            self.commission_members, self.selected_semester)
 
         if self.stop_generation:
             Rich.simple_log("Генерация отменена пользователем")

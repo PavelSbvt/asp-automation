@@ -82,7 +82,9 @@ def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
     return None
 
 
-def fill_database_sheet(self) -> Optional[str]:
+def fill_database_sheet(
+        students_data: list, commission_text: str,
+        commission_members: dict, selected_semester: int) -> Optional[str]:
     """
     функция заполнения листа БД таблицы-шаблона
 
@@ -91,7 +93,7 @@ def fill_database_sheet(self) -> Optional[str]:
 
     Rich.debug_log("функция заполнения листа БД таблицы-шаблона через pandas")
 
-    if not hasattr(self, 'students_data') or not self.students_data:
+    if not students_data:
         Rich.warning_log("Ошибка. Нет студентов!")
         return None
 
@@ -112,7 +114,7 @@ def fill_database_sheet(self) -> Optional[str]:
 
     # ===== Строим словарь комиссий по коду специальности =====
     commission_dict = {}
-    commission_members = getattr(self, 'commission_members', {})
+    commission_members = commission_members or {}
 
     # Переменная для хранения комиссии "Все"
     all_commission = None
@@ -156,7 +158,7 @@ def fill_database_sheet(self) -> Optional[str]:
     Rich.debug_log(f"Ключи словаря комиссий: {list(commission_dict.keys())}")
 
     data_rows = []
-    for student in self.students_data:
+    for student in students_data:
         # Получаем код направления
         direction_code = get_specialty_code(student['profile'])
         if not direction_code:
@@ -234,13 +236,10 @@ def fill_database_sheet(self) -> Optional[str]:
             Rich.debug_log(f"Добавлена наука '{science_branch}' для {student['fio']}")
 
         # Определяем дисциплину в зависимости от семестра
-        if hasattr(self, 'selected_semester'):
-            if self.selected_semester == 1:
-                discipline_text = "История и философия науки"
-            elif self.selected_semester == 2:
-                discipline_text = "Иностранный язык (английский)"
-            else:
-                discipline_text = profile_clean
+        if selected_semester == 1:
+            discipline_text = "История и философия науки"
+        elif selected_semester == 2:
+            discipline_text = "Иностранный язык (английский)"
         else:
             discipline_text = profile_clean
 
@@ -248,7 +247,7 @@ def fill_database_sheet(self) -> Optional[str]:
         row = [
             get_fio_accusative(student['fio'], student.get('citizenship', 'РФ')).upper(),
             discipline_text,
-            self.commission_text,
+            commission_text,
             pred_text,
             get_fio_initials(pred_fio) if pred else '',
             zam_text,
