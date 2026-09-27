@@ -5,7 +5,6 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from core.settings_manager import Settings
-from core.generate_pdf import get_pdf
 from core.parsing_and_build_pdf import parsing
 from utils.output_rich import Rich
 from gui.utils.styles import Style
@@ -22,6 +21,7 @@ def open_settings_tab(self) -> None:
     """
 
     self.tab_widget.setCurrentIndex(2)
+
 
 def what_tab_is_show_now(self) -> int:
     """
@@ -60,6 +60,7 @@ def what_tab_is_show_now(self) -> int:
 
     return current_index
 
+
 def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
     """
     Функция для смены фона виджета с фотографией в главной вкладке.
@@ -83,6 +84,7 @@ def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
 
     old_bg_path = self.bg_path_check
 
+
     def get_random_path() -> str:
         """
         Вложенная функция для получения случайного пути к изображению из папки
@@ -97,6 +99,7 @@ def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
         return path_bg_widget_new.as_posix()
 
     new_image_path = get_random_path()
+
 
     def use_random_photo(photo_path: str) -> None:
         """
@@ -190,6 +193,7 @@ def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
         else:
             use_random_photo(image_path)
 
+
 def on_semester_changed(self, checked: bool, semester: str) -> None:
     """
     Показывает нужные кнопки в зависимости от выбранного семестра
@@ -227,6 +231,7 @@ def on_semester_changed(self, checked: bool, semester: str) -> None:
         self.specialization_xl_choosed_lb.setVisible(True)
         self.label_commission_title.setText("Таблица с комиссией по специальности")
 
+
 def app_name_clicked(self):
     """
     Функция для перехода по ссылке на Гит с репозиторием проекта. Просто попробовать.
@@ -236,6 +241,7 @@ def app_name_clicked(self):
 
     webbrowser.open("https://lab.vr-pro.ru:8514/SAPR/asp-automation/src/branch/"
                     "development")
+
 
 def on_button_choose_theme(self, theme_name: str) -> None:
     """
@@ -254,6 +260,7 @@ def on_button_choose_theme(self, theme_name: str) -> None:
 
     self.change_active_button_styles()
 
+
 def on_slider_changed(self, value):
     """
     Функция для установления нового времени для таймера показа главного окна.
@@ -264,6 +271,7 @@ def on_slider_changed(self, value):
 
     self.indicate_loading_window_timer_duration.setText(f"{str(value)} мс")
     Settings.set_loading_window_timer_duration(value)
+
 
 def set_true_show_loading_window(self) -> None:
     """
@@ -278,6 +286,7 @@ def set_true_show_loading_window(self) -> None:
     self.button_show_loading_window.setStyleSheet(Style.button_blue_style)
     self.button_hide_loading_window.setStyleSheet(Style.button_hide_style)
 
+
 def set_false_show_loading_window(self) -> None:
     """
     Функция для запрета показа загрузочного окна (передает False флагу
@@ -291,6 +300,7 @@ def set_false_show_loading_window(self) -> None:
     self.button_show_loading_window.setStyleSheet(Style.button_hide_style)
     self.button_hide_loading_window.setStyleSheet(Style.button_blue_style)
 
+
 def on_bg_clicked(self) -> None:
     """
     Функция для установления случайного изображения на фон
@@ -300,6 +310,7 @@ def on_bg_clicked(self) -> None:
     """
 
     get_bg_for_main_tab_widget(self, "resources/images/for_main_window")
+
 
 def stop_generation_second_tab(self) -> None:
     """
@@ -321,6 +332,7 @@ def stop_generation_second_tab(self) -> None:
         "Программа завершит текущую операцию и остановится."
     )
 
+
 def stop_generation_process(self) -> None:
     """
     Останавливает процесс генерации и парсинга из основной вкладки главного окна
@@ -340,6 +352,7 @@ def stop_generation_process(self) -> None:
         "Программа завершит текущую операцию и остановится."
     )
 
+
 def run(self) -> None:
     """
     Сигнал для кнопки запуска процессов для run_button
@@ -349,6 +362,6 @@ def run(self) -> None:
     if self.choose_tab == 0:
         parsing(self)
     elif self.choose_tab == 1:
-        get_pdf(self)
+        self.start_pdf_build()
     else:
         return

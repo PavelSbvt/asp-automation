@@ -83,12 +83,19 @@ def get_member_by_role(comm: Optional[Dict], role: str) -> Optional[Dict]:
 
 
 def fill_database_sheet(
-        students_data: list, commission_text: str,
+        students_data: list[dict], commission_text: str,
         commission_members: dict, selected_semester: int) -> Optional[str]:
     """
     функция заполнения листа БД таблицы-шаблона
 
-    :return: Optional[str] -
+    :param students_data: принимает списолк словарей - данные студентов
+    :param commission_text: принимает текст, который вводит пользователь
+     в специальное поле на первой вкладке
+    :param commission_members: принимает словарь с членами комиссии
+    :param selected_semester: int - принимает переменную, хранящую номер
+     выбранного семестра
+
+    :return: Optional[str] - Путь к выходному файлу
     """
 
     Rich.debug_log("функция заполнения листа БД таблицы-шаблона через pandas")

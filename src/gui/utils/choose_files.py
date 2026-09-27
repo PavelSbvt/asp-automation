@@ -21,6 +21,7 @@ def choose_parsing_save_folder(self) -> None:
         self.parsing_save_folder_path = folder_path
         self.save_path_label.setText(folder_path)
 
+
 def choose_save_folder_second_tab(self) -> None:
     """
     выбор папки сохранения для собранных пдф по таблице с собранным БД
@@ -36,6 +37,7 @@ def choose_save_folder_second_tab(self) -> None:
     if folder_path:
         self.save_folder_second_tab_path = folder_path
         self.current_save_path_label.setText(folder_path)
+
 
 def open_parsing_pdf_folder(self) -> None:
     """
@@ -57,6 +59,7 @@ def open_parsing_pdf_folder(self) -> None:
         return
     os.startfile(folder_path)
 
+
 def open_pdf_folder(self) -> None:
     """
     Открывает папку с созданными по готовым данным PDF
@@ -76,6 +79,7 @@ def open_pdf_folder(self) -> None:
         Rich.log_error("[E] ошибка с открытием папки с пдф")
         return
     os.startfile(folder_path)
+
 
 def choose_universal_excel(self) -> None:
     """
@@ -99,6 +103,7 @@ def choose_universal_excel(self) -> None:
 
         Rich.success_log(f"Выбран файл универсальной таблицы: {file_path}")
 
+
 def choose_history_excel(self) -> None:
     """
     выбор doc файла с таблицей, содержащей информацию и комиссии по истории
@@ -118,6 +123,7 @@ def choose_history_excel(self) -> None:
         self.history_xl_choused_label.setText(file_path)
 
         Rich.success_log(f"Выбран файл комиссии по истории: {file_path}")
+
 
 def choose_foreign_excel(self) -> None:
     """
@@ -139,6 +145,7 @@ def choose_foreign_excel(self) -> None:
 
         Rich.success_log(f"Выбран файл комиссии по иностранному: {file_path}")
 
+
 def choose_specialization_excel(self) -> None:
     """
     выбор doc файла с таблицей, содержащей информацию и комиссии по специальности
@@ -158,6 +165,7 @@ def choose_specialization_excel(self) -> None:
         self.specialization_xl_choosed_lb.setText(file_path)
 
         Rich.success_log(f"Выбран файл комиссии по специальности: {file_path}")
+
 
 def choose_save_folder_path(self) -> None:
     """
