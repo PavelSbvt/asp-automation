@@ -1,9 +1,9 @@
 from pathlib import Path
 from typing import Optional, List, Dict, Any
 
-from PyQt6.QtCore import QPoint, Qt
+from PyQt6.QtCore import QPoint, Qt, QThread
 from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton,
-    QProgressBar, QRadioButton, QButtonGroup, QLineEdit,
+    QProgressBar, QRadioButton, QButtonGroup, QLineEdit, QApplication,
     QMessageBox, QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea, QSlider)
 
 from core.settings_manager import Settings
@@ -24,6 +24,7 @@ from core.generate_pdf import choose_file
 from gui.utils.fonts import Fonts
 from gui.utils.styles import Style
 from parser.sait_parsing import update_data
+from core.worker_generate_pdf import PdfBuilderWorker
 
 
 class MainWindow(QMainWindow):
@@ -33,6 +34,9 @@ class MainWindow(QMainWindow):
 
     def __init__(self):
         super().__init__()
+
+        self.thread: QThread | None = None
+        self.worker: PdfBuilderWorker | None = None
 
         self.setObjectName("MainWindow")
 
@@ -144,7 +148,7 @@ class MainWindow(QMainWindow):
 
         self.stop_button = QPushButton()
         self.stop_button.setFixedSize(30, 31)
-        self.stop_button.clicked.connect(lambda: stop_generation_second_tab(self))
+        self.stop_button.clicked.connect(self.on_stop_clicked)
         self.stop_button.setVisible(False)
 
         # Вызов функции для получения индекса текущей вкладки
@@ -1034,6 +1038,187 @@ class MainWindow(QMainWindow):
             self.choose_dark_theme_button.setStyleSheet(Style.button_blue_style)
             self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
             self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
+
+
+    def start_pdf_build(self) -> None:
+        """
+        Функция запускает сборку PDF в отдельном потоке.
+        Проверяет, что выбран файл и папка сохранения.
+
+        :return: None
+        """
+
+        if self.thread is not None and self.thread.isRunning():
+            Rich.warning_log("Сборка уже запущена")
+            return
+
+        if not self.excel_file_path:
+            Rich.log_error("Сначала выберите файл с данными!")
+            QMessageBox.warning(
+                self, "Предупреждение",
+                "Сначала выберите файл с данными!",
+                QMessageBox.StandardButton.Ok,
+            )
+            return
+
+        if not self.save_folder_path:
+            Rich.log_error("Сначала выберите папку для сохранения!")
+            QMessageBox.warning(
+                self, "Предупреждение",
+                "Сначала выберите папку для сохранения!",
+                QMessageBox.StandardButton.Ok,
+            )
+            return
+
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(0)
+        self.run_button.setVisible(False)
+        self.stop_button.setVisible(True)
+        self.stop_button.setEnabled(True)
+        self.widget_title_stop_second.setVisible(True)
+
+        Rich.debug_log("load_workbook в главном потоке")
+        try:
+            from openpyxl import load_workbook
+            test_wb = load_workbook(self.excel_file_path)
+            test_wb.close()
+            Rich.debug_log("load_workbook работает")
+        except BaseException as e:
+            import traceback
+            traceback.print_exc()
+            Rich.log_error(f"load_workbook не работает. ошибка: {e}")
+            return
+
+        # блокировка UI
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        self.progress_bar.setVisible(True)
+
+        # Создаём поток и worker
+        self.thread = QThread()
+        self.worker = PdfBuilderWorker(
+            excel_file=self.excel_file_path,
+            output_folder=self.save_folder_path,
+        )
+        self.worker.moveToThread(self.thread)
+
+        # Связывание сигналов
+        self.thread.started.connect(self.worker.run)
+
+        self.worker.progress.connect(self.on_progress)
+        self.worker.status.connect(self.on_status)
+        self.worker.file_done.connect(self.on_file_done)
+        self.worker.error.connect(self.on_error)
+        self.worker.finished.connect(self.on_finished)
+
+        # завершение потока
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.on_thread_finished)
+
+        self.thread.start()
+
+
+    def on_progress(self, value: int) -> None:
+        """
+        Функция для обновления состояния прогресс-бара, индицирующего
+         прогресс сборки пдф на второй вкладке.
+
+        :param value: Принимает значение, которое будет назначено прогресс-бару
+
+        :return: None
+        """
+
+        self.progress_bar.setValue(value)
+
+
+    @staticmethod
+    def on_status(message: str) -> None:
+        """
+        Функция для вывода статуса операции в лог в консоль
+
+        :param message: Принимает текст с информацией о состоянии операции,
+         который передастся в лог
+
+        :return: None
+        """
+
+        Rich.debug_log(message)
+
+
+    @staticmethod
+    def on_file_done(file_name: str) -> None:
+        """
+        Сообщает, что один PDF готов.
+
+        :param file_name: Принимает имя файла, который только что создался
+
+        :return: None
+        """
+
+        Rich.success_log(f"Собран ПДФ: {file_name}")
+
+
+    def on_error(self, message: str) -> None:
+        """
+        Функция показывает ошибку в логе в консоли и диалогом.
+
+        :param message: Принимает сообщение об ошибке и передаёт его диалогу и логу
+        """
+
+        Rich.log_error(message)
+        QMessageBox.warning(self, "Ошибка", message)
+
+
+    def on_finished(self, processed: int, output_folder: str) -> None:
+        """
+        Вызывается, когда worker завершил работу.
+
+        :param processed: Принимает количество созданных пдф.
+        :param output_folder: Принимает путь к папке сохранения документов
+
+        :return: None
+        """
+
+        Rich.success_log("Сборка ПДФ завершена")
+        Rich.simple_log(f"Создано PDF: {processed}")
+        Rich.simple_log(f"Папка: {output_folder}")
+
+        QMessageBox.information(
+            self,
+            "Сборка ПДФ завершена!",
+            f"Создано PDF: {processed}\n\nДокументы сохранены в:\n{output_folder}",
+            QMessageBox.StandardButton.Ok,
+        )
+
+
+    def on_thread_finished(self) -> None:
+        """
+        Сбрасывает состояния кнопок и остального UI после завершения потока в
+         базовое состояние.
+
+        :return: None
+        """
+
+        self.progress_bar.setVisible(False)
+        self.stop_button.setVisible(False)
+        self.run_button.setVisible(True)
+        self.widget_title_stop_second.setVisible(False)
+        self.stop_button.setEnabled(True)
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
+
+    def on_stop_clicked(self) -> None:
+        """
+        Функция-обработчик кнопки остановки процесса сборки пдф на второй вкладке.
+
+        :return: None
+        """
+
+        if self.worker is not None:
+            Rich.warning_log("Запрошена остановка сборки...")
+            self.worker.request_stop()
+            self.stop_button.setEnabled(False)
+
 
     def resizeEvent(self, event):
         """
