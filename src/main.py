@@ -1,5 +1,7 @@
 import sys
 from pathlib import Path
+import faulthandler
+import multiprocessing
 
 from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
@@ -32,6 +34,7 @@ def start_with_loading_window() -> None:
     Rich.print_spacer()
     load_cached_data(MainWin)
 
+
     def on_loading_closed() -> None:
         """
         Функция для показа основного окна приложения.
@@ -49,6 +52,7 @@ def start_with_loading_window() -> None:
 
     LoadingWindow.closed.connect(on_loading_closed)
 
+
 def start_without_loading_window() -> None:
     """
     Функция для запуска приложения буз загрузочного окна
@@ -65,7 +69,14 @@ def start_without_loading_window() -> None:
     MainWin.show()
     AnimateManager.animation_appearance_window(MainWin, duration=1000)
 
+
 if __name__ == "__main__":
+
+    multiprocessing.freeze_support() # нужна для корректной работы мультипроцессинга
+    # в exe сборке - чтобы exe понимал запущен ли дочерний процесс или нет
+
+    faulthandler.enable() # перехватывает сигнал ошибки от C и печатает
+    # Python-стек в stderr — traceback
 
     Settings.print_settings()
     Rich.print_spacer()
