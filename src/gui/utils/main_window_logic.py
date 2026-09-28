@@ -359,6 +359,9 @@ def run(self) -> None:
 
     :return:None
     """
+
+    self.run_button.setVisible(False)
+
     if self.choose_tab == 0:
         parsing(self)
     elif self.choose_tab == 1:
