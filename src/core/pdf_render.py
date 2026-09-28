@@ -132,24 +132,31 @@ def fill_template(ws, data: dict) -> None:
         ws.row_dimensions[r].height = 18
 
 
-def set_cell(ws, cell_ref, value, *, h_align="left", v_align="center",
-             wrap=False, size=12, italic=False, bold=False, border=None) -> None:
+def set_cell(
+        ws, cell_ref: str, value: str, h_align: str = "left", v_align: str = "center",
+        wrap: bool =False, size: int = 12, italic:
+        bool =False, bold: bool = False, border: Border = None) -> None:
     """
+    Устанавливает значение и стиль указанной ячейки Excel-листа.
 
-    :param ws:
-    :param cell_ref:
-    :param value:
-    :param h_align:
-    :param v_align:
-    :param wrap:
-    :param size:
-    :param italic:
-    :param bold:
-    :param border:
+    Функция принимает либо адрес ячейки в виде строки (например, "A1"),
+    либо уже готовый объект ячейки openpyxl. Это позволяет вызывать её
+    как для статических адресов, так и для ячеек, полученных через
+    ws.cell(row=..., column=...).
 
-    :return:
+    :param ws: Рабочий лист openpyxl (Worksheet), в котором находится ячейка
+    :param cell_ref: Адрес ячейки в виде строки или готового объекта ячейки
+    :param value: Значение, которое будет записано в ячейку
+    :param h_align: Горизонтальное выравнивание текста ("left", "center", "right")
+    :param v_align: Вертикальное выравнивание текста ("top", "center", "bottom")
+    :param wrap: Нужно ли переносить текст по словам
+    :param size: Размер шрифта в пунктах
+    :param italic: Курсивное начертание шрифта
+    :param bold: Жирное начертание шрифта
+    :param border: Объект Border (границы ячейки) или None, если рамка не нужна
+
+    :return: None
     """
-
 
     cell = ws[cell_ref] if isinstance(cell_ref, str) else cell_ref
     cell.value = value
@@ -161,10 +168,10 @@ def set_cell(ws, cell_ref, value, *, h_align="left", v_align="center",
 
 def convert_to_pdf(excel_path: str, pdf_path: str) -> None:
     """
-    Конвертирует Excel → PDF через cscript + VBS.
+    Конвертирует Excel в PDF через cscript + VBS.
 
-    :param excel_path:
-    :param pdf_path:
+    :param excel_path: путь к выбранной таблице с данными
+    :param pdf_path: путь сохранения созданных документов
 
     :return: None
     """

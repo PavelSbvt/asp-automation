@@ -9,7 +9,7 @@ def wrap_text(text: str, width: int = 50) -> str:
     """
     Переносит длинный текст по словам с заданной шириной
 
-    :param text: Принимает текст, который нужно обработать и вернуть с переносами
+    :param text: Принимает текст, который нужно обработать и вернуть с переносами.
     :param width: Принимает желаемую ширину строки (для переноса лишнего)
 
     :return: str - Возвращает отредактированную строку с переносами по ширине
@@ -36,7 +36,6 @@ def choose_file(self) -> None:
         self.excel_file_path = file_path
         self.label_current_tabel.setText(self.excel_file_path)
         Rich.success_log(f"Выбрана таблица  с данными для сборки ПДФ: {file_path}")
-
 
 
 def update_progress(progress_bar: QProgressBar, current: int, total: int) -> None:
