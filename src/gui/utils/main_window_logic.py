@@ -36,15 +36,21 @@ def what_tab_is_show_now(self) -> int:
 
     tab_name = ""
 
+    busy = None
+
+    if ((self.thread is not None and self.thread.isRunning()) or
+            self.stop_generation or self.stop_building_pdf):
+        busy = True
+
     if current_index == 0:
         tab_name = tabs_name[0]
         self.choose_tab = 0
-        self.run_button.setVisible(True)
+        self.run_button.setVisible(not busy)
 
     elif current_index == 1:
         tab_name = tabs_name[1]
         self.choose_tab = 1
-        self.run_button.setVisible(True)
+        self.run_button.setVisible(not busy)
 
     elif current_index == 2:
         tab_name = tabs_name[2]
