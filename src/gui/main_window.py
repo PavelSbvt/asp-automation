@@ -956,16 +956,7 @@ class MainWindow(QMainWindow):
         get_bg_for_main_tab_widget(self, "resources/images/for_main_window")
 
 
-    def get_shortcut(self) -> None:
-        """
-        Функция для создания ярлыка на рабочий стол для быстрого запуска приложения
-        До создания ярлыка выполняются все проверки - на наличие сборки проекта и
-        на существование ярлыка (если уже есть)
-        :return: None
-        """
-
-        check_build()
-
+    # Переопределённые методы родительского класса
     def keyPressEvent(self, event) -> None:
         """
         Обработка нажатий клавиш для остановки процесса
@@ -1014,150 +1005,63 @@ class MainWindow(QMainWindow):
         # Передаем событие дальше
         super().keyPressEvent(event)
 
-    def change_active_button_styles(self) -> None:
+
+    def resizeEvent(self, event):
         """
-        Функция для смены стиля кнопок (одна кнопка должна быть "активной",
-        остальные - "неактивные").
+        Вызывается при изменении размера окна. Используется для адаптации размера фона.
 
-        :return: None. Устанавливает стили для кнопок в соответствии
-        с выбранной темой приложения (активна та кнопка, имя темы за
-        которую она отвечает установлено в параметрах на данных момент).
-        """
-
-        current_theme = Settings.get_theme_name()
-
-        if current_theme == "standard":
-            self.choose_dark_theme_button.setStyleSheet(Style.button_hide_style)
-            self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
-            self.choose_standard_theme_button.setStyleSheet(Style.button_blue_style)
-        elif current_theme == "violet":
-            self.choose_dark_theme_button.setStyleSheet(Style.button_hide_style)
-            self.choose_violet_theme_button.setStyleSheet(Style.button_blue_style)
-            self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
-        elif current_theme == "dark":
-            self.choose_dark_theme_button.setStyleSheet(Style.button_blue_style)
-            self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
-            self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
-
-
-    def start_pdf_build(self) -> None:
-        """
-        Функция запускает сборку PDF в отдельном потоке.
-        Проверяет, что выбран файл и папка сохранения.
+        :param event: QResizeEvent — содержит новую информацию о размере
 
         :return: None
         """
 
-        if self.thread is not None and self.thread.isRunning():
-            Rich.warning_log("Сборка уже запущена")
-            return
+        width = self.width()
+        height = self.height()
 
-        if not self.excel_file_path:
-            Rich.log_error("Сначала выберите файл с данными!")
-            QMessageBox.warning(
-                self, "Предупреждение",
-                "Сначала выберите файл с данными!",
-                QMessageBox.StandardButton.Ok,
-            )
-            return
+        self.width_now = width
+        self.height_now = height
 
-        if not self.save_folder_path:
-            Rich.log_error("Сначала выберите папку для сохранения!")
-            QMessageBox.warning(
-                self, "Предупреждение",
-                "Сначала выберите папку для сохранения!",
-                QMessageBox.StandardButton.Ok,
-            )
-            return
+        if self.height_now <= 800:
+            self.widget_bg_main_tab.setMinimumHeight(200)
+        else:
+            self.widget_bg_main_tab.setMinimumHeight(350)
 
-        self.progress_bar.setVisible(True)
-        self.progress_bar.setValue(0)
-        self.run_button.setVisible(False)
-        self.stop_button.setVisible(True)
-        self.stop_button.setEnabled(True)
-        self.widget_title_stop_second.setVisible(True)
-
-        Rich.debug_log("load_workbook в главном потоке")
-        try:
-            from openpyxl import load_workbook
-            test_wb = load_workbook(self.excel_file_path)
-            test_wb.close()
-            Rich.debug_log("load_workbook работает")
-        except BaseException as e:
-            import traceback
-            traceback.print_exc()
-            Rich.log_error(f"load_workbook не работает. ошибка: {e}")
-            return
-
-        # блокировка UI
-        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
-        self.progress_bar.setVisible(True)
-
-        # Создаём поток и worker
-        self.thread = QThread()
-        self.worker = PdfBuilderWorker(
-            excel_file=self.excel_file_path,
-            output_folder=self.save_folder_path,
-        )
-        self.worker.moveToThread(self.thread)
-
-        # Связывание сигналов
-        self.thread.started.connect(self.worker.run)
-
-        self.worker.progress.connect(self.on_progress)
-        self.worker.status.connect(self.on_status)
-        self.worker.file_done.connect(self.on_file_done)
-        self.worker.error.connect(self.on_error)
-        self.worker.finished.connect(self.on_finished)
-
-        # завершение потока
-        self.worker.finished.connect(self.thread.quit)
-        self.worker.finished.connect(self.worker.deleteLater)
-        self.thread.finished.connect(self.on_thread_finished)
-
-        self.thread.start()
+        super().resizeEvent(event)
 
 
-    def on_progress(self, value: int) -> None:
+    def mousePressEvent(self, event) -> None:
         """
-        Функция для обновления состояния прогресс-бара, индицирующего
-         прогресс сборки пдф на второй вкладке.
+        Обработчик события нажатия кнопки мыши.
 
-        :param value: Принимает значение, которое будет назначено прогресс-бару
+        :param event: Принимает event - объект события, содержащий информацию о нажатии
+        (какая кнопка, координаты и т.д.).
 
         :return: None
         """
 
-        self.progress_bar.setValue(value)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self.drag_position = event.globalPosition().toPoint()
+            event.accept()
 
 
-    @staticmethod
-    def on_status(message: str) -> None:
+    def mouseMoveEvent(self, event) -> None:
         """
-        Функция для вывода статуса операции в лог в консоль
+        Обработчик события движения мыши.
 
-        :param message: Принимает текст с информацией о состоянии операции,
-         который передастся в лог
+        :param event: Принимает event - объект события, содержащий информацию о нажатии
+        (какая кнопка, координаты и т.д.).
 
         :return: None
         """
 
-        Rich.debug_log(message)
+        if event.buttons() == Qt.MouseButton.LeftButton:
+            delta = event.globalPosition().toPoint() - self.drag_position
+            self.move(self.pos() + delta)
+            self.drag_position = event.globalPosition().toPoint()
+            event.accept()
 
 
-    @staticmethod
-    def on_file_done(file_name: str) -> None:
-        """
-        Сообщает, что один PDF готов.
-
-        :param file_name: Принимает имя файла, который только что создался
-
-        :return: None
-        """
-
-        Rich.success_log(f"Собран ПДФ: {file_name}")
-
-
+    # Публичные методы
     def on_error(self, message: str) -> None:
         """
         Функция показывает ошибку в логе в консоли и диалогом.
@@ -1220,55 +1124,162 @@ class MainWindow(QMainWindow):
             self.stop_button.setEnabled(False)
 
 
-    def resizeEvent(self, event):
+    def on_progress(self, value: int) -> None:
         """
-        Вызывается при изменении размера окна. Используется для адаптации размера фона.
+        Функция для обновления состояния прогресс-бара, индицирующего
+         прогресс сборки пдф на второй вкладке.
 
-        :param event: QResizeEvent — содержит новую информацию о размере
+        :param value: Принимает значение, которое будет назначено прогресс-бару
 
         :return: None
         """
 
-        width = self.width()
-        height = self.height()
+        self.progress_bar.setValue(value)
 
-        self.width_now = width
-        self.height_now = height
 
-        if self.height_now <= 800:
-            self.widget_bg_main_tab.setMinimumHeight(200)
-        else:
-            self.widget_bg_main_tab.setMinimumHeight(350)
-
-        super().resizeEvent(event)
-
-    def mousePressEvent(self, event) -> None:
+    def change_active_button_styles(self) -> None:
         """
-        Обработчик события нажатия кнопки мыши.
+        Функция для смены стиля кнопок (одна кнопка должна быть "активной",
+        остальные - "неактивные").
 
-        :param event: Принимает event - объект события, содержащий информацию о нажатии
-        (какая кнопка, координаты и т.д.).
+        :return: None. Устанавливает стили для кнопок в соответствии
+        с выбранной темой приложения (активна та кнопка, имя темы за
+        которую она отвечает установлено в параметрах на данных момент).
+        """
+
+        current_theme = Settings.get_theme_name()
+
+        if current_theme == "standard":
+            self.choose_dark_theme_button.setStyleSheet(Style.button_hide_style)
+            self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
+            self.choose_standard_theme_button.setStyleSheet(Style.button_blue_style)
+        elif current_theme == "violet":
+            self.choose_dark_theme_button.setStyleSheet(Style.button_hide_style)
+            self.choose_violet_theme_button.setStyleSheet(Style.button_blue_style)
+            self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
+        elif current_theme == "dark":
+            self.choose_dark_theme_button.setStyleSheet(Style.button_blue_style)
+            self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
+            self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
+
+
+    def start_pdf_build(self) -> None:
+        """
+        Функция запускает сборку PDF в отдельном потоке.
+        Проверяет, что выбран файл и папка сохранения.
 
         :return: None
         """
 
-        if event.button() == Qt.MouseButton.LeftButton:
-            self.drag_position = event.globalPosition().toPoint()
-            event.accept()
+        self.run_button.setVisible(False)
+
+        if self.thread is not None and self.thread.isRunning():
+            Rich.warning_log("Сборка уже запущена")
+            return
+
+        if not self.excel_file_path:
+            Rich.log_error("Сначала выберите файл с данными!")
+            QMessageBox.warning(
+                self, "Предупреждение",
+                "Сначала выберите файл с данными!",
+                QMessageBox.StandardButton.Ok,
+            )
+            return
+
+        if not self.save_folder_path:
+            Rich.log_error("Сначала выберите папку для сохранения!")
+            QMessageBox.warning(
+                self, "Предупреждение",
+                "Сначала выберите папку для сохранения!",
+                QMessageBox.StandardButton.Ok,
+            )
+            return
+
+        self.progress_bar.setVisible(True)
+        self.progress_bar.setValue(0)
+        self.run_button.setVisible(False)
+        self.stop_button.setVisible(True)
+        self.stop_button.setEnabled(True)
+        self.widget_title_stop_second.setVisible(True)
+
+        Rich.debug_log("load_workbook в главном потоке")
+        try:
+            from openpyxl import load_workbook
+            test_wb = load_workbook(self.excel_file_path)
+            test_wb.close()
+            Rich.debug_log("load_workbook работает")
+
+        except BaseException as e:
+            import traceback
+            traceback.print_exc()
+            Rich.log_error(f"load_workbook не работает. ошибка: {e}")
+            return
+
+        # блокировка UI
+        QApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        self.progress_bar.setVisible(True)
+
+        # Создание потока и worker
+        self.thread = QThread()
+        self.worker = PdfBuilderWorker(
+            excel_file=self.excel_file_path,
+            output_folder=self.save_folder_path,
+        )
+        self.worker.moveToThread(self.thread)
+
+        # Связывание сигналов
+        self.thread.started.connect(self.worker.run)
+
+        self.worker.progress.connect(self.on_progress)
+        self.worker.status.connect(self.on_status)
+        self.worker.file_done.connect(self.on_file_done)
+        self.worker.error.connect(self.on_error)
+        self.worker.finished.connect(self.on_finished)
+
+        # завершение потока
+        self.worker.finished.connect(self.thread.quit)
+        self.worker.finished.connect(self.worker.deleteLater)
+        self.thread.finished.connect(self.on_thread_finished)
+
+        self.thread.start()
 
 
-    def mouseMoveEvent(self, event) -> None:
+    # Статические методы
+    @staticmethod
+    def get_shortcut() -> None:
         """
-        Обработчик события движения мыши.
+        Функция для создания ярлыка на рабочий стол для быстрого запуска приложения
+        До создания ярлыка выполняются все проверки - на наличие сборки проекта и
+        на существование ярлыка (если уже есть)
+        :return: None
+        """
 
-        :param event: Принимает event - объект события, содержащий информацию о нажатии
-        (какая кнопка, координаты и т.д.).
+        check_build()
+
+
+    @staticmethod
+    def on_status(message: str) -> None:
+        """
+        Функция для вывода статуса операции в лог в консоль
+
+        :param message: Принимает текст с информацией о состоянии операции,
+         который передастся в лог
 
         :return: None
         """
 
-        if event.buttons() == Qt.MouseButton.LeftButton:
-            delta = event.globalPosition().toPoint() - self.drag_position
-            self.move(self.pos() + delta)
-            self.drag_position = event.globalPosition().toPoint()
-            event.accept()
+        Rich.debug_log(message)
+
+
+    @staticmethod
+    def on_file_done(file_name: str) -> None:
+        """
+        Сообщает, что один PDF готов.
+
+        :param file_name: Принимает имя файла, который только что создался
+
+        :return: None
+        """
+
+        Rich.success_log(f"Собран ПДФ: {file_name}")
+
