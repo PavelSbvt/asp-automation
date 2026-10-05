@@ -67,6 +67,7 @@ def what_tab_is_show_now(self) -> int:
     return current_index
 
 
+
 def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
     """
     Функция для смены фона виджета с фотографией в главной вкладке.
@@ -208,8 +209,8 @@ def on_semester_changed(self, checked: bool, semester: str) -> None:
     :param checked: принимает имя булевого флага для проверки выбрана ли
      радиокнопка с семестрами
 
-     :param semester: принимает строку с названием семестра, на выбор
-      которого назначена радиокнопка
+    :param semester: принимает строку с названием семестра, на выбор
+     которого назначена радиокнопка
 
     :return: None.
     """
@@ -238,7 +239,7 @@ def on_semester_changed(self, checked: bool, semester: str) -> None:
         self.label_commission_title.setText("Таблица с комиссией по специальности")
 
 
-def app_name_clicked(self):
+def app_name_clicked():
     """
     Функция для перехода по ссылке на Гит с репозиторием проекта. Просто попробовать.
 
