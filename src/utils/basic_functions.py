@@ -1,5 +1,4 @@
 import re
-from typing import Dict
 
 import pandas as pd
 
@@ -23,6 +22,7 @@ def remove_trailing_dot(text: str) -> str:
         return text[:-1]
     return text
 
+
 def normalize_initials(name: str) -> str:
     """
     Нормализует инициалы: приводит к формату с пробелом между инициалами.
@@ -40,6 +40,7 @@ def normalize_initials(name: str) -> str:
     result = re.sub(pattern, r'\1 \2', name)
 
     return result
+
 
 def extract_code_from_row(row, code_col) -> str:
     """
@@ -70,6 +71,7 @@ def extract_code_from_row(row, code_col) -> str:
 
     return code
 
+
 def extract_fio_from_text(text: str) -> str:
     """
     Извлекает ФИО из текста (фамилия + инициалы)
@@ -92,6 +94,7 @@ def extract_fio_from_text(text: str) -> str:
         return match.group(1).strip()
     return text[:30].strip()
 
+
 def extract_initials_from_text(text: str) -> str:
     """
     Извлекает инициалы из текста
@@ -103,8 +106,9 @@ def extract_initials_from_text(text: str) -> str:
 
     return extract_fio_from_text(text)
 
+
 def extract_commission_members(text: str,
-    commissions_dict: Dict, row, code_col: str) -> None:
+    commissions_dict: dict, row, code_col: str) -> None:
     """
     Извлекает членов комиссии из текста и сохраняет в словарь commissions_dict
     по ключу-шифру.
@@ -248,6 +252,7 @@ def extract_commission_members(text: str,
                     'full_text': clean_part,
                     'initials': fio
                 })
+
 
 def extract_code_number(raw_code: str) -> str:
     """

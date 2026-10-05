@@ -1,11 +1,10 @@
+from pytrovich.detector import PetrovichGenderDetector
 from pytrovich.enums import NamePart, Case
 from pytrovich.maker import PetrovichDeclinationMaker
-from pytrovich.detector import PetrovichGenderDetector
 
 
-# экземпляры
-petrovich_maker = PetrovichDeclinationMaker()
-petrovich_detector = PetrovichGenderDetector()
+petrovichMaker = PetrovichDeclinationMaker()
+petrovichDetector = PetrovichGenderDetector()
 
 def get_fio_accusative(fio: str, citizenship: str = "РФ") -> str:
     """
@@ -34,13 +33,14 @@ def get_fio_accusative(fio: str, citizenship: str = "РФ") -> str:
     patronymic = parts[2]
 
     # пол с помощью pytrovich
-    gender = petrovich_detector.detect(firstname=name, middlename=patronymic)
+    gender = petrovichDetector.detect(firstname=name, middlename=patronymic)
 
-    surname_acc = petrovich_maker.make(NamePart.LASTNAME, gender, Case.ACCUSATIVE, surname)
-    name_acc = petrovich_maker.make(NamePart.FIRSTNAME, gender, Case.ACCUSATIVE, name)
-    patronymic_acc = petrovich_maker.make(NamePart.MIDDLENAME, gender, Case.ACCUSATIVE, patronymic)
+    surname_acc = petrovichMaker.make(NamePart.LASTNAME, gender, Case.ACCUSATIVE, surname)
+    name_acc = petrovichMaker.make(NamePart.FIRSTNAME, gender, Case.ACCUSATIVE, name)
+    patronymic_acc = petrovichMaker.make(NamePart.MIDDLENAME, gender, Case.ACCUSATIVE, patronymic)
 
     return f"{surname_acc} {name_acc} {patronymic_acc}"
+
 
 def get_fio_initials(fio: str) -> str:
     """
@@ -74,6 +74,7 @@ def get_fio_initials(fio: str) -> str:
 
     return result
 
+
 def get_fio_initials_for_user(fio: str) -> str:
     """
     Утилитарная функция для получения инициалов из ФИО.
@@ -85,6 +86,7 @@ def get_fio_initials_for_user(fio: str) -> str:
     """
 
     return get_fio_initials(fio)
+
 
 def get_fio_in_accusative(fio: str, citizenship: str = "РФ") -> str:
     """

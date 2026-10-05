@@ -23,6 +23,7 @@ def check_exist_shortcut() -> None:
         Rich.warning_log("Ярлыка приложения нет")
         create_shortcut()
 
+
 def bool_exist_exe() -> bool:
     """
     Функция для проверки наличия сборки
@@ -40,6 +41,7 @@ def bool_exist_exe() -> bool:
 
     return True
 
+
 def check_build() -> None:
     """
     Функция для проверки существования собранного проекта и создания ярлыка,
@@ -53,6 +55,7 @@ def check_build() -> None:
     if bool_exist_exe():
         Rich.debug_log("Найдена сборка")
         check_exist_shortcut()
+
 
 def create_shortcut() -> None:
     """

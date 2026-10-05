@@ -1,11 +1,11 @@
 import os
-import traceback
 import re
+import traceback
 from typing import Dict, Optional, Tuple
 
 import aspose.words as aw
-import pandas as pd
 from openpyxl import load_workbook
+import pandas as pd
 from PyQt6.QtWidgets import QApplication, QMessageBox
 
 from utils.basic_functions import extract_commission_members, normalize_initials
@@ -27,6 +27,7 @@ def normalize_name_for_comparison(name: str) -> str:
     name = normalize_initials(name)
 
     return name
+
 
 def parsing_universal_excel(self) -> None:
     """

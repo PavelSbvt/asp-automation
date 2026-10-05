@@ -1,5 +1,5 @@
-import os
 import inspect
+import os
 
 from rich.console import Console
 from rich.panel import Panel
@@ -8,7 +8,7 @@ from rich.table import Table
 
 console = Console()
 
-class RichLog:
+class Rich:
     """
     Класс с методами вывода логов в консоль с использованием библиотеки Rich
     """
@@ -36,8 +36,8 @@ class RichLog:
             """
             Возвращает имя файла и номер строки, откуда была вызвана функция.
 
-            :return: Str - строка с номером строки и именем файла, из которого была
-            вызвана функция
+            :return: str - строка с номером строки и именем файла, из которого была
+             вызвана функция
             """
 
             try:
@@ -120,7 +120,7 @@ class RichLog:
         Лог-предупреждение о каких-то незначительных проблемах выполнения операции
          - вывод в терминал (с использованием библиотеки Rich)
 
-        :param message: Принимает тест лога, который будет выведен в терминал (консоль)
+        :param message: Принимает текст лога, который будет выведен в терминал (консоль)
 
         :return: None
         """
@@ -164,7 +164,7 @@ class RichLog:
         :return: None
         """
 
-        console.log(f"[grey46][Debug] {"-" * 151}[/grey46]", _stack_offset=2)
+        console.log(f"[grey46][Debug] {'-' * 151}[/grey46]", _stack_offset=2)
 
 
     @staticmethod
@@ -176,7 +176,7 @@ class RichLog:
         :return: None
         """
 
-        console.log(f"[grey46][Debug] {"." * 151}[/grey46]", _stack_offset=2)
+        console.log(f"[grey46][Debug] {'.' * 151}[/grey46]", _stack_offset=2)
 
 
     @staticmethod
@@ -200,6 +200,3 @@ class RichLog:
             table.add_row(*[str(cell) for cell in row])
 
         console.print(table)
-
-
-Rich = RichLog()

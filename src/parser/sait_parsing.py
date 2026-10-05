@@ -1,11 +1,11 @@
-import traceback
 from datetime import datetime
-from typing import List, Tuple, Optional
 from pathlib import Path
+import traceback
+from typing import List, Tuple, Optional
 
-import requests
 from bs4 import BeautifulSoup
 from PyQt6.QtWidgets import QApplication, QMessageBox
+import requests
 
 from utils.output_rich import Rich
 
@@ -35,6 +35,7 @@ def get_current_cache_file() -> Optional[Path]:
     files.sort(key=lambda f: f.stat().st_mtime, reverse=True)
 
     return files[0]  # самый свежий файл - на всякий случай
+
 
 def load_specialties_from_cache() -> Optional[List[Tuple[str, str]]]:
     """
@@ -72,6 +73,7 @@ def load_specialties_from_cache() -> Optional[List[Tuple[str, str]]]:
     except Exception as e:
         Rich.log_error(f"Ошибка загрузки кэша: {e}")
         return None
+
 
 def save_specialties_to_cache(specialties: List[Tuple[str, str]]) -> None:
     """
@@ -113,6 +115,7 @@ def save_specialties_to_cache(specialties: List[Tuple[str, str]]) -> None:
     except Exception as e:
         Rich.log_error(f"Ошибка сохранения кэша: {e}")
 
+
 def get_last_update_time() -> str:
     """
     Возвращает время последнего обновления из имени файла.
@@ -127,6 +130,7 @@ def get_last_update_time() -> str:
         return current_file.stem
 
     return "данные не загружены"
+
 
 def get_specialty_code(profile: str) -> str:
     """
@@ -167,6 +171,7 @@ def get_specialty_code(profile: str) -> str:
     except Exception as e:
         Rich.log_error(f"Ошибка в get_specialty_code: {e}")
         return ""
+
 
 def update_data(self) -> None:
     """
@@ -248,6 +253,7 @@ def update_data(self) -> None:
                 "Ошибка обновления данных:"
             )
 
+
 def site_parce_dn() -> List[Tuple[str, str]]:
     """
     Парсинг данных (профилей и их кодов) аспирантов с сайта магистратуры (резервного)
@@ -303,6 +309,7 @@ def site_parce_dn() -> List[Tuple[str, str]]:
                 specialties.append((code, name))
 
     return specialties
+
 
 def site_parce_main() -> List[Tuple[str, str]]:
     """
