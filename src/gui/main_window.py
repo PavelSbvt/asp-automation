@@ -119,7 +119,7 @@ class MainWindow(QMainWindow):
         self.app_name_button.setText(Settings.get_app_name())
         self.app_name_button.setFont(Fonts.get_qfont("JetBrains_Regular", 14))
         self.app_name_button.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.app_name_button.clicked.connect(app_name_clicked)
+        self.app_name_button.clicked.connect(lambda: app_name_clicked(self))
 
         self.settings_path = Path("resources/images/icons/settings_pycharm_icon.png")
 
