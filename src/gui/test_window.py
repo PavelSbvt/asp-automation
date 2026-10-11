@@ -27,6 +27,8 @@ class LoadingWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setObjectName("loading_window")
+
         self.bg_path_check = ""
 
         self.close_window_animation = None
@@ -39,14 +41,6 @@ class LoadingWindow(QWidget):
 
         print(ui_path)
         loadUi(ui_path, self)
-
-        self.setObjectName("loading_window")
-        self.setStyleSheet("""
-            #loading_window {
-                background-color: #1E1E1E;
-                border-radius: 10px;
-            }
-        """)
 
         self.block_app_name.setFont(Fonts.get_qfont("JetBrains_Regular", 30))
         self.lb_blc_m_load.setFont(Fonts.get_qfont("JetBrains_Medium", 8))
