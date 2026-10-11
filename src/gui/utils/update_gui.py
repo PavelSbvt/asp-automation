@@ -78,6 +78,7 @@ def update_animation_gradient(self) -> None:
 
     if not self.flag_finish_animation:
         self.widget_gradient.setStyleSheet(f"""
+                #widget_gradient{{
                 background: qlineargradient(
                     x1: 0, y1: 0, x2: 1, y2: 0.5,
                     stop: 0 rgba({r}, {g}, {b}, 0.0),
@@ -89,10 +90,11 @@ def update_animation_gradient(self) -> None:
                     stop: 1 rgba({change_red}, {change_green}, {change_blue}, 
                     {self.opacity_animation * 4:.2f})
                 );
-                border-radius: 10px;
+                border-radius: 10px;}}
             """)
     else:
         self.widget_gradient.setStyleSheet(f"""
+                #widget_gradient{{
                 background: qlineargradient(
                     x1: 0, y1: 0, x2: 1, y2: 0.5,
                     stop: 0 rgba({r}, {g}, {b}, 0.0),
@@ -104,7 +106,7 @@ def update_animation_gradient(self) -> None:
                     stop: 1 rgba({change_red}, {change_green}, {change_blue}, 
                     {self.opacity_animation * 4:.2f})
                 );
-                border-radius: 10px;
+                border-radius: 10px;}}
             """)
         if self.opacity_animation <= 0.1:
             self.opacity_animation += 0.0005
