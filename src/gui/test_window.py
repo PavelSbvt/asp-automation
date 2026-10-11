@@ -42,11 +42,34 @@ class LoadingWindow(QWidget):
         print(ui_path)
         loadUi(ui_path, self)
 
-        self.block_app_name.setFont(Fonts.get_qfont("JetBrains_Regular", 30))
+        self.block_app_name.setFont(Fonts.get_qfont("JetBrains_Regular", 28))
         self.lb_blc_m_load.setFont(Fonts.get_qfont("JetBrains_Medium", 8))
         self.lb_hi_prog.setFont(Fonts.get_qfont("JetBrains_Medium", 20))
         self.label_text.setStyleSheet(f"color: {Style.light_font_color};")
         self.label_text.setFont(Fonts.get_qfont("JetBrains_Medium", 11))
+
+        citation_text, author_text = get_citation_with_author()
+
+        if len(citation_text) < 37:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 18))
+        elif len(citation_text) < 70:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 14))
+        elif len(citation_text) < 150:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 12))
+        else:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 10))
+
+        if len(author_text) < 40:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 12))
+        elif len(author_text) < 80:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 10))
+        elif len(author_text) > 120:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 6))
+        else:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 8))
+
+        self.citation_author_label.setText(author_text)
+        self.citation_label.setText(citation_text)
 
         self.icon_path = Path("resources/images/icons/icon_pdf_maker.png")
 
