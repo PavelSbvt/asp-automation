@@ -31,8 +31,10 @@ class LoadingWindow(QWidget):
 
         Rich.enter_log("Показ загрузочного окна.")
 
-        ui_path = Path('src/gui/loading_window.ui').as_posix()
+        ui_path = Path('src/gui/ui/loading_window.ui').as_posix()
         loadUi(ui_path, self)
+
+        self.set_stylesheet_by_theme_in_settings()
 
         self.set_text_on_size_for_labels_citations()
 
@@ -118,6 +120,24 @@ class LoadingWindow(QWidget):
         self.drag_position: QPoint = QPoint()
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+
+    def set_stylesheet_by_theme_in_settings(self) -> None:
+        """
+        Функция выбирает и подключает файл qss в соответствии с выбранной темой стилями
+
+        :return: None
+        """
+
+        theme = Settings.get_theme_name()
+
+        qss_path = Path(f"src/gui/styles/loading_window_{theme}.qss")
+
+        if qss_path.exists():
+            with open(qss_path, "r", encoding="utf-8") as f:
+                self.setStyleSheet(f.read())
+        else:
+            Rich.warning_log(f"QSS-файл не найден: {qss_path}")
 
 
     def set_text_on_size_for_labels_citations(self) -> None:
