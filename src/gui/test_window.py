@@ -38,10 +38,6 @@ class LoadingWindow(QWidget):
 
         self.set_text_on_size_for_labels_citations()
 
-        # установка внутренних отступов для текста
-        self.label_text.setContentsMargins(15, 0, 10, 0)
-        self.lb_blc_m_load.setContentsMargins(10, 0, 0, 0)
-
         # установка
         self.block_app_name.setFont(Fonts.get_qfont("JetBrains_Regular", 28))
         self.lb_blc_m_load.setFont(Fonts.get_qfont("JetBrains_Medium", 8))
