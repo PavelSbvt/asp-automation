@@ -44,9 +44,12 @@ class LoadingWindow(QWidget):
 
         self.block_app_name.setFont(Fonts.get_qfont("JetBrains_Regular", 28))
         self.lb_blc_m_load.setFont(Fonts.get_qfont("JetBrains_Medium", 8))
+        self.lb_blc_m_load.setContentsMargins(10, 0, 0, 0)
         self.lb_hi_prog.setFont(Fonts.get_qfont("JetBrains_Medium", 20))
         self.label_text.setStyleSheet(f"color: {Style.light_font_color};")
+        self.label_text.setContentsMargins(15, 0, 10, 0)
         self.label_text.setFont(Fonts.get_qfont("JetBrains_Medium", 11))
+        self.progress_bar.setStyleSheet(Style.progress_bar_style_blue)
 
         citation_text, author_text = get_citation_with_author()
 
@@ -69,6 +72,7 @@ class LoadingWindow(QWidget):
             self.citation_author_label.setFont(Fonts.get_qfont("Inter", 8))
 
         self.citation_author_label.setText(author_text)
+        self.label_text.setContentsMargins(10, 0, 10, 0)
         self.citation_label.setText(citation_text)
 
         self.icon_path = Path("resources/images/icons/icon_pdf_maker.png")
@@ -81,6 +85,26 @@ class LoadingWindow(QWidget):
             Rich.warning_log(f"Изображение иконки не найдено! путь: {self.icon_path.as_posix()}")
 
         self.loading_window.clicked.connect(lambda: loading_window_img_click(self))
+
+        # Таймер для progressbar
+        self.timer_animation = QTimer()
+        self.timer_animation.timeout.connect(lambda: update_progress_bar_animation(self))
+        time_progress_bar_step = int(Settings.get_loading_window_timer_duration() // 130)
+        self.timer_animation.start(time_progress_bar_step)
+
+        AnimateManager.animation_appearance_window(self, duration=700)
+
+        timer_time = Settings.get_loading_window_timer_duration() / 1000
+
+        Rich.debug_log(f"Запуск таймера на {timer_time:.2f} сек., после чего окна закроется")
+
+        # Основной таймер работы загрузочного окна
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.start_closing)
+        self.timer.start(Settings.get_loading_window_timer_duration())
+
+        # Центрирование окна
+        center_window(self)
 
         # Таймер для запуска анимации градиента
         self.gradient_timer = QTimer()
@@ -125,6 +149,24 @@ class LoadingWindow(QWidget):
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
+
+    def start_closing(self) -> None:
+        """
+        Запускает анимацию исчезновения и закрытия загрузочного окна.
+
+        :return: None
+        """
+
+        if hasattr(self, 'gradient_timer'):
+            self.gradient_timer.stop()
+
+        if hasattr(self, 'timer_animation'):
+            self.timer_animation.stop()
+            self.progress_bar.setValue(100)
+
+        AnimateManager.animation_disappearance_and_closing(self, duration=1000)
+
+
     def mousePressEvent(self, event) -> None:
         """
         Обработчик события нажатия кнопки мыши.
@@ -155,7 +197,6 @@ class LoadingWindow(QWidget):
             self.move(self.pos() + delta)
             self.drag_position = event.globalPosition().toPoint()
             event.accept()
-
 
 
 if __name__ == '__main__':
