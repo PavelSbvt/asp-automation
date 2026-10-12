@@ -1,5 +1,9 @@
+#loading_window {
+    background-color: transparent;
+}
+
 #widget_background_fill {
-    background-color: #2B2D30;
+    background-color: #1E1F22;
     border-radius: 10px;
 }
 
@@ -7,21 +11,67 @@
     background: transparent;
 }
 
-#background_widget_text{
+#background_widget_text {
     background-color: rgba(255, 255, 255, 0.03);
     border-radius: 10px;
 }
 
-#block_app_name{
-    color: white;
-}
-
-#citation{
+#citation {
     background-color: rgba(255, 255, 255, 0.03);
-    border-radius: 10px;
+    border-radius: 12px;
 }
 
-#lb_blc_m_load{
+#block_app_name {
+    color: #D4E0E4;
+    font-weight: bold;
+}
+
+#label_text {
+    color: #D4E0E4;
+}
+
+#lb_blc_m_load {
+    color: #8F949A;
+    padding: 5px 10px;
+}
+
+#citation_label {
+    color: #D4E0E4;
+    font-weight: 300;
+    padding: 5px;
+}
+
+#citation_author_label {
+    color: #8F949A;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    padding: 7px;
+}
+
+#separator {
+    background-color: rgba(255, 255, 255, 0.25);
+    max-height: 1px;
+    border: none;
+}
+
+QProgressBar {
+    background-color: #3C3F41;
+    border: none;
+    border-radius: 4px;
+    height: 8px;
+    text-align: center;
     color: white;
+    font-size: 10px;
+    font-weight: bold;
 }
 
+QProgressBar::chunk {
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #2196F3,
+        stop: 0.5 #42A5F5,
+        stop: 1 #1E88E5
+    );
+    border-radius: 4px;
+    margin: 1px;
+}
