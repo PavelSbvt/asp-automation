@@ -1,14 +1,10 @@
-import os
 import sys
-from PyQt6.QtWidgets import QApplication, QMainWindow
-from PyQt6.uic import loadUi
-
 from pathlib import Path
 
-from PyQt6.QtCore import QPoint, QTimer, pyqtSignal, Qt
-from PyQt6.QtWidgets import (QLabel,
-    QWidget, QVBoxLayout, QProgressBar, QFrame, QPushButton)
+from PyQt6.QtCore import QPoint, QTimer, Qt
+from PyQt6.QtWidgets import QWidget, QApplication
 from PyQt6.QtGui import QPixmap
+from PyQt6.uic import loadUi
 
 from utils.output_rich import Rich
 from gui.utils.windows_animations import AnimateManager
@@ -36,53 +32,27 @@ class LoadingWindow(QWidget):
         Rich.enter_log("Показ загрузочного окна.")
 
         ui_path = Path('src/gui/loading_window.ui').as_posix()
-
-        Rich.enter_log("Показ загрузочного окна.")
-
-        print(ui_path)
         loadUi(ui_path, self)
 
+        self.set_text_on_size_for_labels_citations()
+
+        # установка внутренних отступов для текста
+        self.label_text.setContentsMargins(15, 0, 10, 0)
+        self.lb_blc_m_load.setContentsMargins(10, 0, 0, 0)
+
+        # установка
         self.block_app_name.setFont(Fonts.get_qfont("JetBrains_Regular", 28))
         self.lb_blc_m_load.setFont(Fonts.get_qfont("JetBrains_Medium", 8))
-        self.lb_blc_m_load.setContentsMargins(10, 0, 0, 0)
         self.lb_hi_prog.setFont(Fonts.get_qfont("JetBrains_Medium", 20))
-        self.label_text.setStyleSheet(f"color: {Style.light_font_color};")
-        self.label_text.setContentsMargins(15, 0, 10, 0)
         self.label_text.setFont(Fonts.get_qfont("JetBrains_Medium", 11))
+
+        # Временная установка старых стилей (через Style)
+        self.label_text.setStyleSheet(f"color: {Style.light_font_color};")
         self.progress_bar.setStyleSheet(Style.progress_bar_style_blue)
 
-        citation_text, author_text = get_citation_with_author()
-
-        if len(citation_text) < 37:
-            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 18))
-        elif len(citation_text) < 70:
-            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 14))
-        elif len(citation_text) < 150:
-            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 12))
-        else:
-            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 10))
-
-        if len(author_text) < 40:
-            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 12))
-        elif len(author_text) < 80:
-            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 10))
-        elif len(author_text) > 120:
-            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 6))
-        else:
-            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 8))
-
-        self.citation_author_label.setText(author_text)
-        self.label_text.setContentsMargins(10, 0, 10, 0)
-        self.citation_label.setText(citation_text)
-
-        self.icon_path = Path("resources/images/icons/icon_pdf_maker.png")
-
-        if self.icon_path.exists():
-            self.icon.setPixmap(QPixmap(self.icon_path.as_posix()))
-            self.icon.setScaledContents(True)
-
-        else:
-            Rich.warning_log(f"Изображение иконки не найдено! путь: {self.icon_path.as_posix()}")
+        icon_path = Path("resources/images/icons/icon_pdf_maker.png")
+        self.icon.setPixmap(QPixmap(icon_path.as_posix()))
+        self.icon.setScaledContents(True)
 
         self.loading_window.clicked.connect(lambda: loading_window_img_click(self))
 
@@ -148,6 +118,42 @@ class LoadingWindow(QWidget):
         self.drag_position: QPoint = QPoint()
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+
+
+    def set_text_on_size_for_labels_citations(self) -> None:
+        """
+        Функция для установки размера и шрифта для лейблов с текстом цитаты и её автора
+
+        :return: None. в зависимости от длины текста функция установит оптимальный
+         размер шрифта.
+        """
+
+        citation_text, author_text = get_citation_with_author()
+
+        # для текста цитаты
+        if len(citation_text) < 37:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 18))
+        elif len(citation_text) < 70:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 14))
+        elif len(citation_text) < 150:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 12))
+        else:
+            self.citation_label.setFont(Fonts.get_qfont("Playfair_Display", 10))
+
+        # для текста автора
+        if len(author_text) < 40:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 12))
+        elif len(author_text) < 80:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 10))
+        elif len(author_text) > 120:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 6))
+        else:
+            self.citation_author_label.setFont(Fonts.get_qfont("Inter", 8))
+
+        # установка текста лейблам + установка внутренних отступов для текста цитаты
+        self.citation_author_label.setText(author_text)
+        self.label_text.setContentsMargins(10, 0, 10, 0)
+        self.citation_label.setText(citation_text)
 
 
     def start_closing(self) -> None:
