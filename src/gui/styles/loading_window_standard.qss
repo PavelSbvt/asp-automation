@@ -1,0 +1,27 @@
+#widget_background_fill {
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+#widget_gradient {
+    background: transparent;
+}
+
+#background_widget_text{
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+#block_app_name{
+    color: white;
+}
+
+#citation{
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+#lb_blc_m_load{
+    color: white;
+}
+
