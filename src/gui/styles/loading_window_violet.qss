@@ -40,9 +40,9 @@ QProgressBar {
 QProgressBar::chunk {
     background: qlineargradient(
         x1: 0, y1: 0, x2: 1, y2: 0,
-        stop: 0 #2196F3,
-        stop: 0.5 #42A5F5,
-        stop: 1 #1E88E5
+        stop: 0 #7B4B9A,
+        stop: 0.5 #9A6BAA,
+        stop: 1 #6A3A89
     );
     border-radius: 4px;
     margin: 1px;
