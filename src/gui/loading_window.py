@@ -25,7 +25,6 @@ class MyLoadingWindow(QWidget):
 
     closed = pyqtSignal()
 
-
     def __init__(self) -> None:
         """
         Конструктор класса
@@ -126,6 +125,7 @@ class MyLoadingWindow(QWidget):
         self.setWindowFlag(Qt.WindowType.FramelessWindowHint)
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
+
     def set_stylesheet_by_theme_in_settings(self) -> None:
         """
         Функция выбирает и подключает файл qss в соответствии с выбранной темой стилями
@@ -142,6 +142,7 @@ class MyLoadingWindow(QWidget):
                 self.setStyleSheet(f.read())
         else:
             Rich.warning_log(f"QSS-файл не найден: {qss_path}")
+
 
     def set_text_on_size_for_labels_citations(self) -> None:
         """
@@ -178,6 +179,7 @@ class MyLoadingWindow(QWidget):
         self.label_text.setContentsMargins(10, 0, 10, 0)
         self.citation_label.setText(citation_text)
 
+
     def start_closing(self) -> None:
         """
         Запускает анимацию исчезновения и закрытия загрузочного окна.
@@ -194,6 +196,7 @@ class MyLoadingWindow(QWidget):
 
         AnimateManager.animation_disappearance_and_closing(self, duration=1000)
 
+
     def mousePressEvent(self, event) -> None:
         """
         Обработчик события нажатия кнопки мыши.
@@ -207,6 +210,7 @@ class MyLoadingWindow(QWidget):
         if event.button() == Qt.MouseButton.LeftButton:
             self.drag_position = event.globalPosition().toPoint()
             event.accept()
+
 
     def mouseMoveEvent(self, event) -> None:
         """
