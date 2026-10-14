@@ -18,8 +18,6 @@ class SettingsManager:
         self.config_path = Path("config/settings.json")
         self.settings = {}
 
-        self.app_name = "PDF_maker"
-        self.app_version = "1.4"
         self.loading_window_timer_duration = 5000
         self.flag_show_loading_window = True
         self.theme = "standard"
@@ -37,8 +35,6 @@ class SettingsManager:
         with open(self.config_path, "w", encoding="utf-8") as json_file:
             # Стандартные настройки
             data = {
-                "app_name": self.app_name,
-                "version": self.app_version,
                 "loading_window_timer": self.loading_window_timer_duration,
                 "flag_show_loading_window": self.flag_show_loading_window,
                 "theme": self.theme
@@ -157,8 +153,6 @@ class SettingsManager:
 
             broken_settings_parameters = []
 
-            self.check_appname_and_appversion()
-
             loading_window_timer_duration = settings_data.get("loading_window_timer",
                 "Неизвестно")
             if loading_window_timer_duration == "Неизвестно" or not isinstance(
@@ -215,8 +209,6 @@ class SettingsManager:
         :return: None.
         """
 
-        Rich.simple_log(f"Название приложения: {self.app_name}")
-        Rich.simple_log(f"Версия: {self.app_version}")
         Rich.simple_log(f"Время работы таймера показа загрузочного окна: "
             f"{self.loading_window_timer_duration}")
         Rich.simple_log(f"Время показа окна загрузки: {self.flag_show_loading_window}")
@@ -279,34 +271,6 @@ class SettingsManager:
 
         return theme_name
 
-    def set_app_name_settings(self, app_name: str) -> None:
-        """
-        Функция для задания нового имени приложения.
-        Перепишет настройки на новое значение.
-
-        Атрибут класса настроек (self.app_name) получает новое значение.
-
-        :param app_name: Принимается новое имя приложения
-
-        :return: None.
-        """
-
-        self.app_name = app_name
-        self.update_settings_param("app_name", app_name)
-
-    def get_app_name(self) -> str:
-        """
-        Функция для получения имени приложения.
-
-        Вернёт значение атрибута класса настроек (имени приложения - self.app_name).
-
-        :return: Str(self.app_name).
-        """
-
-        app_name = self.app_name
-
-        return app_name
-
     def set_loading_window_timer_duration(self,
             loading_window_timer_duration: int) -> None:
         """
@@ -341,64 +305,6 @@ class SettingsManager:
 
         return loading_window_timer_duration
 
-    def set_app_version(self, version: str) -> None:
-        """
-        Функция для задания параметру версии приложения нового значения.
-        Перепишет настройки на новое значение.
-
-        Атрибут класса настроек (self.app_version) получает новое значение.
-
-        :param version: Принимается новое значения параметра версии приложения.
-
-        :return: None.
-        """
-
-        self.app_version = version
-
-        self.update_settings_param("version", version)
-
-    def get_app_version(self) -> str:
-        """
-        Функция для получения версии приложения.
-
-        Вернёт значение атрибута класса настроек
-        (значение версии приложения - self.app_version).
-
-        :return: Str(app_version).
-        """
-
-        app_version = self.app_version
-
-        return app_version
-
-    def check_appname_and_appversion(self) -> None:
-        """
-        Функция для проверки соответствия стандартным значениям
-        (значения атрибутов класса - стандартные)
-        имени приложения и версии - потому, что они не должны отличаться от стандартных.
-
-        :return: None
-        """
-
-        standard_app_name = self.app_name
-        standard_app_version = self.app_version
-
-        settings_data = self.settings
-
-        app_name = settings_data.get("app_name", "Неизвестно")
-        app_version = settings_data.get("version", "Неизвестно")
-
-        Rich.debug_log("Проверка имени и версии приложения")
-
-        if app_name != standard_app_name:
-            self.update_settings_param("app_name", standard_app_name)
-            Rich.debug_log(f"Имя приложения в файле настроек изменено "
-                f"с {app_name} на {standard_app_name}")
-
-        if app_version != standard_app_version:
-            self.update_settings_param("version", standard_app_version)
-            Rich.debug_log(f"Версия приложения в "
-                f"файле настроек изменено с {app_version} на {standard_app_version}")
 
     def get_flag_show_loading_window(self) -> bool:
         """
