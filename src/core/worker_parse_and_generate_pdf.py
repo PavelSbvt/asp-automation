@@ -5,7 +5,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import pandas as pd
 from PyQt6.QtCore import QObject, pyqtSignal
 
-from core.pdf_render import render_one_student
+from core.pdf_render import render_one_student_with_commission
 from parser.parsing_functions import parsing_commissions
 from core.fill_db_sheet import fill_database_sheet
 from utils.output_rich import Rich
@@ -333,7 +333,7 @@ class PdfParseAndGenerateWorker(QObject):
             self.status.emit(f"Подготовка PDF: {data['surname_name']}")
 
             try:
-                pdf_path = render_one_student(
+                pdf_path = render_one_student_with_commission(
                     db_file, data, self.output_folder,
                 )
             except Exception as e:
@@ -360,9 +360,9 @@ class PdfParseAndGenerateWorker(QObject):
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
                 executor.submit(
-                    render_one_student, db_file, data, self.output_folder,
-                ): data
-                for data in tasks
+                    render_one_student_with_commission,
+                    db_file, data, self.output_folder,
+                ): data for data in tasks
             }
 
             for idx, future in enumerate(as_completed(futures), 1):
