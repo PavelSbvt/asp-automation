@@ -2,6 +2,47 @@ import os
 import subprocess
 from openpyxl import load_workbook
 from openpyxl.styles import Border, Side, Alignment, Font
+import shutil
+
+
+def render_one_student_with_commission(
+        excel_template: str,
+        data: dict,
+        output_folder: str) -> str:
+    """
+    Обёртка над render_one_student для первой вкладки.
+    Вписывает текст приказа в шаблон перед генерацией PDF.
+    """
+
+    commission_text = data.get("commission_text", "")
+
+    if not commission_text:
+        return render_one_student(excel_template, data, output_folder)
+
+    tmp_template = os.path.abspath(
+        f"temp_template_{os.getpid()}_{data['surname_name']}.xlsx"
+    )
+    shutil.copy(excel_template, tmp_template)
+
+    try:
+        wb = load_workbook(tmp_template)
+        ws = wb["Протокол"]
+
+        ws["A12"] = commission_text
+        ws["A12"].alignment = Alignment(
+            horizontal="left", vertical="center", wrap_text=True
+        )
+
+        wb.save(tmp_template)
+        wb.close()
+
+        return render_one_student(tmp_template, data, output_folder)
+
+    finally:
+        try:
+            os.remove(tmp_template)
+        except OSError:
+            pass
 
 
 def render_one_student(excel_template: str, data: dict, output_folder: str) -> str:
