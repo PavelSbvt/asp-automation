@@ -1070,17 +1070,24 @@ class MainWindow(QMainWindow):
         :return: None
         """
 
-        if hasattr(self, "worker") and self.worker:
-            self.worker.request_stop()
+        if hasattr(self, "worker") and self.worker is not None:
+            try:
+                self.worker.request_stop()
+            except RuntimeError:
+                self.worker = None
 
-        if hasattr(self, "worker_thread") and self.worker_thread.isRunning():
-            self.worker_thread.quit()
-            self.worker_thread.wait(3000)
+        if hasattr(self, "worker_thread") and self.worker_thread is not None:
+            try:
+                if self.worker_thread.isRunning():
+                    self.worker_thread.quit()
+                    self.worker_thread.wait(3000)
+            except RuntimeError:
+                pass
+
+            self.worker_thread = None
 
         Rich.exit_log("Выход из приложения - закрытие главного окна")
-
         event.accept()
-
 
     # Публичные методы
     def on_error(self, message: str) -> None:
@@ -1409,16 +1416,6 @@ class MainWindow(QMainWindow):
             self.label_commission_title.setText("Таблица с комиссией по специальности")
 
 
-    def app_name_clicked(self):
-        """
-        Функция для перехода по ссылке на Гит с репозиторием проекта. Просто попробовать.
-
-        :return: None
-        """
-
-        webbrowser.open("https://lab.vr-pro.ru:8514/SAPR/asp-automation/src/branch/"
-                        "development")
-
     def on_button_choose_theme(self, theme_name: str) -> None:
         """
         Функция для смены темы приложения по кнопке
@@ -1626,7 +1623,7 @@ class MainWindow(QMainWindow):
     def start_parsing(self):
         # Собираем параметры из UI
         universal = self.universal_file_path
-        commission = self.history_commission_path  # или другой по семестру
+        commission = self.history_commission_path
         output = self.parsing_save_folder_path
         commission_text = self.input_commission.text().strip()
 
@@ -1661,7 +1658,7 @@ class MainWindow(QMainWindow):
         # Останавливаем поток после завершения
         self.worker.finished.connect(self.worker_thread.quit)
         self.worker.finished.connect(self.worker.deleteLater)
-        self.worker_thread.finished.connect(self.worker_thread.deleteLater)
+        self.worker_thread.finished.connect(self.on_parser_thread_finished)
 
         # UI: блокируем кнопки
         self.run_button.setEnabled(False)
@@ -1670,8 +1667,27 @@ class MainWindow(QMainWindow):
 
         self.worker_thread.start()
 
+
+    def on_parser_thread_finished(self) -> None:
+        """
+        Вызывается, когда поток парсера завершился.
+        Обнуляет ссылки, чтобы не было RuntimeError.
+        """
+
+        # Обнуляем ссылку на поток
+        self.worker_thread = None
+
+        # Восстанавливаем UI (если не сделано в _on_finished)
+        self.progress_bar_parsing.setVisible(False)
+        self.stop_parsing_button.setVisible(False)
+        self.run_button.setVisible(True)
+        self.widget_for_title_to_stop.setVisible(False)
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
+
     def _on_status(self, text: str):
         Rich.debug_log(text)
+
 
     def _on_finished(self, count: int, folder: str):
         QMessageBox.information(
@@ -1681,6 +1697,8 @@ class MainWindow(QMainWindow):
         self.run_button.setEnabled(True)
         self.stop_parsing_button.setEnabled(False)
         self.progress_bar_parsing.setValue(100)
+
+        self.worker = None
 
     def stop_parsing(self):
         if hasattr(self, "worker") and self.worker:
@@ -1726,3 +1744,14 @@ class MainWindow(QMainWindow):
 
         Rich.success_log(f"Собран ПДФ: {file_name}")
 
+
+    @staticmethod
+    def app_name_clicked():
+        """
+        Функция для перехода по ссылке на Гит с репозиторием проекта. Просто попробовать.
+
+        :return: None
+        """
+
+        webbrowser.open("https://lab.vr-pro.ru:8514/SAPR/asp-automation/src/branch/"
+                        "development")
