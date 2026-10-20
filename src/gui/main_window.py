@@ -23,7 +23,6 @@ from gui.utils.styles import Style
 from parser.sait_parsing import update_data
 from core.worker_generate_pdf import PdfBuilderWorker
 
-from core.parsing_and_build_pdf import parsing
 from gui.utils.windows_functions import (
     get_random_image_from_folder, get_main_color_image)
 
@@ -43,7 +42,7 @@ class MainWindow(QMainWindow):
 
         self.setMinimumSize(900, 650)
 
-        self.setWindowTitle(Settings.get_app_name())
+        self.setWindowTitle("PDF_Maker")
 
         # Текущая ширина окна. Установлено стандартное значение
         self.width_now: int = 0
@@ -117,7 +116,7 @@ class MainWindow(QMainWindow):
 
         # Кнопка с именем приложения - ссылка на репозиторий проекта
         self.app_name_button = QPushButton()
-        self.app_name_button.setText(Settings.get_app_name())
+        self.app_name_button.setText("PDF_Maker")
         self.app_name_button.setFont(Fonts.get_qfont("JetBrains_Regular", 14))
         self.app_name_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.app_name_button.clicked.connect(self.app_name_clicked)
@@ -829,7 +828,7 @@ class MainWindow(QMainWindow):
         self.button_show_loading_window.setFixedHeight(50)
         self.button_show_loading_window.setFixedWidth(200)
         self.button_show_loading_window.setFont(Fonts.get_qfont("JetBrains_Light", 8))
-        self.button_show_loading_window.clicked.connect(lambda: self.set_true_show_loading_window)
+        self.button_show_loading_window.clicked.connect(self.set_true_show_loading_window)
 
         self.button_hide_loading_window = QPushButton()
         self.button_hide_loading_window.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -837,7 +836,7 @@ class MainWindow(QMainWindow):
         self.button_hide_loading_window.setFixedHeight(50)
         self.button_hide_loading_window.setFixedWidth(200)
         self.button_hide_loading_window.setFont(Fonts.get_qfont("JetBrains_Light", 8))
-        self.button_hide_loading_window.clicked.connect(lambda: self.set_false_show_loading_window)
+        self.button_hide_loading_window.clicked.connect(self.set_false_show_loading_window)
 
         loading_param_h_layout.addWidget(self.param_show_loading_window)
         loading_param_h_layout.addStretch()
@@ -1062,12 +1061,24 @@ class MainWindow(QMainWindow):
             event.accept()
 
 
-    def closeEvent(self, event):
+    def closeEvent(self, event) -> None:
+        """
+        Функция, вызывающаяся при закрытии окна.
+
+        :param event: событие закрытия окна
+
+        :return: None
+        """
+
         if hasattr(self, "worker") and self.worker:
             self.worker.request_stop()
+
         if hasattr(self, "worker_thread") and self.worker_thread.isRunning():
             self.worker_thread.quit()
             self.worker_thread.wait(3000)
+
+        Rich.exit_log("Выход из приложения - закрытие главного окна")
+
         event.accept()
 
 
