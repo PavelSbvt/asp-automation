@@ -9,10 +9,8 @@ class AnimationsManager:
     Класс для функций анимации появления/исчезания окна
     """
 
-    def __init__(self):
-        pass
-
-    def animation_appearance_window(self, widget: QWidget, duration: int = 700,
+    @staticmethod
+    def animation_appearance_window(widget: QWidget, duration: int = 700,
         easing: QEasingCurve.Type = QEasingCurve.Type.OutCubic) -> QPropertyAnimation:
         """
         Анимация появления окна (увеличение прозрачности от 0 до 1)
@@ -50,7 +48,9 @@ class AnimationsManager:
 
         return animation_appearance
 
-    def animation_disappearance_window(self, widget: QWidget, duration: int = 450,
+
+    @staticmethod
+    def animation_disappearance_window(widget: QWidget, duration: int = 450,
         easing: QEasingCurve.Type = QEasingCurve.Type.InCubic, callback = None) \
             -> QPropertyAnimation:
         """
@@ -93,7 +93,9 @@ class AnimationsManager:
 
         return animation_disappearance
 
-    def animation_disappearance_and_closing(self, widget: QWidget,
+
+    @staticmethod
+    def animation_disappearance_and_closing(widget: QWidget,
             duration: int = 450) -> None:
         """
         Функция для создания анимации плавного исчезания окна и его закрытия
@@ -121,13 +123,65 @@ class AnimationsManager:
 
             widget.deleteLater()
 
+
         # Вызов функции исчезания виджета с последующим закрытием
-        widget.close_animation = self.animation_disappearance_window(
+        widget.close_animation = AnimationsManager.animation_disappearance_window(
             widget,
             duration=duration,
             callback=close_window
         )
 
 
+    @staticmethod
+    def window_appearance_animation(
+            window_name: QWidget,
+            duration: int = 250
+            ) -> QPropertyAnimation:
+        """
+        Функция для анимирования появления основного окна приложения. Анимирует
+        плавное появление окна.
 
-AnimateManager = AnimationsManager()
+        :param window_name: принимает ссылку объект окна
+        :param duration: int - принимает время длительности анимации в миллисекундах
+
+        :return: QPropertyAnimation
+        """
+
+        Rich.debug_log(f"Запуск анимации появления окна '{window_name.objectName()}'")
+
+        fade_in = QPropertyAnimation(window_name, b"windowOpacity")
+        fade_in.setDuration(duration)
+        fade_in.setStartValue(0.0)
+        fade_in.setEndValue(1.0)
+        fade_in.setEasingCurve(QEasingCurve.Type.OutCubic)
+        fade_in.start()
+
+        return fade_in
+
+
+    @staticmethod
+    def animation_of_window_disappearing(
+            window_name: QWidget,
+            duration: int = 200
+            ) -> QPropertyAnimation:
+        """
+        Функция для анимирования исчезновения основного окна приложения.
+        Анимирует плавное исчезновение окна.
+
+        :param window_name: принимает ссылку объект окна
+        :param duration: int - принимает время длительности анимации в миллисекундах
+
+        :return: QPropertyAnimation
+        """
+
+        fade_anim = QPropertyAnimation(window_name, b"windowOpacity")
+        fade_anim.setDuration(duration)
+        fade_anim.setStartValue(1.0)
+        fade_anim.setEndValue(0.0)
+        fade_anim.setEasingCurve(QEasingCurve.Type.InCubic)
+
+        fade_anim.finished.connect(window_name.close)
+
+        fade_anim.start()
+
+        return fade_anim
