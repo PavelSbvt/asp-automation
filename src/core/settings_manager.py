@@ -24,6 +24,7 @@ class SettingsManager:
 
         self.get_settings()
 
+
     def write_standard_settings(self) -> None:
         """
         Функция для записи стандартных настроек в файл (по пути сохранения настроек -
@@ -42,6 +43,7 @@ class SettingsManager:
             json.dump(data, json_file, ensure_ascii=False, indent=4)
             Rich.debug_log("Применены стандартные настройки")
 
+
     def write_settings(self) -> None:
         """
         Записывает стандартные настройки в JSON-файл, создаёт родительскую папку и файл
@@ -55,6 +57,7 @@ class SettingsManager:
         self.write_standard_settings()
 
         Rich.success_log(f"Файл с настройками сохранён: {self.config_path}")
+
 
     def read_settings(self) -> dict:
         """
@@ -74,6 +77,7 @@ class SettingsManager:
 
             Rich.success_log("Настройки получены")
             return settings_data
+
 
     def read_one_param(self, param_name: str):
         """
@@ -95,6 +99,7 @@ class SettingsManager:
             param_value = settings_data.get(f"{param_name}", "Неизвестно")
             return param_value
 
+
     def read_one_param_hide_log(self, param_name: str):
         """
         Функция для чтения из файла настроек только одного параметра.
@@ -115,6 +120,7 @@ class SettingsManager:
             param_value = settings_data.get(f"{param_name}", "Неизвестно")
             return param_value
 
+
     def rewrite_settings(self) -> None:
         """
         Функция для перезаписи файла с настройками.
@@ -130,6 +136,7 @@ class SettingsManager:
         # Запись
         self.write_standard_settings()
         Rich.debug_log("Настройки обновлены.")
+
 
     def get_settings(self) -> None:
         """
@@ -200,6 +207,7 @@ class SettingsManager:
                     # Если файл с настройками битый, то переписать.
                     self.rewrite_settings()
 
+
     def print_settings(self) -> None:
         """
         Функция для вывода настроек (при запуске программы в лог)
@@ -213,6 +221,7 @@ class SettingsManager:
             f"{self.loading_window_timer_duration}")
         Rich.simple_log(f"Время показа окна загрузки: {self.flag_show_loading_window}")
         Rich.simple_log(f"Цветовая тема: {self.theme}")
+
 
     def update_settings_param(self, param_name: str, new_value: Optional) -> None:
         """
@@ -245,6 +254,7 @@ class SettingsManager:
         Rich.print_spacer()
         Rich.debug_log(f"Обновлено поле '{param_name}' = {new_value}")
 
+
     def set_theme(self, theme_name: str) -> None:
         """
         Функция для задания цветовой темы приложения.
@@ -259,6 +269,7 @@ class SettingsManager:
         self.theme = theme_name
         self.update_settings_param("theme", theme_name)
 
+
     def get_theme_name(self) -> str:
         """
         Функция для получения имени темы приложения.
@@ -270,6 +281,7 @@ class SettingsManager:
         theme_name = self.theme
 
         return theme_name
+
 
     def set_loading_window_timer_duration(self,
             loading_window_timer_duration: int) -> None:
@@ -290,6 +302,7 @@ class SettingsManager:
         self.update_settings_param("loading_window_timer",
             loading_window_timer_duration)
 
+
     def get_loading_window_timer_duration(self) -> int:
         """
         Функция для получения значения таймера загрузочного окна приложения.
@@ -308,23 +321,6 @@ class SettingsManager:
 
     def get_flag_show_loading_window(self) -> bool:
         """
-        Функция для проверки разрешения приложения на показ загрузочного окна
-
-        :return: flag_show - Текущее значение флага, разрешающего или
-        запрещающего показ загрузочного окна
-        """
-
-        flag_show = self.read_one_param("flag_show_loading_window")
-
-        if flag_show:
-            Rich.debug_log("Показ загрузочного окна разрешён")
-        else:
-            Rich.debug_log("Показ загрузочного окна запрещен")
-
-        return flag_show
-
-    def get_flag_show_loading_window_hide_log(self) -> bool:
-        """
         Функция для проверки разрешения приложения на показ загрузочного окна.
         Минимальный вывод информации в лог
 
@@ -335,6 +331,7 @@ class SettingsManager:
         flag_show = self.read_one_param_hide_log("flag_show_loading_window")
 
         return flag_show
+
 
     def set_flag_show_loading_window(self, bool_value: bool) -> None:
         """
@@ -350,7 +347,6 @@ class SettingsManager:
         self.flag_show_loading_window = bool_value
 
         self.update_settings_param("flag_show_loading_window", bool_value)
-
 
 
 Settings = SettingsManager()
