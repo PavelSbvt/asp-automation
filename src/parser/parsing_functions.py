@@ -68,10 +68,13 @@ def parse_doc_with_tables(path: str) -> Tuple[pd.DataFrame, str]:
     return tables_df, text
 
 
-def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
+def parsing_commissions(class_name) -> Optional[Dict[str, Dict]]:
     """
     Парсит файл комиссии и возвращает словарь:
     { "шифр": {"members": [...], "code": "шифр"} }
+
+    :param class_name: Принимает имя класса, в котором будет атрибут для
+     хранения возвращаемых значений
 
     :return: Optional[Dict[str, Dict]] - возвращает словарь с данными комиссии
     """
@@ -80,27 +83,27 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
     Rich.simple_log("Парсинг комиссии.")
 
     # Определяем файл в зависимости от семестра
-    if self.radio_button_1.isChecked():
-        path = getattr(self, "history_commission_path", None)
+    if class_name.radio_button_1.isChecked():
+        path = getattr(class_name, "history_commission_path", None)
         commission_name = "История"
         semester_name = "Первый семестр"
-    elif self.radio_button_2.isChecked():
-        path = getattr(self, "foreign_commission_path", None)
+    elif class_name.radio_button_2.isChecked():
+        path = getattr(class_name, "foreign_commission_path", None)
         commission_name = "Иностранный"
         semester_name = "Второй семестр"
     else:
-        path = getattr(self, "specialization_commission_path", None)
+        path = getattr(class_name, "specialization_commission_path", None)
         commission_name = "Специальность"
         semester_name = "Третий семестр"
 
     if not path:
-        QMessageBox.warning(self, "Ошибка",
+        QMessageBox.warning(class_name, "Ошибка",
                             f"Сначала выберите файл комиссии '{commission_name}'!")
         Rich.log_error("Ошибка. сначала выберите файл комиссии")
         return None
 
     if not os.path.exists(path):
-        QMessageBox.warning(self, "Ошибка", f"Файл не существует: {path}")
+        QMessageBox.warning(class_name, "Ошибка", f"Файл не существует: {path}")
         Rich.log_error("ошибка. файл не существует")
         return None
 
@@ -161,7 +164,7 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
                         extract_commission_members(value,
                                             commissions_by_code, row, code_col)
 
-        self.commissions_by_code = commissions_by_code
+        class_name.commissions_by_code = commissions_by_code
 
         if commissions_by_code:
             Rich.simple_log(f"Найдено комиссий для шифров: {len(commissions_by_code)}")
@@ -178,7 +181,7 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
 
             # Вывод ошибки на пустоту данных о комиссии
             QMessageBox.critical(
-                self,
+                class_name,
                 "Ошибка",
                 f"Не удалось найти членов комиссии в файле:\n{path}\n\n"
             )
@@ -191,7 +194,7 @@ def parsing_commissions(self) -> Optional[Dict[str, Dict]]:
         Rich.log_error(f"Ошибка при парсинге комиссии: {e}")
         traceback.print_exc()
         QMessageBox.critical(
-            self,
+            class_name,
             "Ошибка",
             f"Не удалось прочитать файл комиссии:\n{str(e)}"
         )
