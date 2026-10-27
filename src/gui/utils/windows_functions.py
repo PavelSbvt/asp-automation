@@ -1,29 +1,14 @@
-from datetime import datetime
 import colorsys
 from pathlib import Path
+from typing import Tuple
 import random
 
 from PIL import Image
-from PyQt6.QtWidgets import QLabel, QWidget
 
 from utils.output_rich import Rich
-from parser.sait_parsing import ParsingDir
 
 
-def center_window(self) -> None:
-    """
-    Функция для центрирования главного окна, чтобы оно появлялось
-    по центру экрана пользователя после исчезновения загрузочного окна
-
-    :return: None
-    """
-
-    qr = self.frameGeometry()
-    cp = self.screen().availableGeometry().center()
-    qr.moveCenter(cp)
-    self.move(qr.topLeft())
-
-def get_main_color_image(image_path: str) -> tuple[int, int, int]:
+def get_main_color_image(image_path: str) -> Tuple[int, int, int]:
     """
     Функция нужна для определения главного цвета изображения на фоне виджета.
     Пока для загрузочного окна
@@ -76,6 +61,7 @@ def get_main_color_image(image_path: str) -> tuple[int, int, int]:
         Rich.log_error(f"Ошибка: {e}")
         return (220, 220, 220)
 
+
 def get_random_image_from_folder(folder_path: str) -> str:
     """
     Возвращает путь к случайному изображению из указанной папки
@@ -100,117 +86,3 @@ def get_random_image_from_folder(folder_path: str) -> str:
     random_image = random.choice(images)
 
     return str(random_image)
-
-def background_window_by_time_of_day(target_label: QLabel,
-        target_widget: QWidget, check_bg_path: str) -> tuple[int,int,int, str]:
-    """
-    Функция для установления текста лейбл приветствия пользователя (в соответствии
-    с временем) + передача главного цвета атрибуту класса загрузочного окна (именно
-    для атрибутов созданы параметры return_r, return_g и return_b)
-
-    :param target_label: Принимает имя объекта QLabel, текст которого будет изменять.
-
-    :param target_widget: Принимает имя виджета, фон которого будет менять
-     в соответствии с временем суток.
-
-     :param check_bg_path: Принимает имя атрибута класса, в котором сохраняется путь к
-      последнему выбранному фоновому изображению - чтобы избежать повторного выбора
-       фонового изображения при поиске случайного изображения.
-
-    :return: tuple[int,int,int, str] - возвращает кортеж, содержащий
-     главные (усреднённые цвета случайного изображения для фона) цвета rgb и строку
-     с путём случайно выбранного для фона изображения.
-    """
-
-    current_hour = datetime.now().hour
-    # current_hour = 12 # - отладка и тестирование
-
-    time_of_day = ""
-
-    Rich.print_spacer()
-    Rich.debug_log("Вывод приветствия в соответствии с текущим времени")
-
-    if 6 <= current_hour < 11:
-        time_of_day = "утро"
-        target_label.setText("Доброе утро!")
-        folder_path = "resources/images/for_start_window/images/morning"
-
-
-    elif 11 <= current_hour < 17:
-        time_of_day = "день"
-        target_label.setText("Добрый день")
-        folder_path = "resources/images/for_start_window/images/day"
-
-    elif 17 <= current_hour < 21:
-        time_of_day = "вечер"
-        target_label.setText("Добрый вечер")
-        folder_path = "resources/images/for_start_window/images/evening"
-
-    else:
-        time_of_day = "ночь"
-        target_label.setText("Доброй ночи")
-        folder_path = "resources/images/for_start_window/images/night"
-
-    Rich.debug_log(f"Текущее время {current_hour} часа ({time_of_day})")
-
-    img_path = Path(get_random_image_from_folder(folder_path)).as_posix()
-
-    path_bg_loading = ""
-    if check_bg_path == "":
-        check_bg_path = img_path
-        path_bg_loading = img_path
-    else:
-        if img_path != check_bg_path:
-            check_bg_path = img_path
-            path_bg_loading = img_path
-        elif img_path == check_bg_path:
-            while img_path == check_bg_path:
-                img_path = Path(get_random_image_from_folder(folder_path)).as_posix()
-            check_bg_path = img_path
-            path_bg_loading = img_path
-
-    Rich.debug_log(f"Выбрано случайное изображение: {img_path}")
-
-    target_widget.setStyleSheet(
-            f"background-image: url({path_bg_loading}); border-radius: 10px;")
-
-    # главный цвет изображения
-    main_color = get_main_color_image(img_path)
-    target_label.setStyleSheet(f"font-weight: bold; color: rgb{main_color}")
-
-    return main_color[0], main_color[1], main_color[2], check_bg_path
-
-def load_cached_data(self) -> None:
-    """
-    Загружает данные из кэша (файла txt) и обновляет лейбл с временем в
-    главном окне приложения.
-
-    :return: None
-    """
-
-    files = list(ParsingDir.glob("*.txt")) if ParsingDir.exists() else []
-
-    if files:
-        filename = files[0].stem
-
-        if hasattr(self, 'time_update_label'):
-            self.time_update_label.setText(filename)
-
-        if hasattr(self, 'label_for_info_update_site_paring'):
-            self.label_for_info_update_site_paring.setText(
-                "Последнее обновление данных (парсинг сайтов):"
-            )
-
-        Rich.success_log(
-            f"Загружен файл с информацией о специальностях аспирантов: {filename}")
-
-    else:
-        if hasattr(self, 'time_update_label'):
-            self.time_update_label.setText("Данные не загружены")
-
-        if hasattr(self, 'label_for_info_update_site_paring'):
-            self.label_for_info_update_site_paring.setText(
-                "Данные не загружены (нажмите 'Обновить данные'):"
-            )
-
-        Rich.warning_log("Файл кэша не найден")
