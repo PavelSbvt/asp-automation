@@ -6,31 +6,32 @@ class StylesManager:
     """
     класс для стилей кнопок, виджетов
     """
+
     def __init__(self):
 
-        self.background_color = ""
+        self.background_color: str = ""
 
-        self.background_dark_color = ""
+        self.background_dark_color: str = ""
 
-        self.light_font_color = ""
+        self.light_font_color: str = ""
 
-        self.dark_font_color = ""
+        self.dark_font_color: str = ""
 
-        self.button_blue_style = ""
+        self.button_blue_style: str = ""
 
-        self.button_hide_style = ""
+        self.button_hide_style: str = ""
 
-        self.radio_button_style = ""
+        self.radio_button_style: str = ""
 
-        self.progress_bar_style_blue = ""
+        self.progress_bar_style_blue: str = ""
 
-        self.q_line_edit_style = ""
+        self.q_line_edit_style: str = ""
 
-        self.q_scroll_bar_style = ""
+        self.q_scroll_bar_style: str = ""
 
-        self.q_slider_style = ""
+        self.q_slider_style: str = ""
 
-        self.standard_theme = [
+        self.standard_theme: list = [
             "#2B2D30", "#1E1F22", "#D4E0E4", "#8F949A",
             "#3574F0", "#2866e0", "#2557ba",
             "#595959", "rgb(110,110,110)", "rgb(60,60,60)",
@@ -42,7 +43,7 @@ class StylesManager:
             "#f0f8ff", "#4A8BF5", "#e6f0ff", "#2A5FD0"
         ]
 
-        self.violet_theme = [
+        self.violet_theme: list = [
             "#2D1B3D", "#1A0F2A", "#E8D5F5", "#B8A0C8",
             "#7B4B9A", "#6A3A89", "#593078",
             "#4A2D5A", "#5A3A6A", "#3A204A",
@@ -54,7 +55,7 @@ class StylesManager:
             "#F5E8FF", "#9A6BAA", "#D5C0E5", "#6A3A89"
         ]
 
-        self.dark_theme = [
+        self.dark_theme: list = [
             "#1E1E1E", "#0D0D0D", "#E0E0E0", "#A0A0A0",
             "#3C3C3C", "#4A4A4A", "#2E2E2E",
             "#2A2A2A", "#3A3A3A", "#1A1A1A",
@@ -66,7 +67,7 @@ class StylesManager:
             "#DDDDDD", "#888888", "#BBBBBB", "#555555"
         ]
 
-    def update_styles_for_choose_theme(self):
+    def update_styles_for_choose_theme(self) -> None:
         """
         Функция для явного обновления стилей в соответствии с выбранной темой.
 
