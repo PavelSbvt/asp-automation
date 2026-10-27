@@ -1,30 +1,41 @@
 from pathlib import Path
+import traceback
 import webbrowser
 from typing import Optional, List, Dict, Any
 
 from PyQt6.QtCore import QPoint, Qt, QThread
-from PyQt6.QtWidgets import (QWidget, QLabel, QTabWidget, QPushButton,
-    QProgressBar, QRadioButton, QButtonGroup, QLineEdit, QApplication,
-    QMessageBox, QMainWindow, QVBoxLayout, QHBoxLayout, QScrollArea, QSlider)
+from PyQt6.QtWidgets import (
+    QWidget, QLabel, QTabWidget, QPushButton,
+    QProgressBar, QRadioButton, QButtonGroup,
+    QLineEdit, QApplication, QMessageBox,
+    QMainWindow, QVBoxLayout, QHBoxLayout,
+    QScrollArea, QSlider, QFileDialog)
+from PyQt6.QtGui import QMouseEvent, QResizeEvent, QCloseEvent
 
 from core.settings_manager import Settings
 from core.worker_parse_and_generate_pdf import PdfParseAndGenerateWorker
 from utils.output_rich import Rich
 from utils.create_shortcut import check_build
 from gui.utils.choose_files import (
-    choose_universal_excel, choose_save_folder_second_tab,
-    choose_parsing_save_folder, open_parsing_pdf_folder,
-    choose_history_excel, choose_foreign_excel, choose_specialization_excel,
+    choose_universal_excel,
+    choose_save_folder_second_tab,
+    choose_parsing_save_folder,
+    open_parsing_pdf_folder,
+    choose_history_excel,
+    choose_foreign_excel,
+    choose_specialization_excel,
     open_pdf_folder)
-from gui.utils.update_gui import set_styles
-from core.generate_pdf import choose_file
 from gui.utils.fonts import Fonts
 from gui.utils.styles import Style
-from parser.sait_parsing import update_data
+from parser.sait_parsing import (
+    site_parce_main, site_parce_dn,
+    save_specialties_to_cache, get_last_update_time,
+    ParsingDir)
 from core.worker_generate_pdf import PdfBuilderWorker
-
 from gui.utils.windows_functions import (
-    get_random_image_from_folder, get_main_color_image)
+    get_random_image_from_folder,
+    get_main_color_image)
+from gui.utils.windows_animations import AnimationsManager
 
 
 class MainWindow(QMainWindow):
@@ -416,7 +427,7 @@ class MainWindow(QMainWindow):
         self.button_to_update_date.setFixedHeight(50)
         self.button_to_update_date.setFixedWidth(200)
         self.button_to_update_date.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.button_to_update_date.clicked.connect(lambda: update_data(self))
+        self.button_to_update_date.clicked.connect(lambda: self.update_data())
 
         # Заголовок с инфо о последнем обновлении
         self.label_info_last_update_cache = QLabel()
@@ -713,7 +724,7 @@ class MainWindow(QMainWindow):
         self.button_shouse_table.setFont(Fonts.get_qfont(
             "JetBrains_Regular", 10))
         self.button_shouse_table.clicked.connect(
-            lambda: choose_file(self))
+            self.choose_file)
 
         # Кнопка открытия папки сохранения
         self.button_open_folder_with_pdf = QPushButton()
@@ -948,13 +959,14 @@ class MainWindow(QMainWindow):
 
         tab_settings_layout.addStretch()
 
-        set_styles(self)
+        self.set_styles()
 
         self.change_active_button_styles()
 
         # ПУть к папке с изображениями для фона главного окна (основной вкладки)
         self.get_bg_for_main_tab_widget("resources/images/for_main_window")
 
+        self.setAttribute(Qt.WidgetAttribute.WA_DeleteOnClose, False)
 
     # Переопределённые методы родительского класса
     def keyPressEvent(self, event) -> None:
@@ -1005,8 +1017,7 @@ class MainWindow(QMainWindow):
         # Передаем событие дальше
         super().keyPressEvent(event)
 
-
-    def resizeEvent(self, event):
+    def resizeEvent(self, event: QResizeEvent):
         """
         Вызывается при изменении размера окна. Используется для адаптации размера фона.
 
@@ -1028,8 +1039,7 @@ class MainWindow(QMainWindow):
 
         super().resizeEvent(event)
 
-
-    def mousePressEvent(self, event) -> None:
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         """
         Обработчик события нажатия кнопки мыши.
 
@@ -1043,8 +1053,7 @@ class MainWindow(QMainWindow):
             self.drag_position = event.globalPosition().toPoint()
             event.accept()
 
-
-    def mouseMoveEvent(self, event) -> None:
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         """
         Обработчик события движения мыши.
 
@@ -1060,8 +1069,7 @@ class MainWindow(QMainWindow):
             self.drag_position = event.globalPosition().toPoint()
             event.accept()
 
-
-    def closeEvent(self, event) -> None:
+    def closeEvent(self, event: QCloseEvent) -> None:
         """
         Функция, вызывающаяся при закрытии окна.
 
@@ -1069,6 +1077,10 @@ class MainWindow(QMainWindow):
 
         :return: None
         """
+
+        if getattr(self, "_is_closing", False):
+            event.accept()
+            return
 
         if hasattr(self, "worker") and self.worker is not None:
             try:
@@ -1087,9 +1099,396 @@ class MainWindow(QMainWindow):
             self.worker_thread = None
 
         Rich.exit_log("Выход из приложения - закрытие главного окна")
-        event.accept()
+
+        self._is_closing = True
+
+        event.ignore()
+
+        Rich.debug_log("Запуск анимации исчезновения окна")
+
+        self.close_anim = AnimationsManager.animation_of_window_disappearing(self, 265)
 
     # Публичные методы
+    def update_data(self) -> None:
+        """
+        Принудительное обновление данных с сайтов.
+        Вызывается по кнопке "Обновить данные".
+
+        :return: None
+        """
+
+        Rich.print_spacer()
+        Rich.simple_log("Обновление данных кодов и шифров аспирантов")
+
+        try:
+            # Обновляем текст в интерфейсе
+            if hasattr(self, 'label_for_info_update_site_paring'):
+                self.label_for_info_update_site_paring.setText("Обновление данных...")
+                QApplication.processEvents()
+
+            # Парсим основной сайт
+            Rich.debug_log("Парсинг основного сайта (tstu.ru)...")
+            specialties = site_parce_main()
+
+            # Если основной сайт не дал данных - пробуем резервный
+            if not specialties:
+                Rich.debug_log("Парсинг резервного сайта (dn.tstu.ru)...")
+                specialties = site_parce_dn()
+
+            if specialties:
+                # Сохраняем данные (старый файл удалится)
+                save_specialties_to_cache(specialties)
+
+                # Получаем время из имени файла
+                update_time = get_last_update_time()
+
+                if hasattr(self, 'time_update_label'):
+                    self.time_update_label.setText(update_time)
+
+                if hasattr(self, 'label_for_info_update_site_paring'):
+                    self.label_for_info_update_site_paring.setText(
+                        "Последнее обновление данных (парсинг сайтов):"
+                    )
+
+                QMessageBox.information(
+                    self,
+                    "Обновление завершено",
+                    f"Данные успешно обновлены!\n\n"
+                    f"Загружено специальностей: {len(specialties)}\n"
+                    f"Время обновления: {update_time}"
+                )
+                Rich.success_log(
+                    f"Данные обновлены! Загружено {len(specialties)} специальностей")
+
+            else:
+                QMessageBox.warning(
+                    self,
+                    "Ошибка обновления",
+                    "Не удалось получить данные с сайтов.\n\n"
+                    "Проверьте подключение к интернету."
+                )
+                Rich.log_error("Не удалось получить данные с сайтов")
+
+                if hasattr(self, 'label_for_info_update_site_paring'):
+                    self.label_for_info_update_site_paring.setText(
+                        "Ошибка обновления данных (проверьте интернет):"
+                    )
+
+        except Exception as e:
+            Rich.log_error(f"Ошибка при обновлении данных: {e}")
+            traceback.print_exc()
+
+            QMessageBox.critical(
+                self,
+                "Ошибка",
+                f"Не удалось обновить данные:\n{str(e)}"
+            )
+
+            if hasattr(self, 'label_for_info_update_site_paring'):
+                self.label_for_info_update_site_paring.setText(
+                    "Ошибка обновления данных:"
+                )
+
+    def load_cached_data(self) -> None:
+        """
+        Загружает данные из кэша (файла txt) и обновляет лейбл с временем в
+        главном окне приложения.
+
+        :return: None
+        """
+
+        files = list(ParsingDir.glob("*.txt")) if ParsingDir.exists() else []
+
+        if files:
+            filename = files[0].stem
+
+            if hasattr(self, 'time_update_label'):
+                self.time_update_label.setText(filename)
+
+            if hasattr(self, 'label_for_info_update_site_paring'):
+                self.label_for_info_update_site_paring.setText(
+                    "Последнее обновление данных (парсинг сайтов):"
+                )
+
+            Rich.success_log(
+                f"Загружен файл с информацией о специальностях аспирантов: {filename}")
+
+        else:
+            if hasattr(self, 'time_update_label'):
+                self.time_update_label.setText("Данные не загружены")
+
+            if hasattr(self, 'label_for_info_update_site_paring'):
+                self.label_for_info_update_site_paring.setText(
+                    "Данные не загружены (нажмите 'Обновить данные'):"
+                )
+
+            Rich.warning_log("Файл кэша не найден")
+
+    def set_styles(self) -> None:
+        """
+        Функция для установки и обновления QSS стилей виджетов, кнопок,
+         прогрессбаров и др.
+
+        :return: None. Устанавливает стили
+        """
+
+        Style.update_styles_for_choose_theme()
+
+        self.shortcut_button.setStyleSheet(Style.button_blue_style)
+
+        self.tab_widget.setStyleSheet(f"""
+           QTabWidget::pane {{
+               background-color: #2B2B2B;
+               border: none;
+               top: -1px;
+           }}
+           QTabBar {{
+               background-color: {Style.background_color};
+           }}
+           QTabBar::tab {{
+               background: transparent;
+               color: {Style.dark_font_color};
+               padding: 10px 20px;
+               margin-right: 0px;
+               border: none;
+               border-bottom: 2px solid transparent;
+           }}
+           QTabBar::tab:selected {{
+               background: transparent;
+               color: {Style.light_font_color};
+               border-bottom: 2px solid rgb({self.main_color_str});
+               font-weight: bold;
+           }}            
+           QTabBar::tab:hover:!selected {{
+               color: {Style.light_font_color};
+               border-bottom: 2px solid #4D4E51;
+           }}
+       """)
+
+        self.main_tab_scroll_area.setStyleSheet(Style.q_scroll_bar_style)
+
+        self.main_back_widget.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 0px;")
+
+        # Стили с основной вкладки
+
+        self.label_title_to_stop.setStyleSheet(
+            f"color: {Style.light_font_color};"
+            f"border: none; background-color: transparent;")
+
+        self.label_title_stop_2.setStyleSheet(
+            f"color: {Style.light_font_color};"
+            f"border: none; background-color: transparent;")
+
+        self.widget_for_title_to_stop.setStyleSheet(
+            f"background-color: rgba({self.main_color_str}, 0.2); border-radius: 10px;"
+            f"border: 2px dotted {Style.dark_font_color};")
+
+        self.widget_title_stop_second.setStyleSheet(
+            f"background-color: rgba({self.main_color_str}, 0.35);"
+            f" border-radius: 10px;"
+            f"border: 2px dotted {Style.dark_font_color};")
+
+        self.progress_bar_parsing.setStyleSheet(Style.progress_bar_style_blue)
+        self.app_name_button.setStyleSheet(f"""
+                    QPushButton {{
+                        background: transparent;
+                        color: {Style.light_font_color};
+                        border: none;
+                        border-radius: 4px;
+                        padding: 6px 10px;
+                        margin-left: 30px;
+                    }}
+                """)
+        self.settings_button.setStyleSheet(f"""
+                    QPushButton {{
+                        background-image: url({self.settings_path.as_posix()});
+                        border: none;
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        background-color: transparent;
+                        border-radius: 5px;
+                    }}
+                    QPushButton:hover {{
+                        background-color: rgba(255, 255, 255, 0.08);
+                    }}
+                    QPushButton:pressed {{
+                        background-color: rgba(255, 255, 255, 0.15);
+                    }}
+                """)
+        self.run_button.setStyleSheet(f"""
+                    QPushButton {{
+                        background-image: url({self.run_button_path.as_posix()});
+                        background-repeat: no-repeat;
+                        background-position: center;
+                        border: none;
+                        background-color: transparent;
+                        border-radius: 5px;
+                    }}
+                    QPushButton:hover {{
+                        background-color: rgba(255, 255, 255, 0.08);
+                    }}
+                    QPushButton:pressed {{
+                        background-color: rgba(255, 255, 255, 0.15);
+                    }}
+                """)
+
+        style_for_stop_button = f"""
+                QPushButton {{
+                    background-image: url({self.stop_button_path.as_posix()});
+                    background-repeat: no-repeat;
+                    background-position: center;
+                    border: none;
+                    background-color: #8A3535;
+                    border-radius: 5px;
+                }}
+                QPushButton:hover {{
+                    background-color: #B44747;
+                }}
+                QPushButton:pressed {{
+                    background-color: #7A2E2E;
+                }}
+            """
+
+        self.stop_parsing_button.setStyleSheet(style_for_stop_button)
+        self.stop_button.setStyleSheet(style_for_stop_button)
+
+        self.container_widget_main_tab.setStyleSheet(
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
+        self.open_folder_button.setStyleSheet(Style.button_blue_style)
+        self.radio_buttons_background.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+        )
+        self.label_for_radio_buttons.setStyleSheet(
+            f"color: {Style.light_font_color}; margin: 10px; font-weight: bold;")
+        self.radio_button_1.setStyleSheet(Style.radio_button_style)
+        self.radio_button_2.setStyleSheet(Style.radio_button_style)
+        self.radio_button_3.setStyleSheet(Style.radio_button_style)
+        self.input_commission.setStyleSheet(Style.q_line_edit_style)
+        self.widget_for_choose_files_commission.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+        )
+        self.btn_choose_universal_xl.setStyleSheet(Style.button_blue_style)
+        self.universal_excel_label.setStyleSheet(
+            f"color: {Style.dark_font_color};"
+            f"background-color: {Style.background_dark_color};"
+            f"padding: 10px;"
+        )
+        self.widget_for_choose_commission_file.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+        )
+        self.btn_choose_history_commission.setStyleSheet(Style.button_blue_style)
+        self.history_xl_choused_label.setStyleSheet(
+            f"color: {Style.dark_font_color};"
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
+        )
+        self.btn_choose_foreign_commission.setStyleSheet(Style.button_blue_style)
+        self.foreign_xl_choosed_label.setStyleSheet(
+            f"color: {Style.dark_font_color};"
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
+        )
+        self.btn_choose_specialization_commission.setStyleSheet(Style.button_blue_style)
+        self.specialization_xl_choosed_lb.setStyleSheet(
+            f"color: {Style.dark_font_color};"
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
+        )
+        self.time_update_label.setStyleSheet(
+            f"color: {Style.dark_font_color}; "
+            f"background-color: {Style.background_dark_color};"
+        )
+        self.button_to_update_date.setStyleSheet(Style.button_blue_style)
+        self.label_info_last_update_cache.setStyleSheet(
+            f"color: {Style.light_font_color};")
+        self.label_commission_title.setStyleSheet(
+            f"color: {Style.light_font_color}; padding: 10px;"
+            f"background-color: {Style.background_color}; border-radius: 10px;")
+        self.widget_for_cache.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+        )
+        self.button_change_save_path.setStyleSheet(Style.button_blue_style)
+        self.widget_for_change_save_path.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+            f"padding: 10px;")
+        self.change_path_label.setStyleSheet(
+            f"color: {Style.light_font_color};")
+        self.save_path_label.setStyleSheet(
+            f"color: {Style.dark_font_color};"
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;"
+            f"padding: 10px;")
+
+        # Стили с вкладки сборки по готовой таблице
+        self.tab_second_widget.setStyleSheet(
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
+        self.background_widget_for_second_tab.setStyleSheet(
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
+        self.second_tab_title.setStyleSheet(
+            f"color: {Style.light_font_color}; font: bold;")
+        self.widget_for_pos_button_path_and_title_choose_save_path.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+            f"padding: 10px;")
+        self.title_change_save_path.setStyleSheet(
+            f"color: {Style.light_font_color};"
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+            f"margin-top: 5px; font: bold;")
+        self.current_save_path_label.setStyleSheet(
+            f"color: {Style.dark_font_color};"
+            f"background-color: {Style.background_dark_color}; border-radius: 10px;")
+        self.button_shouse_save_path_for_second_tab.setStyleSheet(
+            Style.button_blue_style)
+        self.progress_bar.setStyleSheet(Style.progress_bar_style_blue)
+        self.widget_for_choose_table.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+            f"padding: 10px;")
+        self.title_choose_table_label.setStyleSheet(
+            f"color: {Style.light_font_color};"
+            f"background-color: {Style.background_color}; border-radius: 10px;"
+            f"font: bold;")
+        self.label_current_tabel.setStyleSheet(
+            f"color: {Style.dark_font_color};"
+           f"background-color: {Style.background_dark_color}; border-radius: 10px;"
+           f"padding: 10px;")
+        self.button_shouse_table.setStyleSheet(
+            Style.button_blue_style)
+        self.button_open_folder_with_pdf.setStyleSheet(
+            Style.button_blue_style)
+
+        # Стили с вкладки настроек
+        self.choose_dark_theme_button.setStyleSheet(Style.button_hide_style)
+        self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
+        self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
+        self.label_title_choose_theme.setStyleSheet(
+            f"color: {Style.light_font_color}; font: bold;")
+        self.widget_for_choose_theme.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;")
+        self.indicate_loading_window_timer_duration.setStyleSheet(
+            f"color: {Style.dark_font_color};")
+        self.slider_loading_window_timer_duration.setStyleSheet(Style.q_slider_style)
+        self.loading_window_timer_duration_param_widget.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;")
+
+        if not Settings.get_flag_show_loading_window():
+            self.button_hide_loading_window.setStyleSheet(Style.button_blue_style)
+        else:
+            self.button_hide_loading_window.setStyleSheet(Style.button_hide_style)
+
+        if Settings.get_flag_show_loading_window():
+            self.button_show_loading_window.setStyleSheet(Style.button_blue_style)
+        else:
+            self.button_show_loading_window.setStyleSheet(Style.button_hide_style)
+
+        self.param_show_loading_window.setStyleSheet(f"color: {Style.light_font_color};")
+        self.loading_window_param_widget.setStyleSheet(
+            f"background-color: {Style.background_color}; border-radius: 10px;")
+        self.settings_main_widget.setStyleSheet(
+            f"background: {Style.background_dark_color}; border-radius: 10px;")
+        self.settings_label.setStyleSheet(
+            f"color: {Style.light_font_color}; font: bold;")
+        self.settings_cap.setStyleSheet(
+            f"background-color: {Style.background_dark_color};")
+        self.tab_settings_widget.setStyleSheet(
+            f"background-color: {Style.background_dark_color}; "
+            f"border-radius: 10px;")
+
     def on_error(self, message: str) -> None:
         """
         Функция показывает ошибку в логе в консоли и диалогом.
@@ -1099,7 +1498,6 @@ class MainWindow(QMainWindow):
 
         Rich.log_error(message)
         QMessageBox.warning(self, "Ошибка", message)
-
 
     def on_finished(self, processed: int, output_folder: str) -> None:
         """
@@ -1122,7 +1520,6 @@ class MainWindow(QMainWindow):
             QMessageBox.StandardButton.Ok,
         )
 
-
     def on_thread_finished(self) -> None:
         """
         Сбрасывает состояния кнопок и остального UI после завершения потока в
@@ -1138,7 +1535,6 @@ class MainWindow(QMainWindow):
         self.stop_button.setEnabled(True)
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
-
     def on_stop_clicked(self) -> None:
         """
         Функция-обработчик кнопки остановки процесса сборки пдф на второй вкладке.
@@ -1150,7 +1546,6 @@ class MainWindow(QMainWindow):
             Rich.warning_log("Запрошена остановка сборки...")
             self.worker.request_stop()
             self.stop_button.setEnabled(False)
-
 
     def on_progress(self, value: int) -> None:
         """
@@ -1164,6 +1559,24 @@ class MainWindow(QMainWindow):
 
         self.progress_bar.setValue(value)
 
+    def choose_file(self) -> None:
+        """
+        Функция для выбора файла обрабатываемой таблицы для генерации пдф.
+
+        :return: None
+        """
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите файл Excel с данными",
+            "",
+            "Excel files (*.xlsx *.xls);;All files (*.*)"
+        )
+
+        if file_path:
+            self.excel_file_path = file_path
+            self.label_current_tabel.setText(self.excel_file_path)
+            Rich.success_log(f"Выбрана таблица  с данными для сборки ПДФ: {file_path}")
 
     def change_active_button_styles(self) -> None:
         """
@@ -1190,7 +1603,6 @@ class MainWindow(QMainWindow):
             self.choose_violet_theme_button.setStyleSheet(Style.button_hide_style)
             self.choose_standard_theme_button.setStyleSheet(Style.button_hide_style)
 
-
     def open_settings_tab(self) -> None:
         """
         Функция для открытия вкладки с настройками
@@ -1199,7 +1611,6 @@ class MainWindow(QMainWindow):
         """
 
         self.tab_widget.setCurrentIndex(2)
-
 
     def what_tab_is_show_now(self) -> int:
         """
@@ -1211,8 +1622,6 @@ class MainWindow(QMainWindow):
         tabs_name = ["Главная", "ЛР по формированию PDF", "Настройки"]
 
         current_index = self.tab_widget.currentIndex()
-
-        tab_name = ""
 
         busy = None
 
@@ -1243,7 +1652,6 @@ class MainWindow(QMainWindow):
         Rich.debug_log(f"Открыта вкладка: {current_index} ({tab_name})")
 
         return current_index
-
 
     def get_bg_for_main_tab_widget(self, folder_path: str) -> None:
         """
@@ -1282,7 +1690,6 @@ class MainWindow(QMainWindow):
             return path_bg_widget_new.as_posix()
 
         new_image_path = get_random_path()
-
 
         def use_random_photo(photo_path: str) -> None:
             """
@@ -1377,7 +1784,6 @@ class MainWindow(QMainWindow):
             else:
                 use_random_photo(image_path)
 
-
     def on_semester_changed(self, checked: bool, semester: str) -> None:
         """
         Показывает нужные кнопки в зависимости от выбранного семестра
@@ -1415,7 +1821,6 @@ class MainWindow(QMainWindow):
             self.specialization_xl_choosed_lb.setVisible(True)
             self.label_commission_title.setText("Таблица с комиссией по специальности")
 
-
     def on_button_choose_theme(self, theme_name: str) -> None:
         """
         Функция для смены темы приложения по кнопке
@@ -1429,14 +1834,16 @@ class MainWindow(QMainWindow):
         Settings.set_theme(theme_name)
         Rich.debug_log(f"Выбрана тема: {theme_name}")
 
-        set_styles(self)
+        self.set_styles()
 
         self.change_active_button_styles()
 
-    def on_slider_changed(self, value):
+    def on_slider_changed(self, value: int):
         """
         Функция для установления нового времени для таймера показа главного окна.
         Принимает значение от слайдера (от 1 до 15 секунд (от 1000 до 15000 мс)).
+
+        :param value: принимает значение слайдера
 
         :return: None
         """
@@ -1500,7 +1907,6 @@ class MainWindow(QMainWindow):
             "Программа завершит текущую операцию и остановится."
         )
 
-
     def stop_generation_process(self) -> None:
         """
         Останавливает процесс генерации и парсинга из основной вкладки главного окна
@@ -1520,7 +1926,6 @@ class MainWindow(QMainWindow):
             "Программа завершит текущую операцию и остановится."
         )
 
-
     def run(self) -> None:
         """
         Сигнал для кнопки запуска процессов для run_button
@@ -1537,7 +1942,6 @@ class MainWindow(QMainWindow):
             self.start_pdf_build()
         else:
             return
-
 
     def start_pdf_build(self) -> None:
         """
@@ -1619,7 +2023,6 @@ class MainWindow(QMainWindow):
 
         self.thread.start()
 
-
     def start_parsing(self):
         # Собираем параметры из UI
         universal = self.universal_file_path
@@ -1667,7 +2070,6 @@ class MainWindow(QMainWindow):
 
         self.worker_thread.start()
 
-
     def on_parser_thread_finished(self) -> None:
         """
         Вызывается, когда поток парсера завершился.
@@ -1684,11 +2086,6 @@ class MainWindow(QMainWindow):
         self.widget_for_title_to_stop.setVisible(False)
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
-
-    def _on_status(self, text: str):
-        Rich.debug_log(text)
-
-
     def _on_finished(self, count: int, folder: str):
         QMessageBox.information(
             self, "Готово",
@@ -1704,8 +2101,11 @@ class MainWindow(QMainWindow):
         if hasattr(self, "worker") and self.worker:
             self.worker.request_stop()
 
-
     # Статические методы
+    @staticmethod
+    def _on_status(text: str):
+        Rich.debug_log(text)
+
     @staticmethod
     def get_shortcut() -> None:
         """
@@ -1716,7 +2116,6 @@ class MainWindow(QMainWindow):
         """
 
         check_build()
-
 
     @staticmethod
     def on_status(message: str) -> None:
@@ -1731,7 +2130,6 @@ class MainWindow(QMainWindow):
 
         Rich.debug_log(message)
 
-
     @staticmethod
     def on_file_done(file_name: str) -> None:
         """
@@ -1743,7 +2141,6 @@ class MainWindow(QMainWindow):
         """
 
         Rich.success_log(f"Собран ПДФ: {file_name}")
-
 
     @staticmethod
     def app_name_clicked():
