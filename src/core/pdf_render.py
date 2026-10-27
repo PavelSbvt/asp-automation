@@ -159,9 +159,9 @@ def fill_template(ws, data: dict) -> None:
              h_align="center", v_align="center", border=thin_border)
 
     if len(data["surname_name_p"]) > 35:
-        ws.cell(row=39, column=4).font = Font(name="Times New Roman", size=8, italic=True)
+        ws.cell(row=39, column=4).font = Font(name="Times New Roman",size=8,italic=True)
     else:
-        ws.cell(row=39, column=4).font = Font(name="Times New Roman", size=12, italic=True)
+        ws.cell(row=39, column=4).font = Font(name="Times New Roman",size=12,italic=True)
 
     ws.row_dimensions[2].height = 20
     ws.row_dimensions[7].height = 5
@@ -174,9 +174,9 @@ def fill_template(ws, data: dict) -> None:
 
 
 def set_cell(
-        ws, cell_ref: str, value: str, h_align: str = "left", v_align: str = "center",
-        wrap: bool =False, size: int = 12, italic:
-        bool =False, bold: bool = False, border: Border = None) -> None:
+        ws, cell_ref: str, value: str, h_align: str = "left",
+        v_align: str = "center", wrap: bool =False, size: int = 12,
+        italic: bool =False, bold: bool = False, border: Border = None) -> None:
     """
     Устанавливает значение и стиль указанной ячейки Excel-листа.
 
