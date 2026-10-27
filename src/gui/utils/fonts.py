@@ -18,7 +18,6 @@ class Fonts:
     # Словарь для хранения имен загруженных семейств шрифтов
     _font_families: dict = {}
 
-
     @classmethod
     def ensure_initialized(cls) -> None:
         """
@@ -70,7 +69,6 @@ class Fonts:
         cls._initialized = True
         Rich.debug_log("Шрифты успешно загружены")
 
-
     @classmethod
     def get_font(cls, font_name: str) -> str:
         """
@@ -89,7 +87,6 @@ class Fonts:
             Rich.warning_log(f"Передано неправильное имя шрифта: {font_name}")
             Rich.debug_log("Применён стандартный шрифт 'Inter'")
             return cls._font_families.get("Inter")
-
 
     @classmethod
     def get_qfont(cls, font_name: str, size: int = 10) -> QFont:

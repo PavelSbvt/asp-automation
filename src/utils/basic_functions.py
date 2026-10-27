@@ -159,7 +159,6 @@ def extract_commission_members(text: str,
             'science_branch': science_branch
         }
 
-
     split_text = re.sub(r',?\s*член\s+комиссии\s*', '', text, flags=re.IGNORECASE)
     split_text = split_text.rstrip(',').strip()
 

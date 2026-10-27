@@ -48,7 +48,6 @@ class AnimationsManager:
 
         return animation_appearance
 
-
     @staticmethod
     def animation_disappearance_window(widget: QWidget, duration: int = 450,
         easing: QEasingCurve.Type = QEasingCurve.Type.InCubic, callback = None) \
@@ -93,7 +92,6 @@ class AnimationsManager:
 
         return animation_disappearance
 
-
     @staticmethod
     def animation_disappearance_and_closing(widget: QWidget,
             duration: int = 450) -> None:
@@ -123,14 +121,12 @@ class AnimationsManager:
 
             widget.deleteLater()
 
-
         # Вызов функции исчезания виджета с последующим закрытием
         widget.close_animation = AnimationsManager.animation_disappearance_window(
             widget,
             duration=duration,
             callback=close_window
         )
-
 
     @staticmethod
     def window_appearance_animation(
@@ -157,7 +153,6 @@ class AnimationsManager:
         fade_in.start()
 
         return fade_in
-
 
     @staticmethod
     def animation_of_window_disappearing(
