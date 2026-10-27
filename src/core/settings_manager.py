@@ -18,12 +18,12 @@ class SettingsManager:
         self.config_path = Path("config/settings.json")
         self.settings = {}
 
-        self.loading_window_timer_duration = 5000
-        self.flag_show_loading_window = True
-        self.theme = "standard"
+        self.loading_window_timer_duration: int = 5000
+        self.flag_show_loading_window: bool = True
+        self.theme: str = "standard"
+        self.path_parsing_data: str = "resources/parsing_data"
 
         self.get_settings()
-
 
     def write_standard_settings(self) -> None:
         """
@@ -38,11 +38,11 @@ class SettingsManager:
             data = {
                 "loading_window_timer": self.loading_window_timer_duration,
                 "flag_show_loading_window": self.flag_show_loading_window,
-                "theme": self.theme
+                "theme": self.theme,
+                "path_parsing_data": self.path_parsing_data
             }
             json.dump(data, json_file, ensure_ascii=False, indent=4)
             Rich.debug_log("Применены стандартные настройки")
-
 
     def write_settings(self) -> None:
         """
@@ -57,7 +57,6 @@ class SettingsManager:
         self.write_standard_settings()
 
         Rich.success_log(f"Файл с настройками сохранён: {self.config_path}")
-
 
     def read_settings(self) -> dict:
         """
@@ -77,7 +76,6 @@ class SettingsManager:
 
             Rich.success_log("Настройки получены")
             return settings_data
-
 
     def read_one_param(self, param_name: str):
         """
@@ -99,7 +97,6 @@ class SettingsManager:
             param_value = settings_data.get(f"{param_name}", "Неизвестно")
             return param_value
 
-
     def read_one_param_hide_log(self, param_name: str):
         """
         Функция для чтения из файла настроек только одного параметра.
@@ -120,7 +117,6 @@ class SettingsManager:
             param_value = settings_data.get(f"{param_name}", "Неизвестно")
             return param_value
 
-
     def rewrite_settings(self) -> None:
         """
         Функция для перезаписи файла с настройками.
@@ -136,7 +132,6 @@ class SettingsManager:
         # Запись
         self.write_standard_settings()
         Rich.debug_log("Настройки обновлены.")
-
 
     def get_settings(self) -> None:
         """
@@ -192,6 +187,22 @@ class SettingsManager:
                 Rich.debug_log("Повторное получение настроек")
                 return
 
+            path_parsing_data = settings_data.get("path_parsing_data", "Неизвестно")
+
+            if path_parsing_data == "Неизвестно" or not isinstance(
+                    path_parsing_data, str):
+                broken_settings_parameters.append("path_parsing_data")
+            else:
+                self.path_parsing_data = path_parsing_data
+
+            if broken_settings_parameters:
+                Rich.warning_log(f"Данные настроек не содержат информацию "
+                                 f"о {broken_settings_parameters}")
+                Rich.debug_log("Перезапись настроек")
+                self.rewrite_settings()
+                Rich.debug_log("Повторное получение настроек")
+                return
+
         except json.JSONDecodeError as e:
             Rich.warning_log(f"Ошибка открытия json файла с настройками. "
                 f"Текст ошибки: {e}")
@@ -207,7 +218,6 @@ class SettingsManager:
                     # Если файл с настройками битый, то переписать.
                     self.rewrite_settings()
 
-
     def print_settings(self) -> None:
         """
         Функция для вывода настроек (при запуске программы в лог)
@@ -221,7 +231,7 @@ class SettingsManager:
             f"{self.loading_window_timer_duration}")
         Rich.simple_log(f"Время показа окна загрузки: {self.flag_show_loading_window}")
         Rich.simple_log(f"Цветовая тема: {self.theme}")
-
+        Rich.simple_log(f"Путь сохранения данных парсинга сайтов: {self.path_parsing_data}")
 
     def update_settings_param(self, param_name: str, new_value: Optional) -> None:
         """
@@ -254,7 +264,6 @@ class SettingsManager:
         Rich.print_spacer()
         Rich.debug_log(f"Обновлено поле '{param_name}' = {new_value}")
 
-
     def set_theme(self, theme_name: str) -> None:
         """
         Функция для задания цветовой темы приложения.
@@ -269,7 +278,6 @@ class SettingsManager:
         self.theme = theme_name
         self.update_settings_param("theme", theme_name)
 
-
     def get_theme_name(self) -> str:
         """
         Функция для получения имени темы приложения.
@@ -282,6 +290,19 @@ class SettingsManager:
 
         return theme_name
 
+    def get_path_parsing_data(self) -> str:
+        """
+        Функция для получения пути сохранения данных парсинга сайтов.
+
+        Вернёт значение атрибута класса настроек
+         (пути сохранения данных парсинга сайтов - self.path_parsing_data).
+
+        :return: Str(self.path_parsing_data).
+        """
+
+        path_parsing_data = self.path_parsing_data
+
+        return path_parsing_data
 
     def set_loading_window_timer_duration(self,
             loading_window_timer_duration: int) -> None:
@@ -302,7 +323,6 @@ class SettingsManager:
         self.update_settings_param("loading_window_timer",
             loading_window_timer_duration)
 
-
     def get_loading_window_timer_duration(self) -> int:
         """
         Функция для получения значения таймера загрузочного окна приложения.
@@ -318,7 +338,6 @@ class SettingsManager:
 
         return loading_window_timer_duration
 
-
     def get_flag_show_loading_window(self) -> bool:
         """
         Функция для проверки разрешения приложения на показ загрузочного окна.
@@ -331,7 +350,6 @@ class SettingsManager:
         flag_show = self.read_one_param_hide_log("flag_show_loading_window")
 
         return flag_show
-
 
     def set_flag_show_loading_window(self, bool_value: bool) -> None:
         """

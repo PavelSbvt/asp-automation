@@ -1,16 +1,16 @@
 from datetime import datetime
 from pathlib import Path
-import traceback
 from typing import List, Tuple, Optional
 
 from bs4 import BeautifulSoup
-from PyQt6.QtWidgets import QApplication, QMessageBox
 import requests
 
+from core.settings_manager import Settings
 from utils.output_rich import Rich
 
 
-ParsingDir = Path("resources/parsing_data")
+ParsingDir = Path(Settings.get_path_parsing_data())
+
 
 def get_current_cache_file() -> Optional[Path]:
     """
@@ -171,87 +171,6 @@ def get_specialty_code(profile: str) -> str:
     except Exception as e:
         Rich.log_error(f"Ошибка в get_specialty_code: {e}")
         return ""
-
-
-def update_data(self) -> None:
-    """
-    Принудительное обновление данных с сайтов.
-    Вызывается по кнопке "Обновить данные".
-
-    :return: None
-    """
-
-    Rich.print_spacer()
-    Rich.simple_log("Обновление данных кодов и шифров аспирантов")
-
-    try:
-        # Обновляем текст в интерфейсе
-        if hasattr(self, 'label_for_info_update_site_paring'):
-            self.label_for_info_update_site_paring.setText("Обновление данных...")
-            QApplication.processEvents()
-
-        # Парсим основной сайт
-        Rich.debug_log("Парсинг основного сайта (tstu.ru)...")
-        specialties = site_parce_main()
-
-        # Если основной сайт не дал данных - пробуем резервный
-        if not specialties:
-            Rich.debug_log("Парсинг резервного сайта (dn.tstu.ru)...")
-            specialties = site_parce_dn()
-
-        if specialties:
-            # Сохраняем данные (старый файл удалится)
-            save_specialties_to_cache(specialties)
-
-            # Получаем время из имени файла
-            update_time = get_last_update_time()
-
-            if hasattr(self, 'time_update_label'):
-                self.time_update_label.setText(update_time)
-
-            if hasattr(self, 'label_for_info_update_site_paring'):
-                self.label_for_info_update_site_paring.setText(
-                    "Последнее обновление данных (парсинг сайтов):"
-                )
-
-            QMessageBox.information(
-                self,
-                "Обновление завершено",
-                f"Данные успешно обновлены!\n\n"
-                f"Загружено специальностей: {len(specialties)}\n"
-                f"Время обновления: {update_time}"
-            )
-            Rich.success_log(
-                f"Данные обновлены! Загружено {len(specialties)} специальностей")
-
-        else:
-            QMessageBox.warning(
-                self,
-                "Ошибка обновления",
-                "Не удалось получить данные с сайтов.\n\n"
-                "Проверьте подключение к интернету."
-            )
-            Rich.log_error("Не удалось получить данные с сайтов")
-
-            if hasattr(self, 'label_for_info_update_site_paring'):
-                self.label_for_info_update_site_paring.setText(
-                    "Ошибка обновления данных (проверьте интернет):"
-                )
-
-    except Exception as e:
-        Rich.log_error(f"Ошибка при обновлении данных: {e}")
-        traceback.print_exc()
-
-        QMessageBox.critical(
-            self,
-            "Ошибка",
-            f"Не удалось обновить данные:\n{str(e)}"
-        )
-
-        if hasattr(self, 'label_for_info_update_site_paring'):
-            self.label_for_info_update_site_paring.setText(
-                "Ошибка обновления данных:"
-            )
 
 
 def site_parce_dn() -> List[Tuple[str, str]]:
