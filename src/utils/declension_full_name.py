@@ -6,6 +6,7 @@ from pytrovich.maker import PetrovichDeclinationMaker
 petrovichMaker = PetrovichDeclinationMaker()
 petrovichDetector = PetrovichGenderDetector()
 
+
 def get_fio_accusative(fio: str, citizenship: str = "РФ") -> str:
     """
     Преобразует ФИО из именительного падежа в винительный.
