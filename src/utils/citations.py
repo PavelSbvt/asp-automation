@@ -1,4 +1,5 @@
 import random
+from typing import Tuple
 
 from utils.output_rich import Rich
 
@@ -74,7 +75,7 @@ QUOTES = {
 }
 
 
-def get_citation_with_author() -> tuple[str, str]:
+def get_citation_with_author() -> Tuple[str, str]:
     """
     Возвращает случайную цитату и её автора вместе
 
