@@ -9,8 +9,7 @@ from PyQt6.QtGui import QIcon
 from core.settings_manager import Settings
 from gui.loading_window import MyLoadingWindow
 from gui.main_window import MainWindow
-from gui.utils.windows_functions import load_cached_data
-from gui.utils.windows_animations import AnimateManager
+from gui.utils.windows_animations import AnimationsManager
 from utils.output_rich import Rich
 
 
@@ -27,12 +26,16 @@ def start_with_loading_window() -> None:
 
     LoadingWindow = MyLoadingWindow()
 
+    LoadingWindow.setWindowOpacity(0.0)
     LoadingWindow.show()
+    LoadingWindow.fade_in_anim = AnimationsManager.window_appearance_animation(
+        LoadingWindow, 320)
+
 
     MainWin = MainWindow()
 
     Rich.print_spacer()
-    load_cached_data(MainWin)
+    MainWin.load_cached_data()
 
 
     def on_loading_closed() -> None:
@@ -46,9 +49,10 @@ def start_with_loading_window() -> None:
         Rich.print_spacer()
         LoadingWindow.hide()
         Rich.exit_log("Загрузочное окно скрыто")
-        MainWin.show()
         Rich.enter_log("Показ главного окна")
-        AnimateManager.animation_appearance_window(MainWin, duration=1000)
+        MainWin.setWindowOpacity(0.0)
+        MainWin.show()
+        MainWin.fade_in_anim = AnimationsManager.window_appearance_animation(MainWin,320)
 
     LoadingWindow.closed.connect(on_loading_closed)
 
@@ -63,11 +67,12 @@ def start_without_loading_window() -> None:
     Rich.debug_log("Запуск приложения без загрузочного окна")
     MainWin = MainWindow()
 
-    load_cached_data(MainWin)
+    MainWin.load_cached_data()
 
     Rich.enter_log("Показ главного окна")
+    MainWin.setWindowOpacity(0.0)
     MainWin.show()
-    AnimateManager.animation_appearance_window(MainWin, duration=1000)
+    MainWin.fade_in_anim = AnimationsManager.window_appearance_animation(MainWin,320)
 
 
 if __name__ == "__main__":
@@ -86,9 +91,11 @@ if __name__ == "__main__":
     App.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
 
     if Settings.get_flag_show_loading_window():
+        Rich.debug_log("Показ загрузочного окна разрешён")
         Rich.print_spacer()
         start_with_loading_window()
     else:
+        Rich.debug_log("Показ загрузочного окна запрещен")
         Rich.print_spacer()
         start_without_loading_window()
 
