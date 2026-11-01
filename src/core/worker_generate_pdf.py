@@ -1,11 +1,12 @@
-import traceback
 import os
+import traceback
 from concurrent.futures import ProcessPoolExecutor
 
 import pandas as pd
 from PyQt6.QtCore import QObject, pyqtSignal
 
 from core.pdf_render import render_one_student
+from utils.output_rich import Rich
 
 
 class PdfBuilderWorker(QObject):
@@ -13,41 +14,62 @@ class PdfBuilderWorker(QObject):
     Класс для работы с сигналами и потоками процесса сборки пдф с второй вкладки
     """
 
-    progress = pyqtSignal(int)
-    status = pyqtSignal(str)
-    file_done = pyqtSignal(str)
-    error = pyqtSignal(str)
-    finished = pyqtSignal(int, str)
+    progress: pyqtSignal = pyqtSignal(int)
+    status: pyqtSignal = pyqtSignal(str)
+    file_done: pyqtSignal = pyqtSignal(str)
+    error: pyqtSignal = pyqtSignal(str)
+    finished: pyqtSignal = pyqtSignal(int, str)
 
     def __init__(self, excel_file: str, output_folder: str):
+        """
+        Инициализирует объект PdfBuilderWorker с указанными файлами и папкой для вывода.
+
+        :param excel_file: Путь к Excel-файлу
+        :param output_folder: Путь к папке для сохранения PDF-файлов
+        """
+
         super().__init__()
         self.excel_file = excel_file
-        self.output_folder = output_folder
-        self.stop_requested = False
-
+        self.output_folder: str = output_folder
+        self.stop_requested: bool = False
 
     def request_stop(self) -> None:
-        self.stop_requested = True
+        """
+        Запрашивает остановку процесса сборки.
+        """
 
+        self.stop_requested = True
+        Rich.debug_log("Запрос на остановку процесса сборки")
 
     def run(self) -> None:
-        processed = 0
+        """
+        Запускает процесс сборки PDF-файлов из Excel-файла и сохраняет их в указанную
+         папку.
+        """
+
+        processed: int = 0
         try:
             self.status.emit("Запущен процесс сборки ПДФ")
+            Rich.debug_log("Запущен процесс сборки ПДФ")
 
             # Чтение Excel в главном процессе worker'а
             try:
                 df = pd.read_excel(self.excel_file, sheet_name="БД", dtype=str)
             except Exception as e:
                 self.error.emit(f"Ошибка чтения файла: {e}")
+                Rich.warning_log(f"Ошибка чтения файла: {e}")
                 return
 
             if df is None or len(df) == 0:
                 self.error.emit("Нет данных для обработки")
+                Rich.warning_log("Нет данных для обработки")
                 return
 
             self.status.emit(f"Найдено {len(df)} человек")
+            Rich.debug_log(f"Найдено {len(df)} человек")
             os.makedirs(self.output_folder, exist_ok=True)
+            Rich.debug_log(f"Создана папка для сохранения "
+                           f"PDF-файлов: {self.output_folder}")
 
             total = len(df)
             tasks = []
@@ -63,7 +85,9 @@ class PdfBuilderWorker(QObject):
                         or not surname_name_p):
                     continue
 
-                code = direction.split()[0] if direction and direction != "nan" else "unknown"
+                code = (direction.split()[0]
+                        if direction and direction != "nan"
+                        else "unknown")
 
                 data = {
                     "code": code,
@@ -83,14 +107,22 @@ class PdfBuilderWorker(QObject):
 
             # Запуск обработки в пуле процессов
             self.status.emit(f"Запуск пула процессов ({len(tasks)} задач)")
+            Rich.debug_log(f"Запуск пула процессов ({len(tasks)} задач)")
+
+            if not tasks:
+                self.error.emit("Нет валидных задач для генерации")
+                Rich.warning_log("Нет валидных задач для генерации")
+                return
 
             with ProcessPoolExecutor(max_workers=1) as executor:
                 for idx, data in enumerate(tasks):
                     if self.stop_requested:
                         self.status.emit("Сборка остановлена пользователем")
+                        Rich.debug_log("Сборка остановлена пользователем")
                         break
 
                     self.status.emit(f"Подготовка ПДФ для '{data['surname_name']}'")
+                    Rich.debug_log(f"Подготовка ПДФ для '{data['surname_name']}'")
 
                     try:
                         future = executor.submit(
@@ -103,14 +135,18 @@ class PdfBuilderWorker(QObject):
 
                     except Exception as e:
                         self.error.emit(f"Ошибка для '{data['surname_name']}': {e}")
+                        Rich.warning_log(f"Ошибка для '{data['surname_name']}': {e}")
                         continue
 
                     processed += 1
                     self.progress.emit(int(processed / len(tasks) * 100))
+                    Rich.debug_log(f"Обработано {processed}/{total}")
                     self.file_done.emit(os.path.basename(pdf_path))
 
         except BaseException as e:
             traceback.print_exc()
             self.error.emit(f"Непредвиденная ошибка: {e}")
+            Rich.log_error(f"Непредвиденная ошибка: {e}")
         finally:
             self.finished.emit(processed, self.output_folder)
+            Rich.success_log("Процесс сборки ПДФ завершён")
