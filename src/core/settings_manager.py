@@ -10,7 +10,7 @@ class SettingsManager:
     Класс для работы с настройками приложения.
     """
 
-    def __init__(self) -> None:
+    def __init__(self):
         """
         Конструктор класса настроек.
         """

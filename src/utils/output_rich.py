@@ -13,10 +13,6 @@ class Rich:
     Класс с методами вывода логов в консоль с использованием библиотеки Rich
     """
 
-    def __init__(self):
-        pass
-
-
     @staticmethod
     def log_error(message: str, details: str = "") -> None:
         """
@@ -53,6 +49,7 @@ class Rich:
             except (AttributeError, KeyError, ValueError, TypeError):
                 return "Неизвестно:?"
 
+
         caller = get_caller_info()
 
         content = f"[bold white on red]ERROR[/bold white on red]\n\n{message}"
@@ -71,7 +68,6 @@ class Rich:
             )
         )
 
-
     @staticmethod
     def success_log(message: str) -> None:
         """
@@ -86,7 +82,6 @@ class Rich:
 
         console.log(f"[green][SUCCESS] {message}[/green]", _stack_offset=2)
 
-
     @staticmethod
     def simple_log(message: str) -> None:
         """
@@ -100,7 +95,6 @@ class Rich:
 
         console.log(f"[cyan][INFO] {message}[/cyan]", _stack_offset=2)
 
-
     @staticmethod
     def debug_log(message: str) -> None:
         """
@@ -112,7 +106,6 @@ class Rich:
         """
 
         console.log(f"[grey46][Debug] {message}[/grey46]", _stack_offset=2)
-
 
     @staticmethod
     def warning_log(message: str) -> None:
@@ -127,7 +120,6 @@ class Rich:
 
         console.log(f"[bold yellow][WARN] ВНИМАНИЕ: {message}[/bold yellow]", _stack_offset=2)
 
-
     @staticmethod
     def enter_log(message: str) -> None:
         """
@@ -140,7 +132,6 @@ class Rich:
         """
 
         console.log(f"[magenta][ENTER] ▶ ВХОД: {message}[/magenta]",  _stack_offset=2)
-
 
     @staticmethod
     def exit_log(message: str) -> None:
@@ -155,7 +146,6 @@ class Rich:
         """
         console.log(f"[magenta][EXIT] ◀ ВЫХОД: {message}[/magenta]",  _stack_offset=2)
 
-
     @staticmethod
     def print_spacer() -> None:
         """
@@ -165,7 +155,6 @@ class Rich:
         """
 
         console.log(f"[grey46][Debug] {'-' * 151}[/grey46]", _stack_offset=2)
-
 
     @staticmethod
     def print_spacer_points() -> None:
@@ -177,7 +166,6 @@ class Rich:
         """
 
         console.log(f"[grey46][Debug] {'.' * 151}[/grey46]", _stack_offset=2)
-
 
     @staticmethod
     def print_table(title: str, cols: list, rows: list) -> None:

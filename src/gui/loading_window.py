@@ -25,7 +25,7 @@ class MyLoadingWindow(QWidget):
 
     closed = pyqtSignal()
 
-    def __init__(self) -> None:
+    def __init__(self):
         """
         Конструктор класса
         """
