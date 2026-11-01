@@ -20,21 +20,20 @@ class PdfParseAndGenerateWorker(QObject):
         1) парсинг (Excel + doc-файлы комиссии + сборка БД);
         2) генерация PDF по каждому студенту.
 
-    ВАЖНО: если render_one_student использует Excel/VBScript —
-    параллелизм через ProcessPoolExecutor НЕ РАБОТАЕТ, ставим
-    USE_PROCESS_POOL = False. Если рендер на чистом Python —
-    можно включить True и получить ускорение.
+    Примечание: если render_one_student использует Excel/VBScript —
+    параллелизм через ProcessPoolExecutor не работает,
+    USE_PROCESS_POOL = False.
     """
 
-    progress = pyqtSignal(int)
-    status = pyqtSignal(str)
-    file_done = pyqtSignal(str)
-    error = pyqtSignal(str)
-    finished = pyqtSignal(int, str)
+    progress: pyqtSignal = pyqtSignal(int)
+    status: pyqtSignal = pyqtSignal(str)
+    file_done: pyqtSignal = pyqtSignal(str)
+    error: pyqtSignal = pyqtSignal(str)
+    finished: pyqtSignal = pyqtSignal(int, str)
 
-    # Флаг: использовать ли реальный параллелизм при генерации.
-    # Включи True, если render_one_student — чистый Python (без Excel).
-    USE_PROCESS_POOL = False
+    # Флаг: использовать ли параллелизм при генерации.
+    USE_PROCESS_POOL: bool = False
+
 
     def __init__(
         self,
@@ -59,8 +58,7 @@ class PdfParseAndGenerateWorker(QObject):
         self.commission_text = commission_text
         self.selected_semester = selected_semester
 
-        self.stop_requested = False
-
+        self.stop_requested: bool = False
 
     def request_stop(self) -> None:
         """
@@ -69,17 +67,20 @@ class PdfParseAndGenerateWorker(QObject):
 
         self.stop_requested = True
 
-
     # Основной метод, выполняется в отдельном QThread
     def run(self) -> None:
-        processed = 0
+        """
+        Основной цикл работы воркера.
+        """
+
+        processed: int = 0
         try:
             self.status.emit("НАЧАЛО ПАРСИНГА")
             Rich.simple_log("НАЧАЛО ПАРСИНГА")
 
             # парсинг
             self.status.emit("Парсинг универсальной таблицы...")
-            students_data = self.parse_universal_table()
+            students_data: list[dict] = self.parse_universal_table()
 
             if self.stop_requested:
                 self.status.emit("Остановлено пользователем")
@@ -93,7 +94,7 @@ class PdfParseAndGenerateWorker(QObject):
 
             # Парсинг doc-файла комиссии
             self.status.emit("Парсинг комиссии...")
-            commission_members = self.parse_commission()
+            commission_members: list[dict] = self.parse_commission()
 
             if self.stop_requested:
                 self.status.emit("Остановлено пользователем")
@@ -107,7 +108,7 @@ class PdfParseAndGenerateWorker(QObject):
 
             # Заполнение БД
             self.status.emit("Заполнение БД...")
-            db_file = fill_database_sheet(
+            db_file: str = fill_database_sheet(
                 students_data,
                 self.commission_text,
                 commission_members,
@@ -145,22 +146,26 @@ class PdfParseAndGenerateWorker(QObject):
     def parse_universal_table(self) -> list[dict]:
         """
         Читает универсальную таблицу, возвращает список студентов.
+
+        :return: список словарей с данными о студентах
         """
 
         Rich.debug_log("Чтение универсальной таблицы.")
 
-        df = pd.read_excel(
+        df: pd.DataFrame = pd.read_excel(
             self.universal_excel_file,
             dtype=str,
             engine="openpyxl",
         )
         Rich.simple_log(f"Загружено {len(df)} строк")
 
-        columns = list(df.columns)
-        fio_idx = profile_idx = citizenship_idx = None
+        columns: list[str] = list(df.columns)
+        fio_idx: int | None = None
+        profile_idx: int | None = None
+        citizenship_idx: int | None = None
 
         for i, col in enumerate(columns):
-            col_lower = col.lower()
+            col_lower: str = col.lower()
             if "фио" in col_lower:
                 fio_idx = i
             if "профиль" in col_lower:
@@ -168,28 +173,28 @@ class PdfParseAndGenerateWorker(QObject):
             if "гражданство" in col_lower:
                 citizenship_idx = i
 
-        fio_idx = fio_idx if fio_idx is not None else 2
-        profile_idx = profile_idx if profile_idx is not None else 22
-        citizenship_idx = citizenship_idx if citizenship_idx is not None else 40
+        fio_idx: int = fio_idx if fio_idx is not None else 2
+        profile_idx: int = profile_idx if profile_idx is not None else 22
+        citizenship_idx: int = citizenship_idx if citizenship_idx is not None else 40
 
         Rich.debug_log(
             f"Индексы: ФИО={fio_idx}, Профиль={profile_idx}, "
             f"Гражданство={citizenship_idx}"
         )
 
-        students = []
+        students: list[dict] = []
         for index, row in df.iterrows():
             if self.stop_requested:
                 Rich.debug_log(f"Остановка на строке {index}")
                 return students
 
             try:
-                fio = str(row.iloc[fio_idx]).strip() if len(row) > fio_idx else ""
-                profile = (
+                fio: str = str(row.iloc[fio_idx]).strip() if len(row) > fio_idx else ""
+                profile: str = (
                     str(row.iloc[profile_idx]).strip()
                     if len(row) > profile_idx else ""
                 )
-                citizenship = (
+                citizenship: str = (
                     str(row.iloc[citizenship_idx]).strip()
                     if len(row) > citizenship_idx else ""
                 )
@@ -213,24 +218,25 @@ class PdfParseAndGenerateWorker(QObject):
         Rich.success_log(f"Всего студентов: {len(students)}")
         return students
 
-
     # парсинг комиссии
-    def parse_commission(self):
+    def parse_commission(self) -> list[dict] | None:
         """
         Парсит doc-файл комиссии. Возвращает словарь с комиссиями
         или None, если что-то пошло не так.
+
+        :return: список словарей с данными о членах комиссии или None
         """
 
         Rich.debug_log("Начало парсинга doc-файла комиссии")
 
         # parsing_commissions(self) ожидает объект с атрибутами radio_button_*
         # и *_commission_path.
-        fake_self = CommissionContext(
+        fake_self: CommissionContext = CommissionContext(
             doc_path=self.doc_file_with_commission,
             selected_semester=self.selected_semester,
         )
 
-        members = parsing_commissions(fake_self)
+        members: list[dict] | None = parsing_commissions(fake_self)
 
         if not members:
             Rich.warning_log("Члены комиссии не найдены!")
@@ -238,7 +244,6 @@ class PdfParseAndGenerateWorker(QObject):
 
         Rich.success_log(f"Комиссия загружена. Найдено комиссий: {len(members)}")
         return members
-
 
     # генерация PDF
     def generate_pdfs(self, db_file: str) -> int:
@@ -251,7 +256,7 @@ class PdfParseAndGenerateWorker(QObject):
         """
 
         try:
-            df = pd.read_excel(db_file, sheet_name="БД", dtype=str)
+            df: pd.DataFrame = pd.read_excel(db_file, sheet_name="БД", dtype=str)
         except Exception as e:
             self.error.emit(f"Ошибка чтения БД: {e}")
             return 0
@@ -262,8 +267,8 @@ class PdfParseAndGenerateWorker(QObject):
 
         os.makedirs(self.output_folder, exist_ok=True)
 
-        total = len(df)
-        tasks = self.prepare_tasks(df)
+        total: int = len(df)
+        tasks: list[dict] = self.prepare_tasks(df)
 
         if not tasks:
             self.error.emit("Нет валидных задач для генерации")
@@ -274,17 +279,23 @@ class PdfParseAndGenerateWorker(QObject):
         else:
             return self.generate_sequential(db_file, tasks, total)
 
-
     def prepare_tasks(self, df: pd.DataFrame) -> list[dict]:
         """
-        Готовит список словарей-задач для render_one_student.
+        Формирует список словарей-задач для генерации PDF по каждому студенту.
+
+        Извлекает ФИО (в именительном и родительном падежах), направление
+        и данные комиссии из соответствующих колонок DataFrame.
+        Пропускает строки, где отсутствует ФИО.
+
+        :param df: DataFrame с данными студентов (лист «БД»)
+        :return: список словарей с данными для render_one_student_with_commission
         """
 
-        tasks = []
+        tasks: list[dict] = []
         for i in range(len(df)):
-            surname_genitive = str(df.iloc[i, 0]).strip()
-            surname_nominative = str(df.iloc[i, 9]).strip()
-            direction = str(df.iloc[i, 10]).strip()
+            surname_genitive: str = str(df.iloc[i, 0]).strip()
+            surname_nominative: str = str(df.iloc[i, 9]).strip()
+            direction: str = str(df.iloc[i, 10]).strip()
 
             if (
                 surname_genitive.lower() == "nan"
@@ -293,7 +304,7 @@ class PdfParseAndGenerateWorker(QObject):
             ):
                 continue
 
-            code = (
+            code: str = (
                 direction.split()[0]
                 if direction and direction.lower() != "nan"
                 else "unknown"
@@ -317,14 +328,19 @@ class PdfParseAndGenerateWorker(QObject):
 
         return tasks
 
-
     def generate_sequential(
         self, db_file: str, tasks: list[dict], total: int) -> int:
         """
         Последовательная генерация. Используется, если Excel внутри.
+
+        :param db_file: путь к xlsx-файлу с листом «БД»
+        :param tasks: список задач для генерации PDF
+        :param total: общее количество задач
+
+        :return: количество успешно созданных PDF
         """
 
-        processed = 0
+        processed: int = 0
         for idx, data in enumerate(tasks, 1):
             if self.stop_requested:
                 self.status.emit("Сборка остановлена пользователем")
@@ -333,7 +349,7 @@ class PdfParseAndGenerateWorker(QObject):
             self.status.emit(f"Подготовка PDF: {data['surname_name']}")
 
             try:
-                pdf_path = render_one_student_with_commission(
+                pdf_path: str = render_one_student_with_commission(
                     db_file, data, self.output_folder,
                 )
             except Exception as e:
@@ -347,15 +363,20 @@ class PdfParseAndGenerateWorker(QObject):
 
         return processed
 
-
     def generate_with_pool(self, db_file: str, tasks: list[dict], total: int) -> int:
         """
-        Параллельная генерация. Работает ТОЛЬКО если render_one_student
+        Параллельная генерация. Работает, если render_one_student
         на чистом Python (без Excel/VBScript).
+
+        :param db_file: путь к xlsx-файлу с листом «БД»
+        :param tasks: список задач для генерации PDF
+        :param total: общее количество задач
+
+        :return: количество успешно созданных PDF
         """
 
-        processed = 0
-        max_workers = os.cpu_count() or 1
+        processed: int = 0
+        max_workers: int = os.cpu_count() or 1
 
         with ProcessPoolExecutor(max_workers=max_workers) as executor:
             futures = {
@@ -371,9 +392,9 @@ class PdfParseAndGenerateWorker(QObject):
                     self.status.emit("Сборка остановлена пользователем")
                     break
 
-                data = futures[future]
+                data: dict = futures[future]
                 try:
-                    pdf_path = future.result()
+                    pdf_path: str = future.result()
                     processed += 1
                     self.file_done.emit(os.path.basename(pdf_path))
                 except Exception as e:
@@ -384,11 +405,12 @@ class PdfParseAndGenerateWorker(QObject):
 
         return processed
 
-
     @staticmethod
     def cleanup_temp_file(path: str) -> None:
         """
         Удаляет временный файл БД, если пользователь остановил процесс.
+
+        :param path: путь к временному файлу
         """
 
         if path and os.path.exists(path):
@@ -402,15 +424,17 @@ class PdfParseAndGenerateWorker(QObject):
 class CommissionContext:
     """
     Минимальная обёртка для parsing_commissions(self), у которой
-    есть только то, что нужно: путь к doc-файлу и семестр.
-
-    parsing_commissions использует:
-        - self.radio_button_1/2/3.isChecked()
-        - self.history_commission_path / foreign_commission_path /
-          specialization_commission_path
+    есть только путь к doc-файлу и семестр.
     """
 
     def __init__(self, doc_path: str, selected_semester: int):
+        """
+        Инициализирует объект CommissionContext.
+
+        :param doc_path: путь к doc-файлу комиссии
+        :param selected_semester: выбранный семестр
+        """
+
         self.history_commission_path = None
         self.foreign_commission_path = None
         self.specialization_commission_path = None
@@ -434,7 +458,14 @@ class FakeRadio:
     """
 
     def __init__(self, checked: bool):
+        """
+        Инициализирует объект FakeRadio.
+
+        :param checked: состояние выбора
+        """
+
         self._checked = checked
 
     def isChecked(self) -> bool:
+
         return self._checked
