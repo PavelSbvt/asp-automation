@@ -10,6 +10,11 @@ QWidget#cap_widget {
     background-color: #1E1F22;
 }
 
+QWidget#container_widget_main_tab {
+    background-color: #1E1F22;
+    border-radius: 10px;
+}
+
 QTabWidget#tab_widget {
     background-color: #2B2D30;
 }
@@ -20,30 +25,48 @@ QTabWidget#tab_widget::pane {
 }
 
 QTabBar::tab {
-    background-color: #1E1F22;
-    color: #D4E0E4;
-    padding: 8px 18px;
-    border-top-left-radius: 8px;
-    border-top-right-radius: 8px;
-    margin-right: 2px;
+    background: transparent;
+    color: #8F949A;
+    padding: 10px 20px;
+    margin-right: 0px;
+    border: none;
+    border-bottom: 2px solid transparent;
 }
 
 QTabBar::tab:selected {
-    background-color: #2B2D30;
+    background: transparent;
     color: #D4E0E4;
     border-bottom: 2px solid #3574F0;
+    font-weight: bold;
 }
 
 QTabBar::tab:hover:!selected {
-    background-color: #4D4E51;
+    color: #D4E0E4;
+    border-bottom: 2px solid #4D4E51;
+}
+
+QWidget#tab_second_widget {
+    background-color: #1E1F22;
+    border-radius: 10px;
+}
+
+QWidget#tab_settings_widget {
+    background-color: #1E1F22;
+    border-radius: 10px;
+}
+
+QWidget#background_widget_for_second_tab {
+    background-color: #1E1F22;
+    border-radius: 10px;
 }
 
 QPushButton#app_name_button {
     background: transparent;
     color: #D4E0E4;
     border: none;
-    font-weight: bold;
-    padding-left: 8px;
+    border-radius: 4px;
+    padding: 6px 10px;
+    margin-left: 30px;
 }
 
 QPushButton#app_name_button:hover {
@@ -51,36 +74,41 @@ QPushButton#app_name_button:hover {
 }
 
 QPushButton#run_button,
-QPushButton#stop_button,
-QPushButton#stop_parsing_button,
 QPushButton#settings_button {
-    background: transparent;
+    background-color: transparent;
     border: none;
-    border-radius: 6px;
+    border-radius: 5px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 QPushButton#run_button:hover,
-QPushButton#stop_button:hover,
-QPushButton#stop_parsing_button:hover,
 QPushButton#settings_button:hover {
-    background-color: #4D4E51;
+    background-color: rgba(255, 255, 255, 0.08);
 }
 
 QPushButton#run_button:pressed,
-QPushButton#stop_button:pressed,
-QPushButton#stop_parsing_button:pressed,
 QPushButton#settings_button:pressed {
-    background-color: #3C3E42;
+    background-color: rgba(255, 255, 255, 0.15);
 }
 
-QPushButton#widget_bg_main_tab {
-    background-color: #1E1F22;
-    border: 2px dashed #4D4E51;
-    border-radius: 10px;
+QPushButton#stop_button,
+QPushButton#stop_parsing_button {
+    background-color: #8A3535;
+    border: none;
+    border-radius: 5px;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
-QPushButton#widget_bg_main_tab:hover {
-    border-color: #3574F0;
+QPushButton#stop_button:hover,
+QPushButton#stop_parsing_button:hover {
+    background-color: #B44747;
+}
+
+QPushButton#stop_button:pressed,
+QPushButton#stop_parsing_button:pressed {
+    background-color: #7A2E2E;
 }
 
 QPushButton#btn_choose_universal_xl,
@@ -91,11 +119,6 @@ QPushButton#button_shouse_table,
 QPushButton#button_open_folder_with_pdf,
 QPushButton#open_folder_button,
 QPushButton#shortcut_button,
-QPushButton#button_show_loading_window,
-QPushButton#button_hide_loading_window,
-QPushButton#choose_standard_theme_button,
-QPushButton#choose_violet_theme_button,
-QPushButton#choose_dark_theme_button,
 QPushButton#btn_choose_history_commission,
 QPushButton#btn_choose_foreign_commission,
 QPushButton#btn_choose_specialization_commission {
@@ -115,11 +138,6 @@ QPushButton#button_shouse_table:hover,
 QPushButton#button_open_folder_with_pdf:hover,
 QPushButton#open_folder_button:hover,
 QPushButton#shortcut_button:hover,
-QPushButton#button_show_loading_window:hover,
-QPushButton#button_hide_loading_window:hover,
-QPushButton#choose_standard_theme_button:hover,
-QPushButton#choose_violet_theme_button:hover,
-QPushButton#choose_dark_theme_button:hover,
 QPushButton#btn_choose_history_commission:hover,
 QPushButton#btn_choose_foreign_commission:hover,
 QPushButton#btn_choose_specialization_commission:hover {
@@ -134,28 +152,96 @@ QPushButton#button_shouse_table:pressed,
 QPushButton#button_open_folder_with_pdf:pressed,
 QPushButton#open_folder_button:pressed,
 QPushButton#shortcut_button:pressed,
-QPushButton#button_show_loading_window:pressed,
-QPushButton#button_hide_loading_window:pressed,
-QPushButton#choose_standard_theme_button:pressed,
-QPushButton#choose_violet_theme_button:pressed,
-QPushButton#choose_dark_theme_button:pressed,
 QPushButton#btn_choose_history_commission:pressed,
 QPushButton#btn_choose_foreign_commission:pressed,
 QPushButton#btn_choose_specialization_commission:pressed {
     background-color: #2557ba;
 }
 
-QPushButton#button_hide_loading_window {
+QPushButton#choose_standard_theme_button[active="false"],
+QPushButton#choose_violet_theme_button[active="false"],
+QPushButton#choose_dark_theme_button[active="false"] {
     background-color: #595959;
     color: #8F949A;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    padding: 0px 10px;
 }
 
-QPushButton#button_hide_loading_window:hover {
-    background-color: rgb(110,110,110);
+QPushButton#choose_standard_theme_button[active="false"]:hover,
+QPushButton#choose_violet_theme_button[active="false"]:hover,
+QPushButton#choose_dark_theme_button[active="false"]:hover {
+    background-color: rgb(110, 110, 110);
 }
 
-QPushButton#button_hide_loading_window:pressed {
-    background-color: rgb(60,60,60);
+QPushButton#choose_standard_theme_button[active="false"]:pressed,
+QPushButton#choose_violet_theme_button[active="false"]:pressed,
+QPushButton#choose_dark_theme_button[active="false"]:pressed {
+    background-color: rgb(60, 60, 60);
+}
+
+QPushButton#choose_standard_theme_button[active="true"],
+QPushButton#choose_violet_theme_button[active="true"],
+QPushButton#choose_dark_theme_button[active="true"] {
+    background-color: #3574F0;
+    color: #D4E0E4;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    padding: 0px 10px;
+}
+
+QPushButton#choose_standard_theme_button[active="true"]:hover,
+QPushButton#choose_violet_theme_button[active="true"]:hover,
+QPushButton#choose_dark_theme_button[active="true"]:hover {
+    background-color: #2866e0;
+}
+
+QPushButton#choose_standard_theme_button[active="true"]:pressed,
+QPushButton#choose_violet_theme_button[active="true"]:pressed,
+QPushButton#choose_dark_theme_button[active="true"]:pressed {
+    background-color: #2557ba;
+}
+
+QPushButton#button_show_loading_window[active="false"],
+QPushButton#button_hide_loading_window[active="false"] {
+    background-color: #595959;
+    color: #8F949A;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    padding: 0px 10px;
+}
+
+QPushButton#button_show_loading_window[active="false"]:hover,
+QPushButton#button_hide_loading_window[active="false"]:hover {
+    background-color: rgb(110, 110, 110);
+}
+
+QPushButton#button_show_loading_window[active="false"]:pressed,
+QPushButton#button_hide_loading_window[active="false"]:pressed {
+    background-color: rgb(60, 60, 60);
+}
+
+QPushButton#button_show_loading_window[active="true"],
+QPushButton#button_hide_loading_window[active="true"] {
+    background-color: #3574F0;
+    color: #D4E0E4;
+    border: none;
+    border-radius: 10px;
+    font-weight: bold;
+    padding: 0px 10px;
+}
+
+QPushButton#button_show_loading_window[active="true"]:hover,
+QPushButton#button_hide_loading_window[active="true"]:hover {
+    background-color: #2866e0;
+}
+
+QPushButton#button_show_loading_window[active="true"]:pressed,
+QPushButton#button_hide_loading_window[active="true"]:pressed {
+    background-color: #2557ba;
 }
 
 QRadioButton#radio_button_1,
@@ -178,7 +264,7 @@ QRadioButton#radio_button_3::indicator {
     width: 10px;
     height: 10px;
     border-radius: 3px;
-    border: 2px solid rgb(211,211,211);
+    border: 2px solid rgb(211, 211, 211);
     background: white;
 }
 
@@ -204,7 +290,7 @@ QProgressBar#progress_bar_parsing {
     border-radius: 4px;
     height: 8px;
     text-align: center;
-    color: #D4E0E4;
+    color: white;
     font-size: 10px;
     font-weight: bold;
 }
@@ -304,54 +390,160 @@ QSlider#slider_loading_window_timer_duration::handle:horizontal:pressed {
 
 QLabel {
     color: #D4E0E4;
-    background: transparent;
 }
 
 QLabel#label_title_to_stop,
 QLabel#label_title_stop_2,
 QLabel#label_info_last_update_cache,
 QLabel#change_path_label,
-QLabel#title_change_save_path,
-QLabel#title_choose_table_label,
-QLabel#label_commission_title,
 QLabel#second_tab_title,
 QLabel#settings_label,
 QLabel#param_show_loading_window,
 QLabel#param_timer_duration_loading_window,
-QLabel#label_title_choose_theme {
+QLabel#label_title_choose_theme,
+QLabel#label_for_radio_buttons {
     color: #D4E0E4;
 }
 
-QLabel#universal_excel_label,
+QLabel#label_commission_title {
+    color: #D4E0E4;
+    padding: 10px;
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+QLabel#title_change_save_path {
+    color: #D4E0E4;
+    background-color: #2B2D30;
+    border-radius: 10px;
+    margin-top: 5px;
+    font-weight: bold;
+}
+
+QLabel#title_choose_table_label {
+    color: #D4E0E4;
+    background-color: #2B2D30;
+    border-radius: 10px;
+    font-weight: bold;
+}
+
+QLabel#universal_excel_label {
+    color: #8F949A;
+    background-color: #1E1F22;
+    padding: 10px;
+    border-radius: 10px;
+}
+
 QLabel#history_xl_choused_label,
 QLabel#foreign_xl_choosed_label,
-QLabel#specialization_xl_choosed_lb,
-QLabel#label_current_tabel,
-QLabel#current_save_path_label,
-QLabel#save_path_label,
-QLabel#time_update_label,
+QLabel#specialization_xl_choosed_lb {
+    color: #8F949A;
+    background-color: #1E1F22;
+    border-radius: 10px;
+}
+
+QLabel#label_current_tabel {
+    color: #8F949A;
+    background-color: #1E1F22;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+QLabel#current_save_path_label {
+    color: #8F949A;
+    background-color: #1E1F22;
+    border-radius: 10px;
+}
+
+QLabel#save_path_label {
+    color: #8F949A;
+    background-color: #1E1F22;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+QLabel#time_update_label {
+    color: #8F949A;
+    background-color: #1E1F22;
+    border-radius: 10px;
+}
+
 QLabel#indicate_loading_window_timer_duration {
     color: #8F949A;
 }
 
-QLabel#time_update_label {
-    font-weight: bold;
-    color: #4ca85a;
+QWidget#radio_buttons_background {
+    background-color: #2B2D30;
+    border-radius: 10px;
 }
 
-QWidget#widget_for_choose_files_commission,
-QWidget#radio_buttons_background,
-QWidget#widget_for_choose_commission_file,
-QWidget#widget_for_cache,
-QWidget#widget_for_change_save_path,
-QWidget#widget_for_choose_table,
-QWidget#widget_for_pos_button_path_and_title_choose_save_path,
-QWidget#widget_for_choose_theme,
-QWidget#loading_window_param_widget,
-QWidget#loading_window_timer_duration_param_widget,
-QWidget#background_widget_for_second_tab,
-QWidget#container_widget_main_tab {
-    background: transparent;
+QWidget#widget_for_choose_files_commission {
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+QWidget#widget_for_choose_commission_file {
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+QWidget#widget_for_cache {
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+QWidget#widget_for_change_save_path {
+    background-color: #2B2D30;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+QWidget#widget_for_choose_table {
+    background-color: #2B2D30;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+QWidget#widget_for_pos_button_path_and_title_choose_save_path {
+    background-color: #2B2D30;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+QWidget#widget_for_choose_theme {
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+QWidget#loading_window_param_widget {
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+QWidget#loading_window_timer_duration_param_widget {
+    background-color: #2B2D30;
+    border-radius: 10px;
+}
+
+QWidget#settings_main_widget {
+    background: #1E1F22;
+    border-radius: 10px;
+}
+
+QWidget#settings_cap {
+    background-color: #1E1F22;
+}
+
+QWidget#widget_for_title_to_stop {
+    background-color: rgba(53, 116, 240, 0.2);
+    border-radius: 10px;
+    border: 2px dotted #8F949A;
+}
+
+QWidget#widget_title_stop_second {
+    background-color: rgba(53, 116, 240, 0.35);
+    border-radius: 10px;
+    border: 2px dotted #8F949A;
 }
 
 QToolTip {
