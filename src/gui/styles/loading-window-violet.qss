@@ -1,0 +1,103 @@
+QWidget#loading_window_2 {
+    background-color: #2D1B3D;
+}
+
+QWidget#widget_background_fill {
+    background-color: #1A0F2A;
+    border-radius: 10px;
+}
+
+QWidget#widget_gradient {
+    background: transparent;
+}
+
+QWidget#background_widget_text {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 10px;
+}
+
+QWidget#citation {
+    background-color: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+}
+
+QLabel#block_app_name {
+    color: #E8D5F5;
+    font-weight: bold;
+}
+
+QLabel#label_text {
+    color: #E8D5F5;
+}
+
+QLabel#lb_hi_prog {
+    color: #E8D5F5;
+    font-weight: bold;
+}
+
+QLabel#lb_blc_m_load {
+    color: #B8A0C8;
+    padding: 5px 10px;
+}
+
+QLabel#citation_label {
+    color: #E8D5F5;
+    font-weight: 300;
+    padding: 5px;
+}
+
+QLabel#citation_author_label {
+    color: #B8A0C8;
+    font-weight: 400;
+    letter-spacing: 0.3px;
+    padding: 7px;
+}
+
+QLabel#icon {
+    background: transparent;
+}
+
+QLine#line {
+    background-color: rgba(255, 255, 255, 0.25);
+    border: none;
+    min-height: 1px;
+    max-height: 1px;
+}
+
+QPushButton#loading_window {
+    background-color: transparent;
+    border: none;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-radius: 10px;
+}
+
+QPushButton#loading_window:hover {
+    background-color: rgba(255, 255, 255, 0.04);
+}
+
+QPushButton#loading_window:pressed {
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+QProgressBar#progress_bar {
+    background-color: #3C3F41;
+    border: none;
+    border-radius: 4px;
+    height: 8px;
+    text-align: center;
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+}
+
+QProgressBar#progress_bar::chunk {
+    background: qlineargradient(
+        x1: 0, y1: 0, x2: 1, y2: 0,
+        stop: 0 #7B4B9A,
+        stop: 0.5 #9A6BAA,
+        stop: 1 #6A3A89
+    );
+    border-radius: 4px;
+    margin: 1px;
+}
