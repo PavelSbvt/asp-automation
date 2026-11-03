@@ -50,7 +50,7 @@ class MyLoadingWindow(QWidget):
         self.lb_hi_prog.setFont(Fonts.get_qfont("JetBrains_Medium", 20))
         self.label_text.setFont(Fonts.get_qfont("JetBrains_Medium", 11))
 
-        icon_path = Path("resources/images/icons/icon_pdf_maker.png")
+        icon_path = Path("resources/images/icons/icon-pdf-maker.png")
         self.icon.setPixmap(QPixmap(icon_path.as_posix()))
         self.icon.setScaledContents(True)
 

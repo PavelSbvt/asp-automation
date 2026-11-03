@@ -58,6 +58,9 @@ class MainWindow(QMainWindow):
         self.thread: Optional[QThread] = None
         self.worker: Optional[PdfBuilderWorker] = None
 
+        self.worker_thread: Optional[QThread] = None
+        self._is_closing: bool = False
+
         self.width_now: int = 0
         self.height_now: int = 0
 
@@ -88,10 +91,10 @@ class MainWindow(QMainWindow):
 
         self._apply_fonts()
 
-        self.stop_button_path = Path("resources/images/icons/stop_button.png")
-        self.run_button_path = Path("resources/images/icons/run_button.png")
+        self.stop_button_path = Path("resources/images/icons/stop-button.png")
+        self.run_button_path = Path("resources/images/icons/run-button.png")
         self.settings_path = Path(
-            "resources/images/icons/settings_pycharm_icon.png")
+            "resources/images/icons/settings-pycharm-icon.png")
 
         self._apply_header_icon_styles()
 
@@ -400,6 +403,7 @@ class MainWindow(QMainWindow):
         self.run_button.setVisible(True)
         self.widget_title_stop_second.setVisible(False)
         self.stop_button.setEnabled(True)
+        self.stop_building_pdf = False
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
     def on_stop_clicked(self) -> None:
@@ -640,7 +644,7 @@ class MainWindow(QMainWindow):
         busy: bool = False
 
         if ((self.thread is not None and self.thread.isRunning()) or
-                self.stop_generation or self.stop_building_pdf):
+                (self.worker_thread is not None and self.worker_thread.isRunning())):
             busy = True
 
         if current_index == 0:
@@ -1022,7 +1026,7 @@ class MainWindow(QMainWindow):
         self.thread.started.connect(self.worker.run)
 
         self.worker.progress.connect(self.on_progress)
-        self.worker.status.connect(self.on_status)
+        self.worker.status.connect(self._on_status)
         self.worker.file_done.connect(self.on_file_done)
         self.worker.error.connect(self.on_error)
         self.worker.finished.connect(self.on_finished)
@@ -1388,17 +1392,7 @@ class MainWindow(QMainWindow):
             f"Создано PDF: {count}\n\nПапка: {folder}",
         )
         self.progress_bar_parsing.setValue(100)
-        self.worker = None
-
-    @staticmethod
-    def on_status(message: str) -> None:
-        """
-        Пишет сообщение о состоянии операции в лог.
-
-        :param message: текст сообщения
-        """
-
-        Rich.debug_log(message)
+        self.stop_generation = False
 
     @staticmethod
     def on_file_done(file_name: str) -> None:

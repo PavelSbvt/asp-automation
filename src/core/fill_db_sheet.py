@@ -270,11 +270,11 @@ def fill_database_sheet(
     df = pd.DataFrame(data_rows, columns=columns)
 
     # Путь к выходному файлу
-    output_path = Path("resources/docs/temporary_protocol_db_sheet.xlsx")
+    output_path = Path("resources/docs/temporary-protocol-db-sheet.xlsx")
     output_path = str(output_path.absolute())
 
     # Определяем путь к файлу-шаблону (корень проекта)
-    template_file = Path("resources/docs/Protocol_template.xlsx")
+    template_file = Path("resources/docs/protocol-template.xlsx")
     template_file = str(template_file.absolute())
 
     if not os.path.exists(template_file):
