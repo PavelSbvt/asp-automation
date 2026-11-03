@@ -9,7 +9,6 @@ from PyQt6.uic import loadUi
 
 from core.settings_manager import Settings
 from gui.utils.fonts import Fonts
-from gui.utils.styles import Style
 from gui.utils.windows_animations import AnimationsManager
 from gui.utils.windows_functions import (
     get_main_color_image,
@@ -37,8 +36,9 @@ class MyLoadingWindow(QWidget):
 
         Rich.enter_log("Показ загрузочного окна.")
 
-        ui_path = Path('src/gui/ui/loading_window.ui').as_posix()
+        ui_path = Path('src/gui/ui/loading-window.ui').as_posix()
         loadUi(ui_path, self)
+        self.setObjectName("loading_window")
 
         self.set_stylesheet_by_theme_in_settings()
 
@@ -49,10 +49,6 @@ class MyLoadingWindow(QWidget):
         self.lb_blc_m_load.setFont(Fonts.get_qfont("JetBrains_Medium", 8))
         self.lb_hi_prog.setFont(Fonts.get_qfont("JetBrains_Medium", 20))
         self.label_text.setFont(Fonts.get_qfont("JetBrains_Medium", 11))
-
-        # Временная установка старых стилей (через Style)
-        self.label_text.setStyleSheet(f"color: {Style.light_font_color};")
-        self.progress_bar.setStyleSheet(Style.progress_bar_style_blue)
 
         icon_path = Path("resources/images/icons/icon_pdf_maker.png")
         self.icon.setPixmap(QPixmap(icon_path.as_posix()))
@@ -180,7 +176,7 @@ class MyLoadingWindow(QWidget):
 
         theme = Settings.get_theme_name()
 
-        qss_path = Path(f"src/gui/styles/loading_window_{theme}.qss")
+        qss_path = Path(f"src/gui/styles/loading-window-{theme}.qss")
 
         if qss_path.exists():
             with open(qss_path, "r", encoding="utf-8") as f:
