@@ -97,10 +97,10 @@ class MainWindow(QMainWindow):
         ui_path = Path('src/gui/ui/test.ui').as_posix()
         loadUi(ui_path, self)
 
+        self.set_stylesheet_by_theme_in_settings()
+
         self.change_active_button_styles()
         self._update_loading_window_buttons()
-
-        self.set_stylesheet_by_theme_in_settings()
 
         # Вкладка с настройками скрыта, открывается только с кнопки
         self.tab_widget.setTabVisible(2, False)
@@ -311,8 +311,6 @@ class MainWindow(QMainWindow):
         self.stop_parsing_button.setStyleSheet(style_for_stop_button)
         self.stop_button.setStyleSheet(style_for_stop_button)
 
-        # self.set_styles()
-
         self.slider_loading_window_timer_duration.setRange(1000, 15000)
         self.slider_loading_window_timer_duration.setValue(
             Settings.get_loading_window_timer_duration())
@@ -351,15 +349,26 @@ class MainWindow(QMainWindow):
             if self.stop_parsing_button.isVisible():
                 Rich.warning_log("Аварийная остановка парсинга по ESC")
                 self.stop_generation = True
-                QMessageBox.warning(self, "Аварийная остановка",
-                                    "Парсинг остановлен по клавише ESC")
+                if self.worker is not None:
+                    try:
+                        self.worker.request_stop()
+                    except RuntimeError:
+                        self.worker = None
+                self.run_button.setVisible(False)
+                self.stop_parsing_button.setEnabled(False)
                 event.accept()
                 return
             elif self.stop_button.isVisible():
                 Rich.warning_log("Аварийная остановка сборки PDF по ESC")
                 self.stop_building_pdf = True
-                QMessageBox.warning(self, "Аварийная остановка",
-                                    "Сборка PDF остановлена по клавише ESC")
+                if self.worker is not None:
+                    try:
+                        self.worker.request_stop()
+                    except RuntimeError:
+                        self.worker = None
+                self.run_button.setVisible(False)
+                self.stop_button.setEnabled(False)
+                QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
                 event.accept()
                 return
 
@@ -474,16 +483,7 @@ class MainWindow(QMainWindow):
 
         theme = Settings.get_theme_name()
 
-        qss_path = Path(f"src/gui/styles/main_window_{theme}.qss")
-
-        if qss_path.exists():
-            with open(qss_path, "r", encoding="utf-8") as f:
-                self.setStyleSheet(f.read())
-        else:
-            Rich.warning_log(f"QSS-файл не найден: {qss_path}")
-
-    def load_qss(self) -> None:
-        qss_path = Path(f"src/gui/styles/main_window_standard.qss")
+        qss_path = Path(f"src/gui/styles/main-window-{theme}.qss")
 
         if qss_path.exists():
             with open(qss_path, "r", encoding="utf-8") as f:
@@ -716,8 +716,6 @@ class MainWindow(QMainWindow):
         for name, btn in theme_buttons.items():
             btn.setProperty("active", name == current_theme)
 
-            # Qt не пересчитывает QSS автоматически при смене property —
-            # нужно принудительно «переполировать» виджет
             btn.style().unpolish(btn)
             btn.style().polish(btn)
             btn.update()
@@ -1079,6 +1077,13 @@ class MainWindow(QMainWindow):
 
         Rich.simple_log("Остановка процесса по запросу пользователя")
         self.stop_building_pdf = True
+
+        if self.worker is not None:
+            try:
+                self.worker.request_stop()
+            except RuntimeError:
+                self.worker = None
+
         self.run_button.setVisible(False)
         self.stop_button.setEnabled(False)
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
@@ -1142,7 +1147,7 @@ class MainWindow(QMainWindow):
             )
             return
 
-        if not self.save_folder_path:
+        if not self.save_folder_second_tab_path:
             Rich.log_error("Сначала выберите папку для сохранения!")
             QMessageBox.warning(
                 self, "Предупреждение",
@@ -1179,7 +1184,7 @@ class MainWindow(QMainWindow):
         self.thread = QThread()
         self.worker = PdfBuilderWorker(
             excel_file=self.excel_file_path,
-            output_folder=self.save_folder_path,
+            output_folder=self.save_folder_second_tab_path,
         )
         self.worker.moveToThread(self.thread)
 
@@ -1199,12 +1204,19 @@ class MainWindow(QMainWindow):
 
         self.thread.start()
 
-    def start_parsing(self):
+    def start_parsing(self) -> None:
+        """
+        Функция для запуска процесса парсинга и сборки ПДФ с первой вкладки
+        """
         # Собираем параметры из UI
         universal = self.universal_file_path
         commission = self.history_commission_path
         output = self.parsing_save_folder_path
         commission_text = self.input_commission.text().strip()
+
+        if self.worker_thread is not None and self.worker_thread.isRunning():
+            Rich.warning_log("Парсинг уже запущен")
+            return
 
         if not universal:
             Rich.log_error("Сначала выберите универсальную таблицу для парсинга!")
@@ -1302,17 +1314,23 @@ class MainWindow(QMainWindow):
         self.stop_parsing_button.setVisible(False)
         self.run_button.setVisible(True)
         self.widget_for_title_to_stop.setVisible(False)
+        self.stop_parsing_button.setEnabled(True)
         QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
 
     def _on_finished(self, count: int, folder: str):
+        self.progress_bar_parsing.setVisible(False)
+        self.stop_parsing_button.setVisible(False)
+        self.stop_parsing_button.setEnabled(True)
+        self.widget_for_title_to_stop.setVisible(False)
+        self.run_button.setVisible(True)
+        self.run_button.setEnabled(True)
+        QApplication.setOverrideCursor(Qt.CursorShape.ArrowCursor)
+
         QMessageBox.information(
             self, "Готово",
             f"Создано PDF: {count}\n\nПапка: {folder}",
         )
-        self.run_button.setEnabled(True)
-        self.stop_parsing_button.setEnabled(False)
         self.progress_bar_parsing.setValue(100)
-
         self.worker = None
 
     def stop_parsing(self):
