@@ -1,16 +1,20 @@
-import sys
-from pathlib import Path
 import faulthandler
 import multiprocessing
+import sys
+import warnings
+from pathlib import Path
 
-from PyQt6.QtWidgets import QApplication
 from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QApplication
 
 from core.settings_manager import Settings
 from gui.loading_window import MyLoadingWindow
 from gui.main_window import MainWindow
 from gui.utils.windows_animations import AnimationsManager
 from utils.output_rich import Rich
+
+
+warnings.filterwarnings("ignore", category=UserWarning, module="openpyxl")
 
 
 def start_with_loading_window() -> None:
@@ -87,7 +91,7 @@ if __name__ == "__main__":
     Rich.print_spacer()
 
     App = QApplication(sys.argv)
-    icon_path = Path('resources/images/icons/icon_pdf_maker_255_size.ico')
+    icon_path = Path('resources/images/icons/icon-pdf-maker-255-size.ico')
     App.setWindowIcon(QIcon(f"{icon_path.as_posix()}"))
 
     if Settings.get_flag_show_loading_window():
