@@ -1,3 +1,4 @@
+import os
 import traceback
 import webbrowser
 from pathlib import Path
@@ -12,15 +13,6 @@ from PyQt6.uic import loadUi
 from core.settings_manager import Settings
 from core.worker_generate_pdf import PdfBuilderWorker
 from core.worker_parse_and_generate_pdf import PdfParseAndGenerateWorker
-from gui.utils.choose_files import (
-    choose_foreign_excel,
-    choose_history_excel,
-    choose_parsing_save_folder,
-    choose_save_folder_second_tab,
-    choose_specialization_excel,
-    choose_universal_excel,
-    open_parsing_pdf_folder,
-    open_pdf_folder)
 from gui.utils.fonts import Fonts
 from gui.utils.windows_animations import AnimationsManager
 from gui.utils.windows_functions import (
@@ -446,6 +438,162 @@ class MainWindow(QMainWindow):
             self.label_current_tabel.setText(self.excel_file_path)
             Rich.success_log(
                 f"Выбрана таблица с данными для сборки ПДФ: {file_path}")
+
+    def choose_parsing_save_folder(self) -> None:
+        """
+        выбор папки сохранения для собранных пдф по напарсенным данным
+
+        :return: None
+        """
+
+        folder_path = QFileDialog.getExistingDirectory(
+            self,
+            "Выберите папку для сохранения PDF (парсинг)",
+            self.parsing_save_folder_path
+        )
+        if folder_path:
+            self.parsing_save_folder_path = folder_path
+            self.save_path_label.setText(folder_path)
+
+    def choose_save_folder_second_tab(self) -> None:
+        """
+        выбор папки сохранения для собранных пдф по таблице с собранным БД
+
+        :param self: Принимает имя родительского класса-виджета
+
+        :return: None
+        """
+
+        folder_path = QFileDialog.getExistingDirectory(
+            self,
+            "Выберите папку для сохранения PDF (сборка)",
+            self.save_folder_second_tab_path
+        )
+        if folder_path:
+            self.save_folder_second_tab_path = folder_path
+            self.current_save_path_label.setText(folder_path)
+
+    def open_parsing_pdf_folder(self) -> None:
+        """
+        Открывает папку с созданными по напарсенным данным PDF
+
+        :return: None
+        """
+
+        folder_path = self.parsing_save_folder_path
+        if not os.path.exists(folder_path):
+            QMessageBox.warning(
+                self,
+                "Папка не найдена",
+                f"Папка '{folder_path}' не существует.\n\n"
+                f"Сначала создайте PDF файлы, нажав кнопку "
+                f"запуска процесса на первой вкладке."
+            )
+            Rich.log_error("[E] ошибка с открытием папки с пдф")
+            return
+        os.startfile(folder_path)
+
+    def open_pdf_folder(self) -> None:
+        """
+        Открывает папку с созданными по готовым данным PDF
+
+        :return: None
+        """
+
+        folder_path = self.save_folder_second_tab_path
+        if not os.path.exists(folder_path):
+            QMessageBox.warning(
+                self,
+                "Папка не найдена",
+                f"Папка '{folder_path}' не существует.\n\n"
+                f"Сначала создайте PDF файлы, нажав кнопку "
+                f"запуска процесса на первой вкладке."
+            )
+            Rich.log_error("[E] ошибка с открытием папки с пдф")
+            return
+        os.startfile(folder_path)
+
+    def choose_universal_excel(self) -> None:
+        """
+        Функция для выбора файла "универсальной" таблицы и сохранения его
+        пути в атрибут класса главного окна
+
+        :return: None
+        """
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите файл Excel с данными",
+            "",
+            "Excel files (*.xlsx *.xls);;All files (*.*)"
+        )
+
+        if file_path:
+            self.universal_file_path = file_path
+
+            self.universal_excel_label.setText(f"{file_path}")
+
+            Rich.success_log(f"Выбран файл универсальной таблицы: {file_path}")
+
+    def choose_history_excel(self) -> None:
+        """
+        выбор doc файла с таблицей, содержащей информацию и комиссии по истории
+
+        :return: None
+        """
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите файл комиссии по истории",
+            "",
+            "Word files (*.doc *.docx);;All files (*.*)"
+        )
+        if file_path:
+            self.history_commission_path = file_path
+
+            self.history_xl_choused_label.setText(file_path)
+
+            Rich.success_log(f"Выбран файл комиссии по истории: {file_path}")
+
+    def choose_foreign_excel(self) -> None:
+        """
+        выбор doc файла с таблицей, содержащей информацию и комиссии по иностранному
+
+        :return: None
+        """
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите файл комиссии по иностранному",
+            "",
+            "Word files (*.doc *.docx);;All files (*.*)"
+        )
+        if file_path:
+            self.foreign_commission_path = file_path
+
+            self.foreign_xl_choosed_label.setText(file_path)
+
+            Rich.success_log(f"Выбран файл комиссии по иностранному: {file_path}")
+
+    def choose_specialization_excel(self) -> None:
+        """
+        выбор doc файла с таблицей, содержащей информацию и комиссии по специальности
+
+        :return: None
+        """
+
+        file_path, _ = QFileDialog.getOpenFileName(
+            self,
+            "Выберите файл комиссии по специальности",
+            "",
+            "Word files (*.doc *.docx);;All files (*.*)"
+        )
+        if file_path:
+            self.specialization_commission_path = file_path
+
+            self.specialization_xl_choosed_lb.setText(file_path)
+
+            Rich.success_log(f"Выбран файл комиссии по специальности: {file_path}")
 
     def change_active_button_styles(self) -> None:
         """
@@ -1006,23 +1154,23 @@ class MainWindow(QMainWindow):
 
         self.widget_bg_main_tab.clicked.connect(self.on_bg_clicked)
         self.open_folder_button.clicked.connect(
-            lambda: open_parsing_pdf_folder(self))
+            self.open_parsing_pdf_folder)
         self.btn_choose_universal_xl.clicked.connect(
-            lambda: choose_universal_excel(self))
+            self.choose_universal_excel)
         self.btn_choose_foreign_commission.clicked.connect(
-            lambda: choose_foreign_excel(self))
+            self.choose_foreign_excel)
         self.btn_choose_specialization_commission.clicked.connect(
-            lambda: choose_specialization_excel(self))
+            self.choose_specialization_excel)
         self.button_to_update_date.clicked.connect(
             lambda: self.update_data())
         self.button_change_save_path.clicked.connect(
-            lambda: choose_parsing_save_folder(self))
+            self.choose_parsing_save_folder)
 
         self.button_shouse_save_path_for_second_tab.clicked.connect(
-            lambda: choose_save_folder_second_tab(self))
+            self.choose_save_folder_second_tab)
         self.button_shouse_table.clicked.connect(self.choose_file)
         self.button_open_folder_with_pdf.clicked.connect(
-            lambda: open_pdf_folder(self))
+            self.open_pdf_folder)
 
         self.button_show_loading_window.clicked.connect(
             self.set_true_show_loading_window)
@@ -1048,7 +1196,7 @@ class MainWindow(QMainWindow):
                 checked, "specialization"))
 
         self.btn_choose_history_commission.clicked.connect(
-            lambda: choose_history_excel(self))
+            self.choose_history_excel)
 
     def _apply_fonts(self) -> None:
         """
