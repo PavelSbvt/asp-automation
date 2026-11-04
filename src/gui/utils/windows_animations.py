@@ -10,8 +10,9 @@ class AnimationsManager:
     """
 
     @staticmethod
-    def animation_appearance_window(widget: QWidget, duration: int = 700,
-        easing: QEasingCurve.Type = QEasingCurve.Type.OutCubic) -> QPropertyAnimation:
+    def animation_appearance_window(
+            widget: QWidget, duration: int = 700,
+            easing: QEasingCurve.Type = QEasingCurve.Type.OutCubic)->QPropertyAnimation:
         """
         Анимация появления окна (увеличение прозрачности от 0 до 1)
 
@@ -49,8 +50,9 @@ class AnimationsManager:
         return animation_appearance
 
     @staticmethod
-    def animation_disappearance_window(widget: QWidget, duration: int = 450,
-        easing: QEasingCurve.Type = QEasingCurve.Type.InCubic, callback = None) \
+    def animation_disappearance_window(
+            widget: QWidget, duration: int = 450,
+            easing: QEasingCurve.Type = QEasingCurve.Type.InCubic, callback = None) \
             -> QPropertyAnimation:
         """
         Анимация плавного исчезания окна (уменьшение прозрачности от 1 до 0)
@@ -93,8 +95,8 @@ class AnimationsManager:
         return animation_disappearance
 
     @staticmethod
-    def animation_disappearance_and_closing(widget: QWidget,
-            duration: int = 450) -> None:
+    def animation_disappearance_and_closing(
+            widget: QWidget, duration: int = 450) -> None:
         """
         Функция для создания анимации плавного исчезания окна и его закрытия
 
